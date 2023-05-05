@@ -12,8 +12,8 @@ const (
 )
 
 type Block struct {
-	bType int
-	val   int
+	Type int `json:"bType"`
+	Val  int `json:"value"`
 }
 
 func getBombLoc(num int, size int) [][]int {
@@ -63,27 +63,27 @@ func GetBoard(num int, size int) [][]Block {
 	for i := range board {
 		board[i] = make([]Block, size)
 		for j := range board[i] {
-			board[i][j] = Block{bType: BLANK, val: 0}
+			board[i][j] = Block{Type: BLANK, Val: 0}
 		}
 	}
 	// Place bomb blocks
 	bombLoc := getBombLoc(num, size)
 	for _, v := range bombLoc {
 		row, col := v[0], v[1]
-		board[row][col].bType = BOMB
-		board[row][col].val = 0
+		board[row][col].Type = BOMB
+		board[row][col].Val = 0
 	}
 	// Place number blocks
 	for _, v := range bombLoc {
 		placeables := getValidNgh(v, size)
 		for _, v := range placeables {
 			row, col := v[0], v[1]
-			switch board[row][col].bType {
+			switch board[row][col].Type {
 			case NUM:
-				board[row][col].val += 1
+				board[row][col].Val += 1
 			case BLANK:
-				board[row][col].bType = NUM
-				board[row][col].val = 1
+				board[row][col].Type = NUM
+				board[row][col].Val = 1
 			default: // BOMB
 				continue
 			}

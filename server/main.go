@@ -1,51 +1,21 @@
 package main
 
 import (
-	"fmt"
-	boardhelper "minesweeper/boardhelper"
-
-	"github.com/gin-contrib/cors"
-	"github.com/gin-gonic/gin"
-	socketio "github.com/googollee/go-socket.io"
+	"log"
+	"minesweeper/ws"
+	"net/http"
 )
 
-var board [][]boardhelper.Block
+// func allowCors(w *http.ResponseWriter) {
+// 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+// }
 
-func getServer(server *socketio.Server) *socketio.Server {
-	fmt.Println("httpServer")
-	return server
-}
 func main() {
-	router := gin.Default()
-	server := socketio.NewServer(nil)
-	server.OnError("/", func(s socketio.Conn, e error) {
-		fmt.Println("meet error:", e)
-		return
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 	})
-	server.OnConnect("/", func(s socketio.Conn) error {
-		s.SetContext("")
-		fmt.Println("connected:", s.ID())
-		return nil
+	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		//	allowCors(&w)
+		ws.ServeWs(w, r)
 	})
-
-	server.OnEvent("/", "notice", func(s socketio.Conn, msg string) {
-		fmt.Println("notice:", msg)
-		s.Emit("reply", "have"+msg)
-		return
-	})
-	server.OnEvent("/", "startGame", func(s socketio.Conn) {
-		board = boardhelper.GetBoard(50, 16) // 16 * 16 Board
-		fmt.Println(board)
-		s.Emit("board", board)
-		return
-	})
-	go server.Serve()
-	defer server.Close()
-	router.Use(cors.New(cors.Config{
-		AllowAllOrigins: true,
-	}))
-
-	router.GET("/socket.io/", gin.WrapH(getServer(server)))
-	router.POST("/socket.io/", gin.WrapH(getServer(server)))
-	router.Run("localhost:8080")
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
