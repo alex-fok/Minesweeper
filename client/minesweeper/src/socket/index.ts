@@ -5,10 +5,11 @@ const socketEvents: Record<string, (event: any)=>void> = {}
 
 socket.addEventListener("message", (event) => {
    const eventName =  "reveal"
+   if (!socketEvents[eventName]) return
    socketEvents[eventName](event)
 })
 
-const addSocketEvent = (name: string, fn: (event: any)=>void) => {
+const addSocketEventHandler = (name: string, fn: (event: any)=>void) => {
     socketEvents[name] = fn
 }
-export { socket, addSocketEvent }
+export { socket, addSocketEventHandler }

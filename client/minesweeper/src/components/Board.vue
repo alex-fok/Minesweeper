@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-    import { socket, addSocketEvent } from '@/socket'
+    import { socket, addSocketEventHandler } from '@/socket'
     import { store }from '@/store/boardStore'
     
     const reveal = (i: number) => {
@@ -20,7 +20,7 @@
     </div>
 </template>
 <script lang='ts'>
-    const blockType = ["BLANK", "BOMB", "NUMBER"]
+    const [BLANK, BOMB, NUMBER] = [0, 1, 2]
     type blockInfo = {
         x: number,
         y: number,
@@ -39,17 +39,22 @@
         show: ""
     }))
 
-    const modifyBoard = (board:block[], x:number, y:number, show: string) => {
-        return board.map((v, _) => {
+    const modifyBoard = (board:block[], x:number, y:number, show: string) => 
+        store.board = board.map((v, _) => {
             if (v.x === x && v.y === y)
                 v.show = show
             return v
         })
+    
+    const getDisplayVal = (block: blockInfo) : string => {
+        if (block["bType"] === NUMBER) return block["value"].toString()
+        return block["bType"] === BOMB ? "BO" : "BL"
     }
-    addSocketEvent("reveal", (event: any) => {
-        const block:blockInfo = JSON.parse(JSON.parse(event.data))
-        const displayVal = blockType[block["bType"]] === "NUMBER" ? block["value"].toString() : blockType[block["bType"]].slice(0, 2)
-        modifyBoard(store.board, block["x"], block["y"], displayVal)
+    addSocketEventHandler("reveal", (event: any) => {
+        const blocks:blockInfo[] = JSON.parse(JSON.parse(event.data))
+        blocks.forEach(block => {
+            modifyBoard(store.board, block["x"], block["y"], getDisplayVal(block))
+        })
     })
     export default {
         name: 'Board',

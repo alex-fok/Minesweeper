@@ -9,9 +9,31 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type V struct {
+	X, Y int
+}
+type BlockInfo struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+	boardhelper.Block
+}
+
+var board = boardhelper.GetBoard(50, 26)
+
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
+}
+
+func getBlockArr(v *V) []BlockInfo {
+	slice := []BlockInfo{}
+	block := BlockInfo{
+		X:     v.X,
+		Y:     v.Y,
+		Block: board[v.X][v.Y],
+	}
+	slice = append(slice, block)
+	return slice
 }
 
 func ServeWs(w http.ResponseWriter, r *http.Request) {
@@ -24,19 +46,9 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	board := boardhelper.GetBoard(50, 26)
 	// for _, line := range board {
 	// 	fmt.Println(line)
 	// }
-	type V struct {
-		X, Y int
-	}
-
-	type BlockInfo struct {
-		X int `json:"x"`
-		Y int `json:"y"`
-		boardhelper.Block
-	}
 
 	for {
 		var v V
@@ -45,18 +57,14 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 			log.Println(err)
 			return
 		}
-		block := BlockInfo{
-			X:     v.X,
-			Y:     v.Y,
-			Block: board[v.Y][v.X],
-		}
-		data, err := json.Marshal(block)
+		data, err := json.Marshal(getBlockArr(&v))
 
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		if err := conn.WriteJSON(string(data)); err != nil {
+		dataArr := []string{string(data)}
+		if err := conn.WriteJSON(dataArr); err != nil {
 			log.Println(err)
 			return
 		}
