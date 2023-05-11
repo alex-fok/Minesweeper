@@ -1,7 +1,6 @@
 package boardhelper
 
 import (
-	// "fmt"
 	"math/rand"
 )
 
@@ -11,9 +10,19 @@ const (
 	NUM   int = 2
 )
 
+type Vertex struct {
+	X, Y int
+}
+
 type Block struct {
 	Type int `json:"bType"`
 	Val  int `json:"value"`
+}
+
+type BlockInfo struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+	Block
 }
 
 func getBombLoc(num int, size int) [][]int {
@@ -37,11 +46,11 @@ func getBombLoc(num int, size int) [][]int {
 	return loc
 }
 
-func getValidNgh(loc []int, size int) [][]int {
+func getNeighbors(loc []int, size int) [][]int {
 	isValid := func(x int, y int) bool {
 		return x >= 0 && x < size && y >= 0 && y < size
 	}
-	slice := make([][]int, 0, 8)
+	neighbors := make([][]int, 0, 8)
 	row, col := loc[0], loc[1]
 	for i := row - 1; i < row+2; i++ {
 		for j := col - 1; j < col+2; j++ {
@@ -49,11 +58,61 @@ func getValidNgh(loc []int, size int) [][]int {
 				continue
 			}
 			if isValid(i, j) {
-				slice = append(slice, []int{i, j})
+				neighbors = append(neighbors, []int{i, j})
 			}
 		}
 	}
-	return slice
+	return neighbors
+}
+
+func GetRevealables(v *Vertex, b [][]Block, size int) []BlockInfo {
+	source := BlockInfo{
+		X:     v.X,
+		Y:     v.Y,
+		Block: b[v.Y][v.X],
+	}
+	if source.Block.Type != BLANK {
+		return []BlockInfo{source}
+	}
+	// Init isVisited
+	isVisited := make([][]bool, size)
+	visitedRow := make([]bool, size*size)
+	for i := range isVisited {
+		isVisited[i], visitedRow = visitedRow[:size], visitedRow[size:]
+	}
+	isVisited[v.Y][v.X] = true
+
+	// Get all revealables
+	var curr BlockInfo
+	revealables := []BlockInfo{}
+	blocks := []BlockInfo{source}
+	for {
+		if len(blocks) == 0 {
+			return revealables
+		}
+		curr, blocks = blocks[0], blocks[1:]
+		revealables = append(revealables, curr)
+
+		// If the block is NUM, continue
+		if b[curr.Y][curr.X].Type == NUM {
+			continue
+		}
+		// Else if block is BLANK, find neighbors
+		neighbors := getNeighbors([]int{curr.Y, curr.X}, size)
+		for _, block := range neighbors {
+			y, x := block[0], block[1]
+			// Add to queue if neighbor block is not visited && Not BOMB
+			if isVisited[y][x] || b[y][x].Type == BOMB {
+				continue
+			}
+			isVisited[y][x] = true
+			blocks = append(blocks, BlockInfo{
+				X:     x,
+				Y:     y,
+				Block: b[y][x],
+			})
+		}
+	}
 }
 
 func GetBoard(num int, size int) [][]Block {
@@ -75,7 +134,7 @@ func GetBoard(num int, size int) [][]Block {
 	}
 	// Place number blocks
 	for _, v := range bombLoc {
-		placeables := getValidNgh(v, size)
+		placeables := getNeighbors(v, size)
 		for _, v := range placeables {
 			row, col := v[0], v[1]
 			switch board[row][col].Type {

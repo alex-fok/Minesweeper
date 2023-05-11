@@ -9,31 +9,18 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type V struct {
-	X, Y int
-}
-type BlockInfo struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	boardhelper.Block
-}
+const DEFAULT_SIZE = 26
+const DEFAULT_BOMB_COUNT = 100
 
-var board = boardhelper.GetBoard(50, 26)
+var board = boardhelper.GetBoard(DEFAULT_BOMB_COUNT, DEFAULT_SIZE)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
 	WriteBufferSize: 1024,
 }
 
-func getBlockArr(v *V) []BlockInfo {
-	slice := []BlockInfo{}
-	block := BlockInfo{
-		X:     v.X,
-		Y:     v.Y,
-		Block: board[v.X][v.Y],
-	}
-	slice = append(slice, block)
-	return slice
+func getBlockArr(v *boardhelper.Vertex) []boardhelper.BlockInfo {
+	return boardhelper.GetRevealables(v, board, DEFAULT_SIZE)
 }
 
 func ServeWs(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +33,8 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	// for _, line := range board {
-	// 	fmt.Println(line)
-	// }
-
 	for {
-		var v V
+		var v boardhelper.Vertex
 		err := conn.ReadJSON(&v)
 		if err != nil {
 			log.Println(err)
