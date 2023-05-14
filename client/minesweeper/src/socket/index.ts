@@ -2,8 +2,10 @@
 const socket = new WebSocket("ws://localhost:8080/ws")
 
 const socketEvents: Record<string, (event: any)=>void> = {}
-
-socket.addEventListener("message", (event) => {
+socket.addEventListener("open", event => {
+    socket.send(JSON.stringify({name: 'newGame'})) 
+})
+socket.addEventListener("message", event => {
    const eventName =  "reveal"
    if (!socketEvents[eventName]) return
    socketEvents[eventName](event)

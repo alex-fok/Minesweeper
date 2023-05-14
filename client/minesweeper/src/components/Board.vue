@@ -1,11 +1,13 @@
 <script setup lang='ts'>
     import { socket, addSocketEventHandler } from '@/socket'
     import { store }from '@/store/boardStore'
-    
     const reveal = (i: number) => {
         const y = Math.floor(i / 26)
         const x = i % 26
-        socket.send(JSON.stringify({x, y}))
+        socket.send(JSON.stringify({
+            name: "reveal",
+            content: JSON.stringify({x, y})
+        }))
     }
 </script>
 <template>
@@ -38,14 +40,13 @@
         y: Math.floor(i / 26),
         show: ""
     }))
-
-    const modifyBoard = (board:block[], x:number, y:number, show: string) => 
+    const modifyBoard = (board:block[], x:number, y:number, show: string) => {
         store.board = board.map((v, _) => {
             if (v.x === x && v.y === y)
                 v.show = show
             return v
         })
-    
+    }
     const getDisplayVal = (block: blockInfo) : string => {
         if (block["bType"] === NUMBER) return block["value"].toString()
         return block["bType"] === BOMB ? "BO" : "BL"

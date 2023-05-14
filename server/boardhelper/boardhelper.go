@@ -65,7 +65,7 @@ func getNeighbors(loc []int, size int) [][]int {
 	return neighbors
 }
 
-func GetRevealables(v *Vertex, b [][]Block, size int) []BlockInfo {
+func GetRevealables(v *Vertex, b [][]Block) []BlockInfo {
 	source := BlockInfo{
 		X:     v.X,
 		Y:     v.Y,
@@ -75,6 +75,7 @@ func GetRevealables(v *Vertex, b [][]Block, size int) []BlockInfo {
 		return []BlockInfo{source}
 	}
 	// Init isVisited
+	size := len(b)
 	isVisited := make([][]bool, size)
 	visitedRow := make([]bool, size*size)
 	for i := range isVisited {
