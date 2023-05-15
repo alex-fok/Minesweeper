@@ -11,11 +11,12 @@ import (
 // }
 
 func main() {
+	var l *ws.Lobby = ws.CreateLobby()
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 	})
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		//	allowCors(&w)
-		ws.ServeWs(w, r)
+		ws.ServeWs(w, r, l)
 	})
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

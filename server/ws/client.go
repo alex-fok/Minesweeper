@@ -1,35 +1,21 @@
 package ws
 
 import (
-	"encoding/json"
 	"log"
-	"math/rand"
-	"minesweeper/boardhelper"
 
 	"github.com/gorilla/websocket"
 )
 
 type Message struct {
-	Name    string `json:"Name"`
-	Content string `json:"Content"`
+	Name    string `json:"name"`
+	Content string `json:"content"`
 }
 
 type Client struct {
 	conn   *websocket.Conn
+	lobby  *Lobby
 	room   *Room
 	update chan *Action
-}
-
-func getBlockArr(m *Message) []boardhelper.BlockInfo {
-	var v boardhelper.Vertex
-	json.Unmarshal([]byte(m.Content), &v)
-	return boardhelper.GetRevealables(&v, board)
-}
-
-func (c *Client) createRoom() {
-	c.room = newRoom(uint(rand.Uint32()))
-	go c.room.run()
-	c.room.register <- c
 }
 
 func (c *Client) handleAction(action *Action) string {
@@ -70,9 +56,9 @@ func (c *Client) readBuffer() {
 			log.Println(err)
 			return
 		}
-		switch messageType := msg.Name; messageType {
+		switch msg.Name {
 		case "newGame":
-			c.createRoom()
+			lobby.createRoom(c)
 		case "reveal":
 			if c.room == nil {
 				continue
@@ -81,20 +67,9 @@ func (c *Client) readBuffer() {
 				Name:    msg.Name,
 				Content: msg.Content,
 			}
+
 		default:
 			continue
 		}
-
-		// data, err := json.Marshal(resObj)
-
-		// if err != nil {
-		// 	log.Println(err)
-		// 	return
-		// }
-		// dataArr := []string{string(data)}
-		// if err := c.conn.WriteJSON(dataArr); err != nil {
-		// 	log.Println(err)
-		// 	return
-		// }
 	}
 }

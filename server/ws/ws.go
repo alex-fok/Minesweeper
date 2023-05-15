@@ -11,11 +11,6 @@ import (
 const DEFAULT_SIZE = 26
 const DEFAULT_BOMB_COUNT = 100
 
-type room struct {
-	conn []*websocket.Conn
-	id   uint
-}
-
 var board = boardhelper.GetBoard(DEFAULT_BOMB_COUNT, DEFAULT_SIZE)
 
 var upgrader = websocket.Upgrader{
@@ -23,7 +18,7 @@ var upgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
-func ServeWs(w http.ResponseWriter, r *http.Request) {
+func ServeWs(w http.ResponseWriter, r *http.Request, l *Lobby) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
 
@@ -33,6 +28,7 @@ func ServeWs(w http.ResponseWriter, r *http.Request) {
 	}
 	client := &Client{
 		conn:   conn,
+		lobby:  lobby,
 		update: make(chan *Action),
 	}
 	go client.readBuffer()
