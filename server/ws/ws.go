@@ -2,16 +2,10 @@ package ws
 
 import (
 	"log"
-	"minesweeper/boardhelper"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
-
-const DEFAULT_SIZE = 26
-const DEFAULT_BOMB_COUNT = 100
-
-var board = boardhelper.GetBoard(DEFAULT_BOMB_COUNT, DEFAULT_SIZE)
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,

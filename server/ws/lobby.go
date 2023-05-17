@@ -2,6 +2,8 @@ package ws
 
 import (
 	"math/rand"
+	"strconv"
+	"time"
 )
 
 type Lobby struct {
@@ -26,11 +28,23 @@ func CreateLobby() *Lobby {
 }
 
 func (l *Lobby) createRoom(c *Client) {
-	id := uint(rand.Uint32())
-	c.room = newRoom(id)
+	var id uint
+	for {
+		rand.Seed(time.Now().UnixNano())
+		id = uint(rand.Uint32() % 10000)
+		if _, ok := l.rooms[id]; !ok {
+			break
+		}
+	}
+
+	c.room = newRoom(id, c, l)
 	go c.room.run()
+
 	l.register <- c.room
-	c.room.register <- c
+	c.update <- &Action{
+		Name:    "room_id",
+		Content: strconv.FormatUint(uint64(id), 10),
+	}
 }
 
 func (l *Lobby) findRoom(id uint) *Room {

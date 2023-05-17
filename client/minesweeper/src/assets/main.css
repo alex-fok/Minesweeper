@@ -1,4 +1,8 @@
 @import './base.css';
-
+body {
+    margin: 0px;
+    background-color:#1b1b1b;
+    font-family:'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
 #app {
 }

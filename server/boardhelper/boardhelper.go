@@ -2,6 +2,7 @@ package boardhelper
 
 import (
 	"math/rand"
+	"time"
 )
 
 const (
@@ -25,10 +26,10 @@ type BlockInfo struct {
 	Block
 }
 
-func getBombLoc(num int, size int) [][]int {
+func getBombLoc(size int, bombCount int) [][]int {
 	max := size * size
 	randArr := make([]int, max)
-
+	rand.Seed(time.Now().UnixNano())
 	// Assign init values
 	for i := range randArr {
 		randArr[i] = i
@@ -39,8 +40,8 @@ func getBombLoc(num int, size int) [][]int {
 		randArr[i-1], randArr[target] = randArr[target], randArr[i-1]
 	}
 	// Trasform to x, y location slice
-	loc := make([][]int, num)
-	for i, v := range randArr[:num] {
+	loc := make([][]int, bombCount)
+	for i, v := range randArr[:bombCount] {
 		loc[i] = append(loc[i], v/size, v%size)
 	}
 	return loc
@@ -116,7 +117,7 @@ func GetRevealables(v *Vertex, b [][]Block) []BlockInfo {
 	}
 }
 
-func GetBoard(num int, size int) [][]Block {
+func GetBoard(size int, bombCount int) [][]Block {
 	board := make([][]Block, size)
 
 	// Init board
@@ -127,7 +128,7 @@ func GetBoard(num int, size int) [][]Block {
 		}
 	}
 	// Place bomb blocks
-	bombLoc := getBombLoc(num, size)
+	bombLoc := getBombLoc(size, bombCount)
 	for _, v := range bombLoc {
 		row, col := v[0], v[1]
 		board[row][col].Type = BOMB
