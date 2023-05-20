@@ -91,11 +91,11 @@ func (c *Client) readBuffer() {
 		}
 		switch msg.Name {
 		case "newGame":
-			c.newGame()
+			go c.newGame()
 		case "joinGame":
-			c.joinGame(&msg)
+			go c.joinGame(&msg)
 		case "reveal":
-			c.reveal(&msg)
+			go c.reveal(&msg)
 		default:
 			continue
 		}

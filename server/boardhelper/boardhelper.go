@@ -16,8 +16,9 @@ type Vertex struct {
 }
 
 type Block struct {
-	Type int `json:"bType"`
-	Val  int `json:"value"`
+	Type    int `json:"bType"`
+	Val     int `json:"value"`
+	Visited bool
 }
 
 type BlockInfo struct {
@@ -124,7 +125,7 @@ func GetBoard(size int, bombCount int) [][]Block {
 	for i := range board {
 		board[i] = make([]Block, size)
 		for j := range board[i] {
-			board[i][j] = Block{Type: BLANK, Val: 0}
+			board[i][j] = Block{Type: BLANK, Val: 0, Visited: false}
 		}
 	}
 	// Place bomb blocks

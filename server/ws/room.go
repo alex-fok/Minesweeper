@@ -94,7 +94,15 @@ func (r *Room) revealBlocks(content string) {
 	// Get revealable blocks
 	var v boardhelper.Vertex
 	json.Unmarshal([]byte(content), &v)
+	if r.board[v.Y][v.X].Visited {
+		return
+	}
 	revealables := boardhelper.GetRevealables(&v, r.board)
+
+	// Update visited blocks
+	for _, block := range revealables {
+		r.board[block.Y][block.X].Visited = true
+	}
 
 	// Update turn-related info
 	if !(revealables[0].Type == boardhelper.BOMB) {
@@ -109,7 +117,11 @@ func (r *Room) revealBlocks(content string) {
 		})
 	}
 
-	data, _ := json.Marshal(revealables)
+	data, _ := json.Marshal(struct {
+		Blocks []boardhelper.BlockInfo `json:"blocks"`
+	}{
+		Blocks: revealables,
+	})
 
 	// Broadcast to clients
 	r.broadcast(&Action{

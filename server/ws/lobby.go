@@ -1,8 +1,8 @@
 package ws
 
 import (
+	"encoding/json"
 	"math/rand"
-	"strconv"
 	"time"
 )
 
@@ -41,9 +41,16 @@ func (l *Lobby) createRoom(c *Client) {
 	go c.room.run()
 
 	l.register <- c.room
+	content, _ := json.Marshal(struct {
+		RoomId       uint `json:"roomId"`
+		IsPlayerTurn bool `json:"isPlayerTurn"`
+	}{
+		RoomId:       id,
+		IsPlayerTurn: c == c.room.turn.curr,
+	})
 	c.update <- &Action{
-		Name:    "room_id",
-		Content: strconv.FormatUint(uint64(id), 10),
+		Name:    "gameCreated",
+		Content: string(content),
 	}
 }
 
