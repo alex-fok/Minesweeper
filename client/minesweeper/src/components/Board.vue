@@ -74,7 +74,6 @@
     }
     .board > div {
         font-family:'Courier New', Courier, monospace;
-        color: white;
         background-color:#343434;   
         width: 3vh;
         height: 3vh;

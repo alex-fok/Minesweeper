@@ -15,7 +15,6 @@
 <style scoped>
     .side-container {
         margin-top: 0%;
-        color:white;
         padding: 0em 2em;
         box-sizing:border-box;
         background-color: #343434;
