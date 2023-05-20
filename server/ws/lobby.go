@@ -36,7 +36,9 @@ func (l *Lobby) createRoom(c *Client) {
 			break
 		}
 	}
-
+	if c.room == nil {
+		c.room.unregister <- c
+	}
 	c.room = newRoom(id, c, l)
 	go c.room.run()
 
