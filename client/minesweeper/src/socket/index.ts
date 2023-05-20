@@ -10,7 +10,7 @@ socket.addEventListener("message", event => {
     // console.log('name: ', name)
     // console.log('content: ', content)
    if (!socketEvents[name]) return
-   socketEvents[name](content)
+   socketEvents[name](JSON.parse(content))
 })
 
 const addSocketEventHandler = (name: string, fn: (event: any)=>void) => {

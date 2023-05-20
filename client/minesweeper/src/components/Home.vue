@@ -3,20 +3,29 @@
     import Panel from './Panel.vue'
     import GameLayout from './GameLayout.vue'
     import TopMenu from './TopMenu.vue'
+    
     import { ref } from 'vue'
     import { addSocketEventHandler } from '@/socket'
+    import config from '@/config'
     
     const container = ref('app-container')
     const turnCount = ref(1)
     const roomId = ref(0)
+    const currState = ref(config.gameState.NEW)
+    const isPlayerTurn = ref(false)
     
-    addSocketEventHandler('turn', (data:string) => {
-        const { count } = JSON.parse(data)
+    addSocketEventHandler('turn', (data:{ count: number }) => {
+        const { count } = data
         turnCount.value = count
+        isPlayerTurn.value = !isPlayerTurn.value
     })
-    addSocketEventHandler('room_id', (data:string) => {
-        const id = JSON.parse(data) 
+
+    addSocketEventHandler('gameCreated', (data:{ roomId: number, isPlayerTurn: boolean }) => {
+        const { roomId: id, isPlayerTurn: isPlayable } = data
         roomId.value = id
+        turnCount.value = 1
+        currState.value = config.gameState.WAITING
+        isPlayerTurn.value = isPlayable
     })
 
 </script>

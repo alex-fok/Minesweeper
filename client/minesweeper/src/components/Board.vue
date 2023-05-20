@@ -44,8 +44,8 @@
         return block["bType"] === BOMB ? "BO" : "BL"
     }
 
-    addSocketEventHandler("reveal", (data: string) => {
-        const blocks:blockInfo[] = JSON.parse(data)
+    addSocketEventHandler("reveal", (data: {blocks:blockInfo[]}) => {
+        const { blocks } = data
         blocks.forEach(block => {
             modifyBoard(store.board, block["x"], block["y"], getDisplayVal(block))
         })
