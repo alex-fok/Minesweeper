@@ -1,5 +1,3 @@
-import gameState from './gameState'
+export { gameState }  from './gameState'
+export { boardSetting } from  './boardSetting'
 
-export default {
-    gameState
-}

@@ -6,12 +6,13 @@
     
     import { ref } from 'vue'
     import { addSocketEventHandler } from '@/socket'
-    import config from '@/config'
+    import { gameState } from '@/config'
+    import { store } from '@/store/boardStore'
     
     const container = ref('app-container')
     const turnCount = ref(1)
-    const roomId = ref(0)
-    const currState = ref(config.gameState.NEW)
+    const roomId = ref(-1)
+    const currState = ref(gameState.NEW)
     const isPlayerTurn = ref(false)
     
     addSocketEventHandler('turn', (data:{ count: number }) => {
@@ -24,8 +25,9 @@
         const { roomId: id, isPlayerTurn: isPlayable } = data
         roomId.value = id
         turnCount.value = 1
-        currState.value = config.gameState.WAITING
+        currState.value = gameState.WAITING
         isPlayerTurn.value = isPlayable
+        store.resetBoard()
     })
 
 </script>

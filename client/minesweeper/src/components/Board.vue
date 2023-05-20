@@ -1,7 +1,7 @@
 <script setup lang='ts'>
     import { socket, addSocketEventHandler } from '@/socket'
-    import { store }from '@/store/boardStore'
-
+    import { store } from '@/store/boardStore'
+    import { boardSetting } from '@/config'
     const [BLANK, BOMB, NUMBER] = [0, 1, 2]
     
     type blockInfo = {
@@ -16,15 +16,9 @@
         show: string
     }
 
-    store.board = store.board.map((_, i) => ({
-        x: i % 26,
-        y: Math.floor(i / 26),
-        show: ""
-    }))
-
     const reveal = (i: number) => {
-        const y = Math.floor(i / 26)
-        const x = i % 26
+        const y = Math.floor(i / boardSetting.SIZE)
+        const x = i % boardSetting.SIZE 
         socket.send(JSON.stringify({
             name: "reveal",
             content: JSON.stringify({x, y})

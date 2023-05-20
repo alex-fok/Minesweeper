@@ -1,7 +1,7 @@
 <script setup lang='ts'>
     import { ref } from 'vue'
     import { socket } from '@/socket'
-    import config from '@/config'
+    import { gameState } from '@/config'
 
     const container = ref('header-container')
     const room = ref('room')
@@ -18,7 +18,7 @@
     }
 
     const joinGame = () => {
-        if (props.gameState !== config.gameState.NEW) return
+        if (props.gameState !== gameState.NEW) return
     }
 </script>
 <template>
