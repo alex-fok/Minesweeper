@@ -40,8 +40,23 @@ func (c *Client) joinGame(msg *Message) {
 		log.Println(err)
 		return
 	}
-	c.lobby.findRoom(joinReq.Id)
+	// Verify Room. Register user if valid
+	r, ok := c.lobby.findRoom(joinReq.Id)
+	if !ok {
+		return
+	}
+	c.room = r
 	c.room.register <- c
+	//
+	content, _ := json.Marshal(struct {
+		IsPlayerTurn bool `json:"isPlayerTurn"`
+	}{
+		IsPlayerTurn: c.room.turn.curr == c,
+	})
+	c.update <- &Action{
+		Name:    "gameJoined",
+		Content: string(content),
+	}
 }
 
 func (c *Client) reveal(msg *Message) {

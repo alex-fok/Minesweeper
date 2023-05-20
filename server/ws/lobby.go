@@ -36,7 +36,7 @@ func (l *Lobby) createRoom(c *Client) {
 			break
 		}
 	}
-	if c.room == nil {
+	if c.room != nil {
 		c.room.unregister <- c
 	}
 	c.room = newRoom(id, c, l)
@@ -56,8 +56,9 @@ func (l *Lobby) createRoom(c *Client) {
 	}
 }
 
-func (l *Lobby) findRoom(id uint) *Room {
-	return l.rooms[id]
+func (l *Lobby) findRoom(id uint) (*Room, bool) {
+	r, ok := l.rooms[id]
+	return r, ok
 }
 
 func (l *Lobby) run() {

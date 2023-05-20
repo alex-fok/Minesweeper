@@ -12,22 +12,28 @@
     const container = ref('app-container')
     const turnCount = ref(1)
     const roomId = ref(-1)
-    const currState = ref(gameState.NEW)
+    const currGameState = ref(gameState.NEW)
     const isPlayerTurn = ref(false)
     
-    addSocketEventHandler('turn', (data:{ count: number }) => {
+    addSocketEventHandler('turnPassed', (data:{ count: number }) => {
         const { count } = data
         turnCount.value = count
         isPlayerTurn.value = !isPlayerTurn.value
     })
 
     addSocketEventHandler('gameCreated', (data:{ roomId: number, isPlayerTurn: boolean }) => {
-        const { roomId: id, isPlayerTurn: isPlayable } = data
+        const { roomId: id, isPlayerTurn: isTurn } = data
         roomId.value = id
         turnCount.value = 1
-        currState.value = gameState.WAITING
-        isPlayerTurn.value = isPlayable
+        currGameState.value = gameState.WAITING
+        isPlayerTurn.value = isTurn
         store.resetBoard()
+    })
+
+    addSocketEventHandler('gameJoined', (data: { isPlayerTurn: boolean }) => {
+        const { isPlayerTurn: isTurn } = data
+        currGameState.value = gameState.PLAYING
+        isPlayerTurn.value = isTurn
     })
 
 </script>

@@ -112,7 +112,7 @@ func (r *Room) revealBlocks(content string) {
 			Count uint `json:"count"`
 		}{Count: r.turn.count})
 		r.broadcast(&Action{
-			Name:    "turn",
+			Name:    "turnPassed",
 			Content: string(turn),
 		})
 	}
