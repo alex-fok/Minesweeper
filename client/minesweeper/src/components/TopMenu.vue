@@ -1,19 +1,19 @@
 <script setup lang='ts'>
-import { socket } from '@/socket'
-import { activeStore } from '@/store'
-
-
-defineProps({
+const props = defineProps({
     roomId: Number,
-    gameState: Number
+    gameState: Number,
+    displayModal: {
+        type: Function,
+        default: (v:string) => {}
+    }
 })
 
 const createRoom = () => {
-    socket.send(JSON.stringify({name: 'newRoom'}))
+    props.displayModal('create')
 }
 
 const joinRoom = () => {
-    activeStore.updateActivity(false)
+    props.displayModal('join')
 }
 </script>
 <template>

@@ -7,14 +7,15 @@ import Modal from './Modal.vue'
 
 import { ref } from 'vue'
 import { addSocketEventHandler } from '@/socket'
-import { gameState } from '@/config'
+import { GAMESETTING } from '@/config'
 import boardStore from '@/store/boardStore'
 import { activeStore } from '@/store'
 
 const turnCount = ref(1)
 const roomId = ref(-1)
-const currGameState = ref(gameState.NEW)
+const currGameState = ref(GAMESETTING.NEW)
 const isPlayerTurn = ref(false)
+const modalContent = ref('createOrJoin')
 
 addSocketEventHandler('turnPassed', (data:{ count: number }) => {
     const { count } = data
@@ -26,28 +27,33 @@ addSocketEventHandler('roomCreated', (data:{ roomId: number, isPlayerTurn: boole
     const { roomId: id, isPlayerTurn: isTurn } = data
     roomId.value = id
     turnCount.value = 1
-    currGameState.value = gameState.WAITING
+    currGameState.value = GAMESETTING.WAITING
     isPlayerTurn.value = isTurn
     boardStore.resetBoard()
 })
 
 addSocketEventHandler('roomJoined', (data: { isPlayerTurn: boolean }) => {
     const { isPlayerTurn: isTurn } = data
-    currGameState.value = gameState.PLAYING
+    currGameState.value = GAMESETTING.PLAYING
     isPlayerTurn.value = isTurn
 })
 
 addSocketEventHandler('newPlayer', (data: {  }) => {
-    currGameState.value = gameState.PLAYING
+    currGameState.value = GAMESETTING.PLAYING
 })
+
+const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
+    modalContent.value = v
+    activeStore.active = false
+}
 </script>
     
 <template>
     <div class='app-container'>
-        <Modal v-if='!activeStore.active' />
+        <Modal v-if='!activeStore.active' :content='modalContent !== `` ? modalContent : undefined'/>
         <GameLayout>
             <template #header>
-                <TopMenu :roomId='roomId'/>
+                <TopMenu :roomId='roomId' :displayModal='displayModal'/>
             </template>
             <Board />
             <Panel :turnCount='turnCount'/> 
