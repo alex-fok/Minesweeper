@@ -1,12 +1,10 @@
 <script setup lang='ts'>
-    import { ref } from 'vue'
-    defineProps({
-        turnCount: Number 
-    })
-    const panel = ref('side-container')
+defineProps({
+    turnCount: Number 
+})
 </script>
 <template>
-    <div :class='panel'>
+    <div class='side-container'>
         <h2>Turn {{ turnCount }}</h2>
         <br/>
         
