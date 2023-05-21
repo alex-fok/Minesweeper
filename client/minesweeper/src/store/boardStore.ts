@@ -15,13 +15,11 @@ const board = new Array(boardSetting.SIZE * boardSetting.SIZE)
         show: ""
     })) as Block[]
 
-const resetBoard = () => {
-    store.board = board.map((_, i) => ({
-        ...board[i], ...{ show: '' }
-    }))
-}
-
-export const store = reactive({
+export default reactive({
     board,
-    resetBoard
+    resetBoard: function() {
+        this.board = this.board.map((_, i) => ({
+        ...this.board[i], ...{ show: '' }
+    }))
+    }
 })

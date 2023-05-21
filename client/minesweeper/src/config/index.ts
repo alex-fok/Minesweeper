@@ -1,3 +1,3 @@
-export { gameState }  from './gameState'
-export { boardSetting } from  './boardSetting'
+export { default as gameState }  from './gameState'
+export { default as boardSetting } from  './boardSetting'
 

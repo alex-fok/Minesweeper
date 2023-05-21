@@ -1,3 +1,3 @@
-export const boardSetting = {
+export default {
     SIZE : 26
 }
