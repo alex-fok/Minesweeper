@@ -72,7 +72,7 @@ const setContent = (v:string) => {
                         :value='alias'
                         @input='setAlias'
                         autofocus />
-                </span> 
+                </span>
             </div>
             <div class='modal-item'>
                 <span :class='createBtn' @click='createRoom'>CREATE</span>
@@ -122,7 +122,6 @@ const setContent = (v:string) => {
         width: 100vw;
         height: 100vh;
         background-color: rgba(207, 207, 207, .4);
-        pointer-events: none;
     }
     .modal {
         margin: 0;
@@ -130,7 +129,7 @@ const setContent = (v:string) => {
         display: flex;
         flex-direction: row;
         align-items: stretch;
-        column-gap: 2rem;
+        column-gap: 1.5rem;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);

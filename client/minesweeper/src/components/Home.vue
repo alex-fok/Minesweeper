@@ -49,8 +49,8 @@ const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
 </script>
     
 <template>
+    <Modal v-if='!activeStore.active' :content='modalContent !== `` ? modalContent : undefined'/>
     <div class='app-container'>
-        <Modal v-if='!activeStore.active' :content='modalContent !== `` ? modalContent : undefined'/>
         <GameLayout>
             <template #header>
                 <TopMenu :roomId='roomId' :displayModal='displayModal'/>
