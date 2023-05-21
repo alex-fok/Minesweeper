@@ -1,54 +1,55 @@
 <script setup lang='ts'>
-    import { socket, addSocketEventHandler } from '@/socket'
-    import { store } from '@/store/boardStore'
-    import { boardSetting } from '@/config'
-    const [BLANK, BOMB, NUMBER] = [0, 1, 2]
-    
-    type blockInfo = {
-        x: number,
-        y: number,
-        bType: number,
-        value: number
-    }
-    type block = {
-        x: number,
-        y: number,
-        show: string
-    }
+import { socket, addSocketEventHandler } from '@/socket'
+import { boardStore } from '@/store'
+import { boardSetting } from '@/config'
 
-    const reveal = (i: number) => {
-        const y = Math.floor(i / boardSetting.SIZE)
-        const x = i % boardSetting.SIZE 
-        socket.send(JSON.stringify({
-            name: "reveal",
-            content: JSON.stringify({x, y})
-        }))
-    }
+type blockInfo = {
+    x: number,
+    y: number,
+    bType: number,
+    value: number
+}
+type block = {
+    x: number,
+    y: number,
+    show: string
+}
 
-    const modifyBoard = (board:block[], x:number, y:number, show: string) => {
-        store.board = board.map((v, _) => {
-            if (v.x === x && v.y === y)
-                v.show = show
-            return v
-        })
-    }
+const [BLANK, BOMB, NUMBER] = [0, 1, 2]
 
-    const getDisplayVal = (block: blockInfo) : string => {
-        if (block["bType"] === NUMBER) return block["value"].toString()
-        return block["bType"] === BOMB ? "BO" : "BL"
-    }
+const reveal = (i: number) => {
+    const y = Math.floor(i / boardSetting.SIZE)
+    const x = i % boardSetting.SIZE
+    socket.send(JSON.stringify({
+        name: 'reveal',
+        content: JSON.stringify({x, y})
+    }))
+}
 
-    addSocketEventHandler("reveal", (data: {blocks:blockInfo[]}) => {
-        const { blocks } = data
-        blocks.forEach(block => {
-            modifyBoard(store.board, block["x"], block["y"], getDisplayVal(block))
-        })
+const modifyBoard = (board:block[], x:number, y:number, show: string) => {
+    boardStore.board = board.map((v, _) => {
+        if (v.x === x && v.y === y)
+            v.show = show
+        return v
     })
+}
+
+const getDisplayVal = (block: blockInfo) : string => {
+    if (block['bType'] === NUMBER) return block['value'].toString()
+    return block['bType'] === BOMB ? 'BO' : 'BL'
+}
+
+addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
+    const { blocks } = data
+    blocks.forEach(block => {
+        modifyBoard(boardStore.board, block['x'], block['y'], getDisplayVal(block))
+    })
+})
 </script>
 <template>
     <div class='board'>
        <div
-          v-for='(block, i) in store.board'
+          v-for='(block, i) in boardStore.board'
           @click='reveal(i)'
           :key='i'
         >

@@ -12,7 +12,7 @@ const board = new Array(boardSetting.SIZE * boardSetting.SIZE)
     .map((_, i) => ({
         x: i % boardSetting.SIZE,
         y: Math.floor(i / boardSetting.SIZE),
-        show: ""
+        show: ''
     })) as Block[]
 
 export default reactive({
