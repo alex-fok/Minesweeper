@@ -1,31 +1,26 @@
 <script setup lang='ts'>
-    import { ref } from 'vue'
-    import { socket } from '@/socket'
-    import { gameState } from '@/config'
+import { socket } from '@/socket'
+import { activeStore } from '@/store'
 
-    const container = ref('header-container')
-    const room = ref('room')
-    const menuItem = ref('menu-item')
-    const button = ref('button')
 
-    const props = defineProps({
-        roomId: Number,
-        gameState: Number
-    })
+defineProps({
+    roomId: Number,
+    gameState: Number
+})
 
-    const createGame = () => {
-        socket.send(JSON.stringify({name: 'newGame'}))
-    }
+const createRoom = () => {
+    socket.send(JSON.stringify({name: 'newRoom'}))
+}
 
-    const joinGame = () => {
-        if (props.gameState !== gameState.NEW) return
-    }
+const joinRoom = () => {
+    activeStore.updateActivity(false)
+}
 </script>
 <template>
-    <div :class='container'>
-        <div :class='menuItem'><div :class='room'>Room #{{ roomId && roomId >= 0 ? roomId : ' (Loading...)' }}</div></div>
-        <div :class='menuItem'><div :class='button' @click='createGame'>Create Game</div></div>
-        <div :class='menuItem'><div :class='button' @click='joinGame'>Join Game</div></div>
+    <div class='header-container'>
+        <div class='menu-item'><div class='room'>Room #{{ roomId && roomId >= 0 ? roomId : ' (Loading...)' }}</div></div>
+        <div class='menu-item'><div class='button' @click='createRoom()'>Create Room</div></div>
+        <div class='menu-item'><div class='button' @click='joinRoom()'>Join Room</div></div>
     </div>
 </template>
 <style scoped>

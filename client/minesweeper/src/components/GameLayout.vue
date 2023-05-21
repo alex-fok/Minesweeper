@@ -1,11 +1,8 @@
-<script setup lang='ts'>
-import {ref} from 'vue'
-const container = ref('main-container')
-</script>
 <template>
-<div :class='container'>
-    <slot />
-</div>
+    <slot name='header'></slot>
+    <div class='main-container'>
+        <slot></slot>
+    </div>
 </template>
 <style scoped>
     .main-container {
