@@ -30,11 +30,11 @@ func newClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	}
 }
 
-func (c *Client) newGame() {
+func (c *Client) newRoom() {
 	c.lobby.createRoom(c)
 }
 
-func (c *Client) joinGame(msg *Message) {
+func (c *Client) joinRoom(msg *Message) {
 	var joinReq JoinRequest
 	if err := json.Unmarshal([]byte(msg.Content), &joinReq); err != nil {
 		log.Println(err)
@@ -47,15 +47,32 @@ func (c *Client) joinGame(msg *Message) {
 	}
 	c.room = r
 	c.room.register <- c
-	//
-	content, _ := json.Marshal(struct {
+
+	isClientCurr := c.room.turn.curr == c
+
+	// Send Client 'gameJoined' message
+	joinedMsg, _ := json.Marshal(struct {
 		IsPlayerTurn bool `json:"isPlayerTurn"`
 	}{
-		IsPlayerTurn: c.room.turn.curr == c,
+		IsPlayerTurn: isClientCurr,
 	})
 	c.update <- &Action{
 		Name:    "gameJoined",
-		Content: string(content),
+		Content: string(joinedMsg),
+	}
+
+	// Send opponent 'newPlayer' message
+	newPlayerMsg, _ := json.Marshal(struct {
+	}{})
+	var opponent *Client
+	if isClientCurr {
+		opponent = c.room.turn.next
+	} else {
+		opponent = c.room.turn.curr
+	}
+	opponent.update <- &Action{
+		Name:    "newPlayer",
+		Content: string(newPlayerMsg),
 	}
 }
 
@@ -105,10 +122,10 @@ func (c *Client) readBuffer() {
 			return
 		}
 		switch msg.Name {
-		case "newGame":
-			go c.newGame()
-		case "joinGame":
-			go c.joinGame(&msg)
+		case "newRoom":
+			go c.newRoom()
+		case "joinRoom":
+			go c.joinRoom(&msg)
 		case "reveal":
 			go c.reveal(&msg)
 		default:
