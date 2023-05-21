@@ -7,6 +7,9 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+type CreateRequest struct {
+	Alias string `json:"alias"`
+}
 type JoinRequest struct {
 	Id uint `json:"id"`
 }
@@ -19,6 +22,7 @@ type Client struct {
 	conn   *websocket.Conn
 	lobby  *Lobby
 	room   *Room
+	alias  string
 	update chan *Action
 }
 
@@ -26,11 +30,18 @@ func newClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	return &Client{
 		conn:   conn,
 		lobby:  lobby,
+		alias:  "Anonymous",
 		update: make(chan *Action),
 	}
 }
 
-func (c *Client) newRoom() {
+func (c *Client) createRoom(msg *Message) {
+	var createReq CreateRequest
+	if err := json.Unmarshal([]byte(msg.Content), &createReq); err != nil {
+		log.Println(err)
+		return
+	}
+	c.alias = createReq.Alias
 	c.lobby.createRoom(c)
 }
 
@@ -122,8 +133,8 @@ func (c *Client) readBuffer() {
 			return
 		}
 		switch msg.Name {
-		case "newRoom":
-			go c.newRoom()
+		case "createRoom":
+			go c.createRoom(&msg)
 		case "joinRoom":
 			go c.joinRoom(&msg)
 		case "reveal":
