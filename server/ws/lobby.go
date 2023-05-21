@@ -51,7 +51,7 @@ func (l *Lobby) createRoom(c *Client) {
 		IsPlayerTurn: c == c.room.turn.curr,
 	})
 	c.update <- &Action{
-		Name:    "gameCreated",
+		Name:    "roomCreated",
 		Content: string(content),
 	}
 }

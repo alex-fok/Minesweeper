@@ -50,14 +50,14 @@ func (c *Client) joinRoom(msg *Message) {
 
 	isClientCurr := c.room.turn.curr == c
 
-	// Send Client 'gameJoined' message
+	// Send Client 'roomJoined' message
 	joinedMsg, _ := json.Marshal(struct {
 		IsPlayerTurn bool `json:"isPlayerTurn"`
 	}{
 		IsPlayerTurn: isClientCurr,
 	})
 	c.update <- &Action{
-		Name:    "gameJoined",
+		Name:    "roomJoined",
 		Content: string(joinedMsg),
 	}
 
