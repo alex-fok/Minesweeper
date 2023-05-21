@@ -32,7 +32,6 @@ const joinRoom = () => {
         user-select: none;
     }
     .menu-item {
-        position: relative;
         padding: 0rem 1rem;
         line-height: 4rem;
         vertical-align: middle;
