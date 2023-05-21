@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { socket, addSocketEventHandler } from '@/socket'
 import { boardStore } from '@/store'
-import { boardSetting } from '@/config'
+import { BOARDSETTING } from '@/config'
 
 type blockInfo = {
     x: number,
@@ -18,8 +18,8 @@ type block = {
 const [BLANK, BOMB, NUMBER] = [0, 1, 2]
 
 const reveal = (i: number) => {
-    const y = Math.floor(i / boardSetting.SIZE)
-    const x = i % boardSetting.SIZE
+    const y = Math.floor(i / BOARDSETTING.SIZE)
+    const x = i % BOARDSETTING.SIZE
     socket.send(JSON.stringify({
         name: 'reveal',
         content: JSON.stringify({x, y})

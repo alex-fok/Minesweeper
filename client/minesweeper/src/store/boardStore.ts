@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { boardSetting } from '@/config'
+import { BOARDSETTING } from '@/config'
 
 type Block = {
     x: number,
@@ -7,11 +7,11 @@ type Block = {
     show: string
 }
 
-const board = new Array(boardSetting.SIZE * boardSetting.SIZE)
+const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
     .fill({})
     .map((_, i) => ({
-        x: i % boardSetting.SIZE,
-        y: Math.floor(i / boardSetting.SIZE),
+        x: i % BOARDSETTING.SIZE,
+        y: Math.floor(i / BOARDSETTING.SIZE),
         show: ''
     })) as Block[]
 
