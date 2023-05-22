@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { socket, addSocketEventHandler } from '@/socket'
 import { gameState } from '@/store'
-import { BOARDSETTING } from '@/config'
+import { BOARDSETTING, GAMESTATUS } from '@/config'
 
 type blockInfo = {
     x: number,
@@ -47,26 +47,34 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
 })
 </script>
 <template>
-    <div class='board'>
-        <div
-            v-if='gameState.status'
-            v-for='(block, i) in gameState.board'
-            @click='reveal(i)'
-            :key='i'
-            >
-            {{ block.show }}
+    <div class='board-container'>
+        <div v-if='gameState.status === GAMESTATUS.PLAYING' class='board'>
+            <div
+                v-for='(block, i) in gameState.board'
+                @click='reveal(i)'
+                :key='i'
+                >
+                {{ block.show }}
+            </div>
+        </div>
+        <div v-else>
+            Waiting for player to join...
         </div>
     </div>
 </template>
 <style scoped>
-    .board {
-        justify-content: center;
-        column-gap: 1px;
-        row-gap:1px;
+    .board-container {
         flex-grow: 1;
+        height: 100%;
+        display: flex;
+        align-items:center;
+        justify-content: center;
+    }
+    .board {
         display: grid;
-        grid-template-columns:auto auto auto auto auto auto auto auto auto auto auto 
-        auto auto auto auto auto auto auto auto auto auto auto auto auto auto auto;
+        column-gap: 1px;
+        row-gap: 1px;
+        grid-template-columns: repeat(26, auto);
     }
     .board > div {
         font-family:'Courier New', Courier, monospace;
