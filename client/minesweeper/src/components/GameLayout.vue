@@ -9,9 +9,6 @@
         flex-grow: 1;
         display: flex;
         flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        column-gap: 2rem;
         height: 100%;
     }
 </style>
