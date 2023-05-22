@@ -7,13 +7,11 @@ import Modal from './Modal.vue'
 
 import { ref } from 'vue'
 import { addSocketEventHandler } from '@/socket'
-import { GAMESETTING } from '@/config'
-import boardStore from '@/store/boardStore'
-import { activeStore } from '@/store'
+import { GAMESTATUS } from '@/config'
+import { gameState, uiState } from '@/store'
 
 const turnCount = ref(1)
 const roomId = ref(-1)
-const currGameState = ref(GAMESETTING.NEW)
 const isPlayerTurn = ref(false)
 const modalContent = ref('createOrJoin')
 
@@ -27,36 +25,38 @@ addSocketEventHandler('roomCreated', (data:{ roomId: number, isPlayerTurn: boole
     const { roomId: id, isPlayerTurn: isTurn } = data
     roomId.value = id
     turnCount.value = 1
-    currGameState.value = GAMESETTING.WAITING
+    gameState.status = GAMESTATUS.WAITING
     isPlayerTurn.value = isTurn
-    boardStore.resetBoard()
+    gameState.resetBoard()
 })
 
 addSocketEventHandler('roomJoined', (data: { isPlayerTurn: boolean }) => {
     const { isPlayerTurn: isTurn } = data
-    currGameState.value = GAMESETTING.PLAYING
+    gameState.status = GAMESTATUS.PLAYING
     isPlayerTurn.value = isTurn
 })
 
 addSocketEventHandler('newPlayer', (data: {  }) => {
-    currGameState.value = GAMESETTING.PLAYING
+    gameState.status = GAMESTATUS.PLAYING
 })
 
 const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
     modalContent.value = v
-    activeStore.active = false
+    uiState.active = false
 }
 </script>
     
 <template>
-    <Modal v-if='!activeStore.active' :content='modalContent !== `` ? modalContent : undefined'/>
+    <Modal v-if='!uiState.active' :content='modalContent !== `` ? modalContent : undefined'/>
     <div class='app-container'>
         <GameLayout>
             <template #header>
                 <TopMenu :roomId='roomId' :displayModal='displayModal'/>
             </template>
-            <Board />
-            <Panel :turnCount='turnCount'/> 
+            <template #default v-if='gameState.status !== GAMESTATUS.NEW'>
+                <Board/>
+                <Panel :turnCount='turnCount'/> 
+            </template>
         </GameLayout>
     </div>
 </template>

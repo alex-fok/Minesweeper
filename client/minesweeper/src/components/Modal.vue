@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { ref } from 'vue';
 import { socket } from '@/socket';
-import { activeStore } from '@/store';
+import { uiState } from '@/store';
 
 const props = defineProps({
     // create, join, createOrJoin
@@ -17,7 +17,7 @@ const joinBtn = ref('btn hidden')
 const showingContent = ref('')
 
 const close = () => {
-    activeStore.active = true
+    uiState.active = true
 }
 
 const createRoom = () => {

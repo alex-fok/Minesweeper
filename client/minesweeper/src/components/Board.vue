@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { socket, addSocketEventHandler } from '@/socket'
-import { boardStore } from '@/store'
+import { gameState } from '@/store'
 import { BOARDSETTING } from '@/config'
 
 type blockInfo = {
@@ -27,7 +27,7 @@ const reveal = (i: number) => {
 }
 
 const modifyBoard = (board:block[], x:number, y:number, show: string) => {
-    boardStore.board = board.map((v, _) => {
+    gameState.board = board.map((v, _) => {
         if (v.x === x && v.y === y)
             v.show = show
         return v
@@ -42,18 +42,19 @@ const getDisplayVal = (block: blockInfo) : string => {
 addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
     const { blocks } = data
     blocks.forEach(block => {
-        modifyBoard(boardStore.board, block['x'], block['y'], getDisplayVal(block))
+        modifyBoard(gameState.board, block['x'], block['y'], getDisplayVal(block))
     })
 })
 </script>
 <template>
     <div class='board'>
-       <div
-          v-for='(block, i) in boardStore.board'
-          @click='reveal(i)'
-          :key='i'
-        >
-        {{ block.show }}
+        <div
+            v-if='gameState.status'
+            v-for='(block, i) in gameState.board'
+            @click='reveal(i)'
+            :key='i'
+            >
+            {{ block.show }}
         </div>
     </div>
 </template>

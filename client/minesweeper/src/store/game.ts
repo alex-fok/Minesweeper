@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { BOARDSETTING } from '@/config'
+import { BOARDSETTING, GAMESTATUS } from '@/config'
 
 type Block = {
     x: number,
@@ -17,6 +17,7 @@ const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
 
 export default reactive({
     board,
+    status: GAMESTATUS.NEW,
     resetBoard: function() {
         this.board = this.board.map((_, i) => ({
         ...this.board[i], ...{ show: '' }

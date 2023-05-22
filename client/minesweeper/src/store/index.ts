@@ -1,2 +1,2 @@
-export { default as activeStore } from './activeStore'
-export { default as boardStore } from './boardStore'
+export { default as uiState } from './ui'
+export { default as gameState } from './game'
