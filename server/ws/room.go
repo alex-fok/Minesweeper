@@ -2,7 +2,6 @@ package ws
 
 import (
 	"encoding/json"
-	"math"
 	"math/rand"
 	"minesweeper/boardhelper"
 	"time"
@@ -13,6 +12,12 @@ type Action struct {
 	Content string `json:"content"`
 }
 
+type Turn struct {
+	count uint
+	curr  *Client
+	next  *Client
+}
+
 type Room struct {
 	id            uint
 	clients       map[*Client]bool
@@ -20,14 +25,10 @@ type Room struct {
 	clientCount   uint
 	board         [][]boardhelper.Block
 	actionHandler map[string]func(string)
-	turn          struct {
-		count uint
-		curr  *Client
-		next  *Client
-	}
-	update     chan *Action
-	register   chan *Client
-	unregister chan *Client
+	turn          Turn
+	update        chan *Action
+	register      chan *Client
+	unregister    chan *Client
 }
 
 const DEFAULT_SIZE = 26
@@ -40,9 +41,14 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 		lobby:       l,
 		clientCount: 0,
 		board:       boardhelper.GetBoard(DEFAULT_SIZE, DEFAULT_BOMB_COUNT),
-		update:      make(chan *Action),
-		register:    make(chan *Client),
-		unregister:  make(chan *Client),
+		turn: Turn{
+			count: 0,
+			curr:  nil,
+			next:  nil,
+		},
+		update:     make(chan *Action),
+		register:   make(chan *Client),
+		unregister: make(chan *Client),
 	}
 	// Init handler
 	room.actionHandler = make(map[string]func(string))
@@ -51,29 +57,35 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 	// Init turn-related info
 	room.turn.count = 1
 
-	rand.Seed(time.Now().UnixNano())
-	if math.Round(float64(rand.Intn(2))) == 0 {
-		room.turn.curr, room.turn.next = c, nil
-	} else {
-		room.turn.curr, room.turn.next = nil, c
-	}
+	room.assignTurn(c)
 	room.clients[c] = true
 	return &room
 }
 
+func (r *Room) assignTurn(c *Client) {
+	isEmpty := r.turn.curr == nil && r.turn.next == nil
+	if isEmpty {
+		rand.Seed(time.Now().UnixNano())
+		if rand.Intn(2) == 0 {
+			r.turn.curr = c
+		} else {
+			r.turn.next = c
+		}
+	} else if r.turn.curr == nil {
+		r.turn.curr = c
+	} else if r.turn.next == nil { // Not 'else'. Could be more than 3 person in a room
+		r.turn.next = c
+	}
+}
+
 func (r *Room) isPlayable(c *Client) bool {
-	return true
-	//return r.turn.curr == c && r.turn.next != nil
+	return r.turn.curr == c && r.turn.next != nil
 }
 
 func (r *Room) registerClient(c *Client) {
 	r.clients[c] = true
+	r.assignTurn(c)
 	r.clientCount++
-	if r.turn.curr == nil {
-		r.turn.curr = c
-	} else if r.turn.next == nil {
-		r.turn.next = c
-	}
 }
 
 func (r *Room) unregisterClient(c *Client) {

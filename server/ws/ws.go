@@ -20,11 +20,7 @@ func ServeWs(w http.ResponseWriter, r *http.Request, l *Lobby) {
 		log.Println(err)
 		return
 	}
-	client := &Client{
-		conn:   conn,
-		lobby:  lobby,
-		update: make(chan *Action),
-	}
+	client := NewClient(conn, lobby)
 	go client.readBuffer()
 	go client.writeBuffer()
 }

@@ -26,7 +26,7 @@ type Client struct {
 	update chan *Action
 }
 
-func newClient(conn *websocket.Conn, lobby *Lobby) *Client {
+func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	return &Client{
 		conn:   conn,
 		lobby:  lobby,
@@ -43,6 +43,7 @@ func (c *Client) createRoom(msg *Message) {
 	}
 	c.alias = createReq.Alias
 	c.lobby.createRoom(c)
+	log.Println("Room created by Client", createReq.Alias)
 }
 
 func (c *Client) joinRoom(msg *Message) {
@@ -51,9 +52,13 @@ func (c *Client) joinRoom(msg *Message) {
 		log.Println(err)
 		return
 	}
+	if c.room != nil && c.room.id == joinReq.Id {
+		return
+	}
 	// Verify Room. Register user if valid
 	r, ok := c.lobby.findRoom(joinReq.Id)
 	if !ok {
+		log.Println("Room", joinReq.Id, "not found")
 		return
 	}
 	c.room = r
@@ -77,8 +82,10 @@ func (c *Client) joinRoom(msg *Message) {
 	}{})
 	var opponent *Client
 	if isClientCurr {
+		log.Println("Opponent is next")
 		opponent = c.room.turn.next
 	} else {
+		log.Println("Opponent is curr")
 		opponent = c.room.turn.curr
 	}
 	opponent.update <- &Action{
