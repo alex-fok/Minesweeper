@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue';
+import { ref, onUpdated, onMounted } from 'vue';
 import { socket } from '@/socket';
 import { uiState } from '@/store';
 
@@ -14,7 +14,16 @@ const alias = ref('')
 const roomId = ref('')
 const createBtn = ref('btn hidden')
 const joinBtn = ref('btn hidden')
-const showingContent = ref('')
+const showingContent = ref(props.content)
+
+// Auto Focus when input field is available
+const setFocus = () => {
+    const elCollection = document.getElementsByClassName('autofocus') as HTMLCollectionOf<HTMLInputElement>
+    if (!elCollection.length) return
+    elCollection[0].focus()
+}
+onUpdated(() => setFocus())
+onMounted(() => setFocus())
 
 const close = () => {
     uiState.active = true
@@ -49,10 +58,6 @@ const setRoomId = (event:Event) => {
     joinBtn.value = roomId.value.length ? 'btn' : 'btn hidden'
 }
 
-const getContent = () => {
-    return showingContent.value.length ? showingContent.value : props.content
-}
-
 const setContent = (v:string) => {
     showingContent.value = v
 }
@@ -60,18 +65,17 @@ const setContent = (v:string) => {
 <template>
     <div class='overlay'></div>
     <div class='modal'>
-        <template v-if='getContent() === `create`'>
+        <template v-if='showingContent === `create`'>
             <div class='modal-item'>
                <span>
                     <label for='alias'>Your Alias:</label>
                     <input
                         type='text'
                         id='alias'
-                        class='alias-input'
+                        class='alias-input autofocus'
                         maxlength=12
                         :value='alias'
-                        @input='setAlias'
-                        autofocus />
+                        @input='setAlias' />
                 </span>
             </div>
             <div class='modal-item'>
@@ -79,18 +83,17 @@ const setContent = (v:string) => {
             </div>
             <div class='modal-close' @click='close()'>&#10005;</div>
         </template>
-        <template v-else-if='getContent() === `join`'>
+        <template v-else-if='showingContent === `join`'>
             <div class='modal-item'>
                 <span>
                     <label for='roomId'>Room #</label>
                     <input
                         type='text'
                         id='roomId'
-                        class='room-input'
+                        class='room-input autofocus'
                         maxlength=4
                         :value='roomId'
-                        @input='setRoomId'
-                        autofocus />
+                        @input='setRoomId' />
                 </span>
             </div>
             <div class='modal-item'>
@@ -98,7 +101,7 @@ const setContent = (v:string) => {
             </div>
             <div class='modal-close' @click='close'>&#10005;</div>
         </template>
-        <template v-else-if='getContent() == `createOrJoin`'>
+        <template v-else-if='showingContent == `createOrJoin`'>
             <div class='modal-item'>
                 <span class='btn' @click='setContent(`create`)'>CREATE ROOM</span>
             </div>
