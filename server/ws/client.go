@@ -11,7 +11,8 @@ type CreateRequest struct {
 	Alias string `json:"alias"`
 }
 type JoinRequest struct {
-	Id uint `json:"id"`
+	Id    uint   `json:"id"`
+	Alias string `json:"alias"`
 }
 type Message struct {
 	Name    string `json:"name"`
@@ -43,7 +44,7 @@ func (c *Client) createRoom(msg *Message) {
 	}
 	c.alias = createReq.Alias
 	c.lobby.createRoom(c)
-	log.Println("Room created by Client", createReq.Alias)
+	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 
 func (c *Client) joinRoom(msg *Message) {
@@ -55,43 +56,16 @@ func (c *Client) joinRoom(msg *Message) {
 	if c.room != nil && c.room.id == joinReq.Id {
 		return
 	}
-	// Verify Room. Register user if valid
+	c.alias = joinReq.Alias
+	// Find Room. Register user if valid
 	r, ok := c.lobby.findRoom(joinReq.Id)
 	if !ok {
 		log.Println("Room", joinReq.Id, "not found")
 		return
 	}
+	log.Println("Client", joinReq.Alias, "joined Room", r.id)
 	c.room = r
 	c.room.register <- c
-
-	isClientCurr := c.room.turn.curr == c
-
-	// Send Client 'roomJoined' message
-	joinedMsg, _ := json.Marshal(struct {
-		IsPlayerTurn bool `json:"isPlayerTurn"`
-	}{
-		IsPlayerTurn: isClientCurr,
-	})
-	c.update <- &Action{
-		Name:    "roomJoined",
-		Content: string(joinedMsg),
-	}
-
-	// Send opponent 'newPlayer' message
-	newPlayerMsg, _ := json.Marshal(struct {
-	}{})
-	var opponent *Client
-	if isClientCurr {
-		log.Println("Opponent is next")
-		opponent = c.room.turn.next
-	} else {
-		log.Println("Opponent is curr")
-		opponent = c.room.turn.curr
-	}
-	opponent.update <- &Action{
-		Name:    "newPlayer",
-		Content: string(newPlayerMsg),
-	}
 }
 
 func (c *Client) reveal(msg *Message) {

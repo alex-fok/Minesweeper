@@ -55,14 +55,16 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 	room.actionHandler["reveal"] = room.revealBlocks
 
 	// Init turn-related info
-	room.turn.count = 1
+	room.turn = Turn{
+		count: 1,
+		curr:  nil,
+		next:  nil,
+	}
 
-	room.assignTurn(c)
-	room.clients[c] = true
+	room.registerClient(c)
 	return &room
 }
-
-func (r *Room) assignTurn(c *Client) {
+func (r *Room) assignTurn(c *Client) (*Client, *Client) {
 	isEmpty := r.turn.curr == nil && r.turn.next == nil
 	if isEmpty {
 		rand.Seed(time.Now().UnixNano())
@@ -73,9 +75,10 @@ func (r *Room) assignTurn(c *Client) {
 		}
 	} else if r.turn.curr == nil {
 		r.turn.curr = c
-	} else if r.turn.next == nil { // Not 'else'. Could be more than 3 person in a room
+	} else if r.turn.next == nil { // Not 'else'. Could be more than 3 clients in a room
 		r.turn.next = c
 	}
+	return r.turn.curr, r.turn.next
 }
 
 func (r *Room) isPlayable(c *Client) bool {
@@ -84,8 +87,45 @@ func (r *Room) isPlayable(c *Client) bool {
 
 func (r *Room) registerClient(c *Client) {
 	r.clients[c] = true
-	r.assignTurn(c)
+	curr, next := r.assignTurn(c)
 	r.clientCount++
+
+	isClientCurr := curr == c
+	var opponent *Client
+
+	if isClientCurr {
+		opponent = next
+	} else {
+		opponent = curr
+	}
+
+	// Send Client 'gameStarted' message
+	if opponent == nil {
+		return
+	}
+	type StartMsg struct {
+		Id           uint `json:"id"`
+		IsPlayerTurn bool `json:"isPlayerTurn"`
+	}
+	cliStartMsg, _ := json.Marshal(StartMsg{
+		Id:           r.id,
+		IsPlayerTurn: isClientCurr,
+	})
+
+	oppStartMsg, _ := json.Marshal(StartMsg{
+		Id:           r.id,
+		IsPlayerTurn: !isClientCurr,
+	})
+
+	c.update <- &Action{
+		Name:    "gameStarted",
+		Content: string(cliStartMsg),
+	}
+
+	opponent.update <- &Action{
+		Name:    "gameStarted",
+		Content: string(oppStartMsg),
+	}
 }
 
 func (r *Room) unregisterClient(c *Client) {

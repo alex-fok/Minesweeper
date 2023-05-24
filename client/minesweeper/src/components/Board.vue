@@ -18,6 +18,7 @@ type block = {
 const [BLANK, BOMB, NUMBER] = [0, 1, 2]
 
 const reveal = (i: number) => {
+    if (gameState.status !== GAMESTATUS.PLAYING) return
     const y = Math.floor(i / BOARDSETTING.SIZE)
     const x = i % BOARDSETTING.SIZE
     socket.send(JSON.stringify({
@@ -48,17 +49,25 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
 </script>
 <template>
     <div class='board-container'>
-        <div v-if='gameState.status === GAMESTATUS.PLAYING' class='board'>
-            <div
-                v-for='(block, i) in gameState.board'
-                @click='reveal(i)'
-                :key='i'
-                >
-                {{ block.show }}
-            </div>
-        </div>
-        <div v-else>
+        <div v-if='gameState.status === GAMESTATUS.WAITING_JOIN'>
             Waiting for player to join...
+        </div>
+        <div v-else class='board-wrapper'>
+            <div class='board'>
+                <div
+                    v-for='(block, i) in gameState.board'
+                    @click='reveal(i)'
+                    :key='i'
+                    >
+                    {{ block.show }}
+                </div>
+            </div>
+            <div
+                v-if='gameState.status === GAMESTATUS.WAITING_TURN'
+                class='overlay'
+            >
+               <div class='overlay-text'>Waiting for opponent...</div>
+            </div>
         </div>
     </div>
 </template>
@@ -69,6 +78,20 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
         display: flex;
         align-items:center;
         justify-content: center;
+    }
+    .board-wrapper {
+        position:relative
+    }
+    .overlay {
+        position:absolute;
+        inset: 0;
+        background-color:rgba(52, 52, 52, .7);
+    }
+    .overlay-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
     .board {
         display: grid;
@@ -83,5 +106,4 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
         height: 3vh;
         user-select: none;
     }
-    
 </style>

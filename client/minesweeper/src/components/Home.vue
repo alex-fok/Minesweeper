@@ -10,34 +10,30 @@ import { addSocketEventHandler } from '@/socket'
 import { GAMESTATUS } from '@/config'
 import { gameState, uiState } from '@/store'
 
+const { NEW, WAITING_JOIN, PLAYING, WAITING_TURN } = GAMESTATUS
+
 const turnCount = ref(1)
 const roomId = ref(-1)
-const isPlayerTurn = ref(false)
 const modalContent = ref('createOrJoin')
 
 addSocketEventHandler('turnPassed', (data:{ count: number }) => {
     const { count } = data
     turnCount.value = count
-    isPlayerTurn.value = !isPlayerTurn.value
+    gameState.status = gameState.status === PLAYING ? WAITING_TURN : PLAYING
 })
 
-addSocketEventHandler('roomCreated', (data:{ roomId: number, isPlayerTurn: boolean }) => {
-    const { roomId: id, isPlayerTurn: isTurn } = data
+addSocketEventHandler('roomCreated', (data:{ roomId: number }) => {
+    const { roomId: id } = data
     roomId.value = id
     turnCount.value = 1
-    gameState.status = GAMESTATUS.WAITING
-    isPlayerTurn.value = isTurn
+    gameState.status = WAITING_JOIN
     gameState.resetBoard()
 })
 
-addSocketEventHandler('roomJoined', (data: { isPlayerTurn: boolean }) => {
-    const { isPlayerTurn: isTurn } = data
-    gameState.status = GAMESTATUS.PLAYING
-    isPlayerTurn.value = isTurn
-})
-
-addSocketEventHandler('newPlayer', (data: {  }) => {
-    gameState.status = GAMESTATUS.PLAYING
+addSocketEventHandler('gameStarted', (data: { isPlayerTurn: boolean, id: number }) => {
+    const { isPlayerTurn, id } = data
+    gameState.status = isPlayerTurn ? PLAYING : WAITING_TURN
+    roomId.value = id
 })
 
 const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
@@ -53,7 +49,7 @@ const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
             <template #header>
                 <TopMenu :roomId='roomId' :displayModal='displayModal'/>
             </template>
-            <template #default v-if='gameState.status !== GAMESTATUS.NEW'>
+            <template #default v-if='gameState.status !== NEW'>
                 <Board/>
                 <Panel :turnCount='turnCount'/> 
             </template>

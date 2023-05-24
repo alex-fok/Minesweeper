@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref, onUpdated, onMounted } from 'vue';
+import { ref, onMounted, watch, nextTick } from 'vue';
 import { socket } from '@/socket';
 import { uiState } from '@/store';
 
@@ -16,14 +16,15 @@ const createBtn = ref('btn hidden')
 const joinBtn = ref('btn hidden')
 const showingContent = ref(props.content)
 
-// Auto Focus when input field is available
-const setFocus = () => {
+// Auto focus when input field is available
+const setFocus = async () => {
+    await nextTick()
     const elCollection = document.getElementsByClassName('autofocus') as HTMLCollectionOf<HTMLInputElement>
     if (!elCollection.length) return
     elCollection[0].focus()
 }
-onUpdated(() => setFocus())
-onMounted(() => setFocus())
+onMounted(setFocus)
+watch(showingContent, setFocus)
 
 const close = () => {
     uiState.active = true
@@ -43,7 +44,10 @@ const joinRoom = () => {
     if (Number.isNaN(roomIdInt)) return
     socket.send(JSON.stringify({
         name: 'joinRoom',
-        content: JSON.stringify({id: roomIdInt})
+        content: JSON.stringify({
+            id: roomIdInt,
+            alias: alias.value
+        })
     }))
     close()
 }
@@ -67,7 +71,7 @@ const setContent = (v:string) => {
     <div class='modal'>
         <template v-if='showingContent === `create`'>
             <div class='modal-item'>
-               <span>
+               <div class='info'>
                     <label for='alias'>Your Alias:</label>
                     <input
                         type='text'
@@ -76,7 +80,7 @@ const setContent = (v:string) => {
                         maxlength=12
                         :value='alias'
                         @input='setAlias' />
-                </span>
+                </div>
             </div>
             <div class='modal-item'>
                 <span :class='createBtn' @click='createRoom'>CREATE</span>
@@ -85,7 +89,7 @@ const setContent = (v:string) => {
         </template>
         <template v-else-if='showingContent === `join`'>
             <div class='modal-item'>
-                <span>
+                <div class='info'>
                     <label for='roomId'>Room #</label>
                     <input
                         type='text'
@@ -94,7 +98,16 @@ const setContent = (v:string) => {
                         maxlength=4
                         :value='roomId'
                         @input='setRoomId' />
-                </span>
+                </div>
+                <div class='info'>
+                    <label for='alias'>Your Alias:</label>
+                    <input
+                        type='text'
+                        id='alias'
+                        class='alias-input'
+                        maxlength='12'
+                        v-model='alias' />
+                </div>
             </div>
             <div class='modal-item'>
                 <span :class='joinBtn' @click='joinRoom'>JOIN</span>
@@ -122,8 +135,7 @@ const setContent = (v:string) => {
 <style scoped>
     .overlay {
         position: absolute;
-        width: 100vw;
-        height: 100vh;
+        inset: 0;
         background-color: rgba(207, 207, 207, .4);
     }
     .modal {
@@ -150,19 +162,39 @@ const setContent = (v:string) => {
         flex-grow: 1;
         display: flex;
         margin: auto;
+        column-gap: 1rem;
     }
-    .modal-item input {
+    .info {
+        display: flex;
+        flex-direction: column;
+        row-gap: .5rem;
+    }
+
+    .info:not(:first-child) {
+        border-left: 1px solid #9F9F9F;
+        padding-left: 1rem;
+    }
+
+    .info label {
+        margin-right: .5rem;
+    }
+    .info input {
         background: transparent;
         border: 0;
         color: white;
-        margin: 0 .5rem;
         outline-width: 0;
+        text-align: center;
+        box-sizing: border-box;
+    }
+    .modal-item input:not(:focus) {
+        border-bottom: 1px solid #9F9F9F;
+        margin-bottom: -.8px;
     }
     .alias-input {
         width: 8rem;
     }
     .room-input {
-        width: 3rem;
+        width: 4rem;
     }
     .btn {
         font-size: .8rem;
