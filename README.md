@@ -38,4 +38,3 @@ At /client/minesweeper, run
 ```
 npm run dev
 ```
-
