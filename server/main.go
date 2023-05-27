@@ -12,8 +12,7 @@ import (
 
 func main() {
 	var l *ws.Lobby = ws.CreateLobby()
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-	})
+	http.Handle("/", http.FileServer(http.Dir("./dist")))
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		//	allowCors(&w)
 		ws.ServeWs(w, r, l)
