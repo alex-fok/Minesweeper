@@ -137,6 +137,7 @@ const setContent = (v:string) => {
         position: absolute;
         inset: 0;
         background-color: rgba(207, 207, 207, .4);
+        z-index: 1;
     }
     .modal {
         margin: 0;
@@ -148,6 +149,7 @@ const setContent = (v:string) => {
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
+        z-index: 2;
         padding: 1.5rem 2rem;
         background-color: rgba(52, 52, 52, .95);
         border-radius: .4rem;
