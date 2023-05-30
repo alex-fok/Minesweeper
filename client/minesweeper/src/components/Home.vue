@@ -31,6 +31,7 @@ addSocketEventHandler('roomCreated', (data:{ roomId: number }) => {
 })
 
 addSocketEventHandler('gameStarted', (data: { isPlayerTurn: boolean, id: number }) => {
+    gameState.resetBoard()
     const { isPlayerTurn, id } = data
     gameState.status = isPlayerTurn ? PLAYING : WAITING_TURN
     roomId.value = id

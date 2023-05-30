@@ -32,12 +32,14 @@ const joinRoom = () => {
         user-select: none;
     }
     .menu-item {
+        display: flex;
         padding: 0rem 1rem;
-        line-height: 4rem;
-        vertical-align: middle;
+        height: 4rem;
+        align-items: center;
     }
     .room {
         font-size: 1.2rem;
+        user-select: text;
     }
     .button {
         color:#9F9F9F;
