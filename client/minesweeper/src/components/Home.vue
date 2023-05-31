@@ -42,25 +42,15 @@ const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
     uiState.active = false
 }
 </script>
-    
 <template>
     <Modal v-if='!uiState.active' :content='modalContent !== `` ? modalContent : undefined'/>
-    <div class='app-container'>
-        <GameLayout>
-            <template #header>
-                <TopMenu :roomId='roomId' :displayModal='displayModal'/>
-            </template>
-            <template #default v-if='gameState.status !== NEW'>
-                <Board/>
-                <Panel :turnCount='turnCount'/> 
-            </template>
-        </GameLayout>
-    </div>
+    <GameLayout>
+        <template #header>
+            <TopMenu :roomId='roomId' :displayModal='displayModal'/>
+        </template>
+        <template #default v-if='gameState.status !== NEW'>
+            <Board/>
+            <Panel :turnCount='turnCount'/> 
+        </template>
+    </GameLayout>
 </template>
-<style scoped>
-    .app-container {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-    }
-</style>

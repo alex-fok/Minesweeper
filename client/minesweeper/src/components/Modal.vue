@@ -188,7 +188,7 @@ const setContent = (v:string) => {
         text-align: center;
         box-sizing: border-box;
     }
-    .modal-item input:not(:focus) {
+    .info input:not(:focus) {
         border-bottom: 1px solid #9F9F9F;
         margin-bottom: -.8px;
     }
