@@ -41,7 +41,8 @@ const joinRoom = () => {
                 class='room-input autofocus'
                 maxlength=4
                 :value='roomId'
-                @input='setRoomId' />
+                @input='setRoomId'
+            />
         </div>
         <div class='info'>
             <label for='alias'>Your Alias:</label>
@@ -50,7 +51,8 @@ const joinRoom = () => {
                 id='alias'
                 class='alias-input'
                 maxlength='12'
-                v-model='alias' />
+                v-model='alias'
+            />
         </div>
     </div>
     <div class='modal-item'>

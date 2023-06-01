@@ -91,30 +91,11 @@ func (r *Room) isPlayable(c *Client) bool {
 	return r.turn.curr == c && r.turn.next != nil
 }
 
-func (r *Room) registerClient(c *Client) {
-	r.clients[c] = true
-	curr, next := r.assignTurn(c)
-	r.clientCount++
-
-	isClientCurr := curr == c
-	var opponent *Client
-
-	if isClientCurr {
-		opponent = next
-	} else {
-		opponent = curr
-	}
-
-	// Send Client 'gameStarted' message
-	if opponent == nil {
-		return
-	}
-
+func (r *Room) startGame() {
 	type PlayerInfo struct {
 		Alias string `json:"alias"`
 		Score uint   `json:"score"`
 	}
-
 	type StartMsg struct {
 		Id           uint       `json:"id"`
 		IsPlayerTurn bool       `json:"isPlayerTurn"`
@@ -122,49 +103,58 @@ func (r *Room) registerClient(c *Client) {
 		Player       PlayerInfo `json:"player"`
 		Opponent     PlayerInfo `json:"opponent"`
 	}
-
 	// Init game stat
 	r.gameStat = GameStat{
 		bombsLeft: DEFAULT_BOMB_COUNT,
 		score:     make(map[*Client]uint),
 	}
-	r.gameStat.score[c] = 0
-	r.gameStat.score[opponent] = 0
+	r.gameStat.score[r.turn.curr] = 0
+	r.gameStat.score[r.turn.next] = 0
 
-	cliInfo := PlayerInfo{
-		Alias: c.alias,
+	currInfo := PlayerInfo{
+		Alias: r.turn.curr.alias,
 		Score: 0,
 	}
 
-	oppInfo := PlayerInfo{
-		Alias: opponent.alias,
+	nextInfo := PlayerInfo{
+		Alias: r.turn.next.alias,
 		Score: 0,
 	}
 
-	cliStartMsg, _ := json.Marshal(StartMsg{
+	currStartMsg, _ := json.Marshal(StartMsg{
 		Id:           r.id,
-		IsPlayerTurn: isClientCurr,
+		IsPlayerTurn: true,
 		BombsLeft:    DEFAULT_BOMB_COUNT,
-		Player:       cliInfo,
-		Opponent:     oppInfo,
+		Player:       currInfo,
+		Opponent:     nextInfo,
 	})
 
-	oppStartMsg, _ := json.Marshal(StartMsg{
+	nextStartMsg, _ := json.Marshal(StartMsg{
 		Id:           r.id,
-		IsPlayerTurn: !isClientCurr,
+		IsPlayerTurn: false,
 		BombsLeft:    DEFAULT_BOMB_COUNT,
-		Player:       oppInfo,
-		Opponent:     cliInfo,
+		Player:       nextInfo,
+		Opponent:     currInfo,
 	})
 
-	c.update <- &Action{
+	r.turn.curr.update <- &Action{
 		Name:    "gameStarted",
-		Content: string(cliStartMsg),
+		Content: string(currStartMsg),
 	}
 
-	opponent.update <- &Action{
+	r.turn.next.update <- &Action{
 		Name:    "gameStarted",
-		Content: string(oppStartMsg),
+		Content: string(nextStartMsg),
+	}
+}
+
+func (r *Room) registerClient(c *Client) {
+	r.clients[c] = true
+	r.assignTurn(c)
+	r.clientCount++
+
+	if r.turn.curr != nil && r.turn.next != nil {
+		r.startGame()
 	}
 }
 
@@ -182,6 +172,66 @@ func (r *Room) unregisterClient(c *Client) {
 	}
 }
 
+func (r *Room) advanceTurn() {
+	// Update turn-related info
+	r.turn.count++
+	r.turn.next, r.turn.curr = r.turn.curr, r.turn.next
+
+	type TurnPassed struct {
+		Count uint `json:"count"`
+	}
+
+	turn, _ := json.Marshal(TurnPassed{Count: r.turn.count})
+	r.broadcast(&Action{
+		Name:    "turnPassed",
+		Content: string(turn),
+	})
+}
+
+func (r *Room) scoreCurrPlayer() {
+	// Update current player's score
+	type Score struct {
+		Player    uint `json:"player"`
+		Opponent  uint `json:"opponent"`
+		BombsLeft uint `json:"bombsLeft"`
+	}
+	r.gameStat.score[r.turn.curr]++
+	r.gameStat.bombsLeft--
+
+	currScore, _ := json.Marshal(Score{
+		Player:    r.gameStat.score[r.turn.curr],
+		Opponent:  r.gameStat.score[r.turn.next],
+		BombsLeft: r.gameStat.bombsLeft,
+	})
+
+	nextScore, _ := json.Marshal(Score{
+		Player:    r.gameStat.score[r.turn.next],
+		Opponent:  r.gameStat.score[r.turn.curr],
+		BombsLeft: r.gameStat.bombsLeft,
+	})
+
+	// Check winning condition
+	if r.gameStat.score[r.turn.curr] > DEFAULT_BOMB_COUNT/2 {
+		r.turn.curr.update <- &Action{
+			Name:    "gameWon",
+			Content: string(currScore),
+		}
+		r.turn.next.update <- &Action{
+			Name:    "gameLost",
+			Content: string(nextScore),
+		}
+	} else {
+		r.turn.curr.update <- &Action{
+			Name:    "scoreUpdated",
+			Content: string(currScore),
+		}
+		r.turn.next.update <- &Action{
+			Name:    "scoreUpdated",
+			Content: string(nextScore),
+		}
+	}
+}
+
 func (r *Room) revealBlocks(content string) {
 	// Get revealable blocks
 	var v boardhelper.Vertex
@@ -190,55 +240,16 @@ func (r *Room) revealBlocks(content string) {
 		return
 	}
 	revealables := boardhelper.GetRevealables(&v, r.board)
+
 	// Update visited blocks
 	for _, block := range revealables {
 		r.board[block.Y][block.X].Visited = true
 	}
-
+	// Advance turn or score current player
 	if revealables[0].Type != boardhelper.BOMB {
-		// Update turn-related info
-		r.turn.count++
-		r.turn.next, r.turn.curr = r.turn.curr, r.turn.next
-		type TurnPassed struct {
-			Count uint `json:"count"`
-		}
-		turn, _ := json.Marshal(TurnPassed{Count: r.turn.count})
-		r.broadcast(&Action{
-			Name:    "turnPassed",
-			Content: string(turn),
-		})
+		r.advanceTurn()
 	} else {
-		// Update score
-		r.gameStat.score[r.turn.curr]++
-		r.gameStat.bombsLeft--
-
-		type Score struct {
-			Player    uint `json:"player"`
-			Opponent  uint `json:"opponent"`
-			BombsLeft uint `json:"bombsLeft"`
-		}
-
-		currScore, _ := json.Marshal(Score{
-			Player:    r.gameStat.score[r.turn.curr],
-			Opponent:  r.gameStat.score[r.turn.next],
-			BombsLeft: r.gameStat.bombsLeft,
-		})
-
-		nextScore, _ := json.Marshal(Score{
-			Player:    r.gameStat.score[r.turn.next],
-			Opponent:  r.gameStat.score[r.turn.curr],
-			BombsLeft: r.gameStat.bombsLeft,
-		})
-
-		r.turn.curr.update <- &Action{
-			Name:    "scoreUpdated",
-			Content: string(currScore),
-		}
-
-		r.turn.next.update <- &Action{
-			Name:    "scoreUpdated",
-			Content: string(nextScore),
-		}
+		r.scoreCurrPlayer()
 	}
 	// Broadcast revealed blocks to clients
 	data, _ := json.Marshal(struct {

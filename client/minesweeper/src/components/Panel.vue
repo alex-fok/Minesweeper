@@ -20,14 +20,14 @@ const isGameStarted = computed(() =>
         <div class='player-list'>
             <div :class='isTurn ? `player-item selected` : `player-item`'>
                 <div class='player-name'>
-                    <span :class='isTurn ? `` : `hide`'>>></span>
+                    <span :class='isTurn ? `` : `hidden`'>>></span>
                     <span>{{ gameState.player.name }}</span>
                 </div>
                 <div class='score'>{{ gameState.player.score }}</div>
             </div>
             <div :class='isOppTurn ? `player-item selected` : `player-item`'>
                 <div class='player-name'>
-                    <span :class='isOppTurn ? `` : `hide`'>>></span>
+                    <span :class='isOppTurn ? `` : `hidden`'>>></span>
                     <span>{{ gameState.opponent.name }}</span>
                 </div>
                 <div class='score'>{{ gameState.opponent.score }}</div>
@@ -78,7 +78,7 @@ const isGameStarted = computed(() =>
         text-align: center;
         margin: auto;
     }
-    .hide {
+    .hidden {
         visibility: hidden;
     }
 </style>

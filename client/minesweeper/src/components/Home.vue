@@ -16,6 +16,17 @@ const turnCount = ref(1)
 const roomId = ref(-1)
 const modalContent = ref('createOrJoin')
 
+const displayModal = (v: 'create' | 'join' | 'createOrJoin' | 'gameEnded') => {
+    modalContent.value = v
+    uiState.active = false
+}
+
+const updateGameStat = (playerScore: number, opponentScore: number, bombsLeft: number) => {
+    gameState.player.score = playerScore
+    gameState.opponent.score = opponentScore
+    gameState.bombsLeft = bombsLeft
+}
+
 addSocketEventHandler('turnPassed', (data:{ count: number }) => {
     const { count } = data
     turnCount.value = count
@@ -56,15 +67,23 @@ addSocketEventHandler('gameStarted', (data: {
 
 addSocketEventHandler('scoreUpdated', (data: { player: number, opponent: number, bombsLeft: number }) => {
     const { player, opponent, bombsLeft } = data
-    gameState.player.score = player
-    gameState.opponent.score = opponent
-    gameState.bombsLeft = bombsLeft
+    updateGameStat(player, opponent, bombsLeft)
 })
 
-const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {
-    modalContent.value = v
-    uiState.active = false
-}
+addSocketEventHandler('gameWon', (data: { player: number, opponent: number, bombsLeft: number}) => {
+    const { player, opponent, bombsLeft } = data
+    updateGameStat(player, opponent, bombsLeft)
+    gameState.status = GAMESTATUS.GAME_WON
+    displayModal('gameEnded')
+})
+
+addSocketEventHandler('gameLost', (data: { player: number, opponent: number, bombsLeft: number}) => {
+    const { player, opponent, bombsLeft } = data
+    updateGameStat(player, opponent, bombsLeft)
+    gameState.status = GAMESTATUS.GAME_LOST
+    displayModal('gameEnded')
+})
+
 </script>
 <template>
     <Modal v-if='!uiState.active' :content='modalContent !== `` ? modalContent : undefined'/>

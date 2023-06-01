@@ -4,6 +4,7 @@ import { uiState } from '@/store';
 import Create from './modal/Create.vue'
 import Join from './modal/Join.vue'
 import CreateOrJoin from './modal/CreateOrJoin.vue';
+import GameEnded from './modal/GameEnded.vue';
 import NoContent from './modal/NoContent.vue'
 
 const props = defineProps({
@@ -43,11 +44,14 @@ watch(showingContent, setFocus)
         <template v-else-if='showingContent === `join`'>
            <Join :close='close'/> 
         </template>
-        <template v-else-if='showingContent == `createOrJoin`'>
+        <template v-else-if='showingContent === `createOrJoin`'>
            <CreateOrJoin :close='close' :setContent='setContent'/>
         </template>
+        <template v-else-if='showingContent === `gameEnded`'>
+            <GameEnded :close='close'/>
+        </template>
         <template v-else>
-           <NoContent :close='close' />
+           <NoContent :close='close'/>
         </template>
     </div>
 </template>
