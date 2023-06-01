@@ -18,9 +18,21 @@ const joinRoom = () => {
 </script>
 <template>
     <div class='header-container'>
-        <div class='menu-item'><div class='room'>Room #{{ roomId !== undefined && roomId >= 0 ? roomId : ' (Loading...)' }}</div></div>
-        <div class='menu-item'><div class='button' @click='createRoom()'>Create Room</div></div>
-        <div class='menu-item'><div class='button' @click='joinRoom()'>Join Room</div></div>
+        <div class='menu-item'>
+            <div class='room'>
+                Room #{{ roomId !== undefined && roomId >= 0 ? roomId : ' (Loading...)' }}
+            </div>
+        </div>
+        <div class='menu-item'>
+            <div class='button' @click='createRoom()'>
+                Create Room
+            </div>
+        </div>
+        <div class='menu-item'>
+            <div class='button' @click='joinRoom()'>
+                Join Room
+            </div>
+        </div>
     </div>
 </template>
 <style scoped>
