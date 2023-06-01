@@ -1,25 +1,43 @@
 <script setup lang='ts'>
-defineProps({
-    turnCount: Number 
+import gameStatus from '@/config/gameStatus';
+import { gameState } from '@/store';
+import { computed } from 'vue';
+
+const isTurn = computed(() => {
+    return gameState.status === gameStatus.PLAYING
 })
+const isOppTurn = computed(() => {
+    return gameState.status === gameStatus.WAITING_TURN
+})
+const isGameStarted = computed(() => 
+    gameState.status !== gameStatus.NEW &&
+    gameState.status !== gameStatus.WAITING_JOIN
+    
+)
 </script>
 <template>
-    <div class='side-container'>
+    <div v-if='isGameStarted' class='side-container'>
         <div class='player-list'>
-        <div class='player-item'>
-            <div class='player-name'><span class='curr hide'>>></span><p>Player 1 &#128081;</p></div>
-            <div class='score'>31</div>
+            <div :class='isTurn ? `player-item selected` : `player-item`'>
+                <div class='player-name'>
+                    <span :class='isTurn ? `` : `hide`'>>></span>
+                    <span>{{ gameState.player.name }}</span>
+                </div>
+                <div class='score'>{{ gameState.player.score }}</div>
+            </div>
+            <div :class='isOppTurn ? `player-item selected` : `player-item`'>
+                <div class='player-name'>
+                    <span :class='isOppTurn ? `` : `hide`'>>></span>
+                    <span>{{ gameState.opponent.name }}</span>
+                </div>
+                <div class='score'>{{ gameState.opponent.score }}</div>
+            </div>
         </div>
-        <div class='player-item selected'>
-            <div class='player-name'><span class='curr'>>></span><p>MMMMMMMMMMMMMMMMMM</p></div>
-            <div class='score'>28</div>
-        </div>
-        </div>
+        <div>Left: {{ gameState.bombsLeft }}</div>
     </div>
 </template>
 <style scoped>
     .side-container {
-        margin-top: 0%;
         padding: 2rem 2rem;
         box-sizing: border-box;
         background-color: #222;
@@ -28,12 +46,14 @@ defineProps({
         display: flex;
         flex-direction: column;
         color: #9F9F9F;
+        row-gap: 1rem;
     }
     .player-list {
         display: flex;
         flex-direction: column;
         row-gap: 1rem;
-        height: 65%;
+        height: 70%;
+        user-select: none;
     }
     .player-item {
         border: 1px solid #9F9F9F;
@@ -48,16 +68,9 @@ defineProps({
         color: white;
     }
     .player-name {
-        display: flex;
-        flex-direction: row;
+        display: grid;
+        grid-template-columns: 2rem 1fr;
         font-size: 1.2rem;
-        flex-grow: 1;
-    }
-    .player-name .curr {
-        width: 2rem;
-    }
-    .player-name p {
-        margin: 0;
         word-break: break-all;
     }
     .score {

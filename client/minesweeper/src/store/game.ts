@@ -20,7 +20,17 @@ export default reactive({
     status: GAMESTATUS.NEW,
     resetBoard: function() {
         this.board = this.board.map((_, i) => ({
-        ...this.board[i], ...{ show: '' }
-    }))
-    }
+            ...this.board[i], ...{ show: '' }
+        }))
+    },
+    player: {
+        name: 'Anonymous',
+        score: 0,
+    },
+    opponent: {
+        name: 'Anonymous',
+        score: 0,
+    },
+    bombsLeft: Number.MAX_SAFE_INTEGER,
+    isGameOver: false,
 })

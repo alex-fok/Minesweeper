@@ -30,11 +30,35 @@ addSocketEventHandler('roomCreated', (data:{ roomId: number }) => {
     gameState.resetBoard()
 })
 
-addSocketEventHandler('gameStarted', (data: { isPlayerTurn: boolean, id: number }) => {
+addSocketEventHandler('gameStarted', (data: {
+    isPlayerTurn: boolean,
+    id: number,
+    bombsLeft: number,
+    player: { alias: string, score: number },
+    opponent: { alias: string, score: number }
+}) => {
     gameState.resetBoard()
-    const { isPlayerTurn, id } = data
+    const { isPlayerTurn, id, bombsLeft, player, opponent } = data
     gameState.status = isPlayerTurn ? PLAYING : WAITING_TURN
     roomId.value = id
+    
+    gameState.bombsLeft = bombsLeft
+    
+    gameState.player = {
+        name: player.alias,
+        score: player.score 
+    }
+    gameState.opponent = {
+        name: opponent.alias,
+        score: opponent.score
+    }
+})
+
+addSocketEventHandler('scoreUpdated', (data: { player: number, opponent: number, bombsLeft: number }) => {
+    const { player, opponent, bombsLeft } = data
+    gameState.player.score = player
+    gameState.opponent.score = opponent
+    gameState.bombsLeft = bombsLeft
 })
 
 const displayModal = (v: 'create' | 'join' | 'createOrJoin') => {

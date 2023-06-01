@@ -18,6 +18,11 @@ type Turn struct {
 	next  *Client
 }
 
+type GameStat struct {
+	score     map[*Client]uint
+	bombsLeft uint
+}
+
 type Room struct {
 	id            uint
 	clients       map[*Client]bool
@@ -26,6 +31,7 @@ type Room struct {
 	board         [][]boardhelper.Block
 	actionHandler map[string]func(string)
 	turn          Turn
+	gameStat      GameStat
 	update        chan *Action
 	register      chan *Client
 	unregister    chan *Client
@@ -103,18 +109,52 @@ func (r *Room) registerClient(c *Client) {
 	if opponent == nil {
 		return
 	}
-	type StartMsg struct {
-		Id           uint `json:"id"`
-		IsPlayerTurn bool `json:"isPlayerTurn"`
+
+	type PlayerInfo struct {
+		Alias string `json:"alias"`
+		Score uint   `json:"score"`
 	}
+
+	type StartMsg struct {
+		Id           uint       `json:"id"`
+		IsPlayerTurn bool       `json:"isPlayerTurn"`
+		BombsLeft    uint       `json:"bombsLeft"`
+		Player       PlayerInfo `json:"player"`
+		Opponent     PlayerInfo `json:"opponent"`
+	}
+
+	// Init game stat
+	r.gameStat = GameStat{
+		bombsLeft: DEFAULT_BOMB_COUNT,
+		score:     make(map[*Client]uint),
+	}
+	r.gameStat.score[c] = 0
+	r.gameStat.score[opponent] = 0
+
+	cliInfo := PlayerInfo{
+		Alias: c.alias,
+		Score: 0,
+	}
+
+	oppInfo := PlayerInfo{
+		Alias: opponent.alias,
+		Score: 0,
+	}
+
 	cliStartMsg, _ := json.Marshal(StartMsg{
 		Id:           r.id,
 		IsPlayerTurn: isClientCurr,
+		BombsLeft:    DEFAULT_BOMB_COUNT,
+		Player:       cliInfo,
+		Opponent:     oppInfo,
 	})
 
 	oppStartMsg, _ := json.Marshal(StartMsg{
 		Id:           r.id,
 		IsPlayerTurn: !isClientCurr,
+		BombsLeft:    DEFAULT_BOMB_COUNT,
+		Player:       oppInfo,
+		Opponent:     cliInfo,
 	})
 
 	c.update <- &Action{
@@ -150,32 +190,63 @@ func (r *Room) revealBlocks(content string) {
 		return
 	}
 	revealables := boardhelper.GetRevealables(&v, r.board)
-
 	// Update visited blocks
 	for _, block := range revealables {
 		r.board[block.Y][block.X].Visited = true
 	}
 
-	// Update turn-related info
-	if !(revealables[0].Type == boardhelper.BOMB) {
+	if revealables[0].Type != boardhelper.BOMB {
+		// Update turn-related info
 		r.turn.count++
 		r.turn.next, r.turn.curr = r.turn.curr, r.turn.next
-		turn, _ := json.Marshal(struct {
+		type TurnPassed struct {
 			Count uint `json:"count"`
-		}{Count: r.turn.count})
+		}
+		turn, _ := json.Marshal(TurnPassed{Count: r.turn.count})
 		r.broadcast(&Action{
 			Name:    "turnPassed",
 			Content: string(turn),
 		})
-	}
+	} else {
+		// Update score
+		r.gameStat.score[r.turn.curr]++
+		r.gameStat.bombsLeft--
 
+		type Score struct {
+			Player    uint `json:"player"`
+			Opponent  uint `json:"opponent"`
+			BombsLeft uint `json:"bombsLeft"`
+		}
+
+		currScore, _ := json.Marshal(Score{
+			Player:    r.gameStat.score[r.turn.curr],
+			Opponent:  r.gameStat.score[r.turn.next],
+			BombsLeft: r.gameStat.bombsLeft,
+		})
+
+		nextScore, _ := json.Marshal(Score{
+			Player:    r.gameStat.score[r.turn.next],
+			Opponent:  r.gameStat.score[r.turn.curr],
+			BombsLeft: r.gameStat.bombsLeft,
+		})
+
+		r.turn.curr.update <- &Action{
+			Name:    "scoreUpdated",
+			Content: string(currScore),
+		}
+
+		r.turn.next.update <- &Action{
+			Name:    "scoreUpdated",
+			Content: string(nextScore),
+		}
+	}
+	// Broadcast revealed blocks to clients
 	data, _ := json.Marshal(struct {
 		Blocks []boardhelper.BlockInfo `json:"blocks"`
 	}{
 		Blocks: revealables,
 	})
 
-	// Broadcast to clients
 	r.broadcast(&Action{
 		Name:    "reveal",
 		Content: string(data),
