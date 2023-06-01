@@ -88,12 +88,12 @@ func GetRevealables(v *Vertex, b [][]Block) []BlockInfo {
 	// Get all revealables
 	var curr BlockInfo
 	revealables := []BlockInfo{}
-	blocks := []BlockInfo{source}
+	queue := []BlockInfo{source}
 	for {
-		if len(blocks) == 0 {
+		if len(queue) == 0 {
 			return revealables
 		}
-		curr, blocks = blocks[0], blocks[1:]
+		curr, queue = queue[0], queue[1:]
 		revealables = append(revealables, curr)
 
 		// If the block is NUM, continue
@@ -109,7 +109,7 @@ func GetRevealables(v *Vertex, b [][]Block) []BlockInfo {
 				continue
 			}
 			isVisited[y][x] = true
-			blocks = append(blocks, BlockInfo{
+			queue = append(queue, BlockInfo{
 				X:     x,
 				Y:     y,
 				Block: b[y][x],
