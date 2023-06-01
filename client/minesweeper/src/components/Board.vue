@@ -9,11 +9,6 @@ type blockInfo = {
     bType: number,
     value: number
 }
-type block = {
-    x: number,
-    y: number,
-    show: string
-}
 
 const [BLANK, BOMB, NUMBER] = [0, 1, 2]
 
@@ -27,23 +22,14 @@ const reveal = (i: number) => {
     }))
 }
 
-const modifyBoard = (board:block[], x:number, y:number, show: string) => {
-    gameState.board = board.map((v, _) => {
-        if (v.x === x && v.y === y)
-            v.show = show
-        return v
-    })
-}
-
-const getDisplayVal = (block: blockInfo) : string => {
-    if (block['bType'] === NUMBER) return block['value'].toString()
-    return block['bType'] === BOMB ? 'BO' : 'BL'
-}
-
 addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
     const { blocks } = data
+    const getDisplayVal = (block: blockInfo) : string => {
+        if (block['bType'] === NUMBER) return block['value'].toString()
+        return block['bType'] === BOMB ? 'BO' : 'BL'
+    }
     blocks.forEach(block => {
-        modifyBoard(gameState.board, block['x'], block['y'], getDisplayVal(block))
+        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = getDisplayVal(block)
     })
 })
 </script>
@@ -82,17 +68,6 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
     .board-wrapper {
         position:relative
     }
-    .overlay {
-        position:absolute;
-        inset: 0;
-        background-color:rgba(52, 52, 52, .7);
-    }
-    .overlay-text {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-    }
     .board {
         display: grid;
         column-gap: 1px;
@@ -105,5 +80,16 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
         width: 3vh;
         height: 3vh;
         user-select: none;
+    }
+    .overlay {
+        position:absolute;
+        inset: 0;
+        background-color:rgba(52, 52, 52, .7);
+    }
+    .overlay-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
     }
 </style>
