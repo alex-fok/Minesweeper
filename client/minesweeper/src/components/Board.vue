@@ -1,5 +1,6 @@
 <script setup lang='ts'>
 import { socket, addSocketEventHandler } from '@/socket'
+import Block from './Block.vue'
 import { gameState } from '@/store'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 
@@ -40,13 +41,12 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
         </div>
         <div v-else class='board-wrapper'>
             <div class='board'>
-                <div
+                <Block
                     v-for='(block, i) in gameState.board'
-                    @click='reveal(i)'
                     :key='i'
-                    >
-                    {{ block.show }}
-                </div>
+                    :reveal='() => { reveal(i) }'
+                    :show='block.show'
+                />
             </div>
             <div
                 v-if='gameState.status === GAMESTATUS.WAITING_TURN'
@@ -73,13 +73,6 @@ addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
         column-gap: 1px;
         row-gap: 1px;
         grid-template-columns: repeat(26, auto);
-    }
-    .board > div {
-        font-family:'Courier New', Courier, monospace;
-        background-color:#343434;   
-        width: 3vh;
-        height: 3vh;
-        user-select: none;
     }
     .overlay {
         position:absolute;
