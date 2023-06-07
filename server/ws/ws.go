@@ -21,6 +21,6 @@ func ServeWs(w http.ResponseWriter, r *http.Request, l *Lobby) {
 		return
 	}
 	client := NewClient(conn, lobby)
-	go client.readBuffer()
-	go client.writeBuffer()
+
+	client.run()
 }

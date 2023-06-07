@@ -6,6 +6,7 @@ const socketEvents: Record<string, (event: any)=>void> = {}
 socket.addEventListener('open', _ => {
     socket.send(JSON.stringify({name: 'newRoom'})) 
 })
+
 socket.addEventListener('message', event => {
     const { name, content } = JSON.parse(event.data)
     console.log('name: ', name)
@@ -17,4 +18,12 @@ socket.addEventListener('message', event => {
 const addSocketEventHandler = (name: string, fn: (event: any)=>void) => {
     socketEvents[name] = fn
 }
+
+addSocketEventHandler('userId', (content: { id: string }) => {
+    const { id } = content
+    const url = new URL(window.location.href)
+    url.searchParams.set('id', id)
+    history.replaceState({}, "", url)
+})
+
 export { socket, addSocketEventHandler }

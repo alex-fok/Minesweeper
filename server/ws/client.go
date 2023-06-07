@@ -11,11 +11,17 @@ import (
 type CreateRequest struct {
 	Alias string `json:"alias"`
 }
+
 type JoinRequest struct {
 	Id    uint   `json:"id"`
 	Alias string `json:"alias"`
 }
-type Message struct {
+
+type IdMsg struct {
+	Id string `json:"id"`
+}
+
+type Request struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
 }
@@ -39,9 +45,9 @@ func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	}
 }
 
-func (c *Client) createRoom(msg *Message) {
+func (c *Client) createRoom(req *Request) {
 	var createReq CreateRequest
-	if err := json.Unmarshal([]byte(msg.Content), &createReq); err != nil {
+	if err := json.Unmarshal([]byte(req.Content), &createReq); err != nil {
 		log.Println(err)
 		return
 	}
@@ -50,9 +56,9 @@ func (c *Client) createRoom(msg *Message) {
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 
-func (c *Client) joinRoom(msg *Message) {
+func (c *Client) joinRoom(req *Request) {
 	var joinReq JoinRequest
-	if err := json.Unmarshal([]byte(msg.Content), &joinReq); err != nil {
+	if err := json.Unmarshal([]byte(req.Content), &joinReq); err != nil {
 		log.Println(err)
 		return
 	}
@@ -71,13 +77,13 @@ func (c *Client) joinRoom(msg *Message) {
 	c.room.register <- c
 }
 
-func (c *Client) reveal(msg *Message) {
+func (c *Client) reveal(req *Request) {
 	if c.room == nil || !c.room.isPlayable(c) {
 		return
 	}
 	c.room.update <- &Action{
-		Name:    msg.Name,
-		Content: msg.Content,
+		Name:    req.Name,
+		Content: req.Content,
 	}
 }
 
@@ -110,21 +116,34 @@ func (c *Client) readBuffer() {
 	}()
 	for {
 		// Get Message Type
-		var msg Message
-		err := c.conn.ReadJSON(&msg)
+		var req Request
+		err := c.conn.ReadJSON(&req)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		switch msg.Name {
+		switch req.Name {
 		case "createRoom":
-			go c.createRoom(&msg)
+			go c.createRoom(&req)
 		case "joinRoom":
-			go c.joinRoom(&msg)
+			go c.joinRoom(&req)
 		case "reveal":
-			go c.reveal(&msg)
+			go c.reveal(&req)
 		default:
 			continue
 		}
+	}
+}
+
+func (c *Client) run() {
+	go c.readBuffer()
+	go c.writeBuffer()
+
+	id, _ := json.Marshal(&IdMsg{
+		Id: c.id,
+	})
+	c.update <- &Action{
+		Name:    "userId",
+		Content: string(id),
 	}
 }
