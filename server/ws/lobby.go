@@ -2,8 +2,7 @@ package ws
 
 import (
 	"encoding/json"
-	"math/rand"
-	"time"
+	"minesweeper/utils"
 )
 
 type Lobby struct {
@@ -30,8 +29,7 @@ func CreateLobby() *Lobby {
 func (l *Lobby) createRoom(c *Client) {
 	var id uint
 	for {
-		rand.Seed(time.Now().UnixNano())
-		id = uint(rand.Uint32() % 10000)
+		id = utils.CreateRoomId()
 		if _, ok := l.rooms[id]; !ok {
 			break
 		}

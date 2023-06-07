@@ -31,7 +31,7 @@ type Client struct {
 
 func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	return &Client{
-		id:     utils.GenerateId(),
+		id:     utils.CreateClientId(),
 		conn:   conn,
 		lobby:  lobby,
 		alias:  "Anonymous",

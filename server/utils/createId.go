@@ -11,7 +11,7 @@ const mask = 1<<bits - 1     // Masking for 6 bit value
 const count = int(63 / bits) // Number of indices per 63 bit
 
 // Generate 16 letter ID
-func GenerateId() string {
+func CreateClientId() string {
 	sb := strings.Builder{}
 	sb.Grow(16)
 	for idIdx, value, remain := 0, rand.Int63(), count; idIdx < 16; {
@@ -26,4 +26,8 @@ func GenerateId() string {
 		remain--
 	}
 	return sb.String()
+}
+
+func CreateRoomId() uint {
+	return uint(rand.Uint32() % 10000)
 }
