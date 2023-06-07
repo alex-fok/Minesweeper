@@ -7,11 +7,6 @@ import (
 	"time"
 )
 
-type Action struct {
-	Name    string `json:"name"`
-	Content string `json:"content"`
-}
-
 type Turn struct {
 	count uint
 	curr  *Client
