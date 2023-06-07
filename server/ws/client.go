@@ -3,34 +3,10 @@ package ws
 import (
 	"encoding/json"
 	"log"
-	"math/rand"
-	"strings"
+	"minesweeper/utils"
 
 	"github.com/gorilla/websocket"
 )
-
-const idLetters string = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-const bits = 6               // Number of bits representing an index; Log2(len(idLetters)) + 1
-const mask = 1<<bits - 1     // Masking for 6 bit value
-const count = int(63 / bits) // Number of indices per 63 bit
-
-// Generate 16 letter ID
-func generateId() string {
-	sb := strings.Builder{}
-	sb.Grow(16)
-	for idIdx, value, remain := 0, rand.Int63(), count; idIdx < 16; {
-		if remain == 0 {
-			value, remain = rand.Int63(), count
-		}
-		if letterIdx := int(value & mask); letterIdx < len(idLetters) {
-			sb.WriteByte(idLetters[letterIdx])
-			idIdx++
-		}
-		value >>= bits
-		remain--
-	}
-	return sb.String()
-}
 
 type CreateRequest struct {
 	Alias string `json:"alias"`
@@ -55,7 +31,7 @@ type Client struct {
 
 func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	return &Client{
-		id:     generateId(),
+		id:     utils.GenerateId(),
 		conn:   conn,
 		lobby:  lobby,
 		alias:  "Anonymous",
