@@ -39,6 +39,11 @@ addSocketEventHandler('roomCreated', (data:{ roomId: number }) => {
     turnCount.value = 1
     gameState.status = WAITING_JOIN
     gameState.resetBoard()
+
+    // Change search query
+    const url = new URL(window.location.href)
+    url.searchParams.set('room', id.toString())
+    history.replaceState({}, '', url)
 })
 
 addSocketEventHandler('gameStarted', (data: {
@@ -63,6 +68,11 @@ addSocketEventHandler('gameStarted', (data: {
         name: opponent.alias,
         score: opponent.score
     }
+    
+    // Change search query
+    const url = new URL(window.location.href)
+    url.searchParams.set('room', id.toString())
+    history.replaceState({}, '', url)
 })
 
 addSocketEventHandler('scoreUpdated', (data: { player: number, opponent: number, bombsLeft: number }) => {

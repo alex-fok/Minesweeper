@@ -4,9 +4,15 @@ import (
 	"encoding/json"
 	"log"
 	"minesweeper/utils"
+	"strconv"
 
 	"github.com/gorilla/websocket"
 )
+
+type ReconnectReq struct {
+	UserId string `json:"userId"`
+	RoomId string `json:"roomId"`
+}
 
 type CreateRequest struct {
 	Alias string `json:"alias"`
@@ -26,22 +32,42 @@ type Request struct {
 	Content string `json:"content"`
 }
 
+type ClientId string
+
 type Client struct {
-	id     string
+	id     ClientId
 	conn   *websocket.Conn
 	lobby  *Lobby
 	room   *Room
 	alias  string
 	update chan *Action
+	stop   chan bool
 }
 
 func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	return &Client{
-		id:     utils.CreateClientId(),
+		id:     ClientId(utils.CreateClientId()),
 		conn:   conn,
 		lobby:  lobby,
 		alias:  "Anonymous",
 		update: make(chan *Action),
+		stop:   make(chan bool),
+	}
+}
+
+func (c *Client) reconnect(req *Request) {
+	var reconnectReq ReconnectReq
+	if err := json.Unmarshal([]byte(req.Content), &reconnectReq); err != nil {
+		log.Println(err)
+		return
+	}
+	c.id = ClientId(reconnectReq.UserId)
+	if rId, err := strconv.ParseUint(reconnectReq.RoomId, 10, 64); err == nil {
+		if r, ok := c.lobby.findRoom(uint(rId)); ok {
+			r.reconnect <- c
+		} else {
+			log.Println("Room", reconnectReq.RoomId, "not found")
+		}
 	}
 }
 
@@ -52,7 +78,11 @@ func (c *Client) createRoom(req *Request) {
 		return
 	}
 	c.alias = createReq.Alias
-	c.lobby.createRoom(c)
+	if c.room != nil {
+		c.room.unregister <- c
+	}
+	c.room = c.lobby.createRoom(c)
+
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 
@@ -63,7 +93,11 @@ func (c *Client) joinRoom(req *Request) {
 		return
 	}
 	if c.room != nil && c.room.id == joinReq.Id {
-		return
+		if c.room.id == joinReq.Id {
+			return
+		} else {
+			c.room.unregister <- c
+		}
 	}
 	c.alias = joinReq.Alias
 	// Find Room. Register user if valid
@@ -88,7 +122,10 @@ func (c *Client) reveal(req *Request) {
 }
 
 func (c *Client) writeBuffer() {
-	defer c.conn.Close()
+	defer func() {
+		c.conn.Close()
+		close(c.update)
+	}()
 	for {
 		select {
 		case action, ok := <-c.update:
@@ -102,6 +139,8 @@ func (c *Client) writeBuffer() {
 					return
 				}
 			}
+		case <-c.stop:
+			break
 		}
 	}
 }
@@ -109,20 +148,22 @@ func (c *Client) writeBuffer() {
 func (c *Client) readBuffer() {
 	defer func() {
 		if c.room != nil {
-			c.room.unregister <- c
+			c.room.disconnect <- c
 			c.conn.Close()
-			close(c.update)
 		}
 	}()
+
+	var req Request
 	for {
 		// Get Message Type
-		var req Request
-		err := c.conn.ReadJSON(&req)
-		if err != nil {
+		if err := c.conn.ReadJSON(&req); err != nil {
 			log.Println(err)
+			c.stop <- true
 			return
 		}
 		switch req.Name {
+		case "reconnect":
+			go c.reconnect(&req)
 		case "createRoom":
 			go c.createRoom(&req)
 		case "joinRoom":
@@ -140,7 +181,7 @@ func (c *Client) run() {
 	go c.writeBuffer()
 
 	id, _ := json.Marshal(&IdMsg{
-		Id: c.id,
+		Id: string(c.id),
 	})
 	c.update <- &Action{
 		Name:    "userId",

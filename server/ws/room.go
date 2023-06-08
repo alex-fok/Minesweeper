@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"log"
 	"math/rand"
 	"minesweeper/boardhelper"
 	"time"
@@ -9,20 +10,19 @@ import (
 
 type Turn struct {
 	count uint
-	curr  *Client
-	next  *Client
+	curr  ClientId
+	next  ClientId
 }
 
 type GameStat struct {
-	score     map[*Client]uint
+	score     map[ClientId]uint
 	bombsLeft uint
 }
 
 type Room struct {
 	id            uint
-	clients       map[*Client]bool
+	clients       map[ClientId]*Client
 	lobby         *Lobby
-	clientCount   uint
 	board         [][]boardhelper.Block
 	actionHandler map[string]func(string)
 	turn          Turn
@@ -30,60 +30,126 @@ type Room struct {
 	update        chan *Action
 	register      chan *Client
 	unregister    chan *Client
+	disconnect    chan *Client
+	reconnect     chan *Client
+	timeouts      map[ClientId]int64
+	stop          chan bool
 }
 
 const DEFAULT_SIZE = 26
 const DEFAULT_BOMB_COUNT = 100
+const TIMELIMIT_IN_SEC = 5 // 5 minutes
 
 func newRoom(id uint, c *Client, l *Lobby) *Room {
-	room := Room{
-		id:          id,
-		clients:     make(map[*Client]bool),
-		lobby:       l,
-		clientCount: 0,
-		board:       boardhelper.GetBoard(DEFAULT_SIZE, DEFAULT_BOMB_COUNT),
+	r := &Room{
+		id:      id,
+		clients: make(map[ClientId]*Client),
+		lobby:   l,
+		board:   boardhelper.GetBoard(DEFAULT_SIZE, DEFAULT_BOMB_COUNT),
 		turn: Turn{
-			count: 0,
-			curr:  nil,
-			next:  nil,
+			count: 1,
+			curr:  "",
+			next:  "",
 		},
 		update:     make(chan *Action),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
+		disconnect: make(chan *Client),
+		reconnect:  make(chan *Client),
+		timeouts:   make(map[ClientId]int64),
 	}
 	// Init handler
-	room.actionHandler = make(map[string]func(string))
-	room.actionHandler["reveal"] = room.revealBlocks
+	r.actionHandler = make(map[string]func(string))
+	r.actionHandler["reveal"] = r.revealBlocks
+	go r.run()
 
-	// Init turn-related info
-	room.turn = Turn{
-		count: 1,
-		curr:  nil,
-		next:  nil,
+	// Register Client
+	r.registerClient(c)
+
+	// Update client with room id
+	content, _ := json.Marshal(struct {
+		RoomId uint `json:"roomId"`
+	}{
+		RoomId: id,
+	})
+	c.update <- &Action{
+		Name:    "roomCreated",
+		Content: string(content),
 	}
-
-	room.registerClient(c)
-	return &room
+	return r
 }
-func (r *Room) assignTurn(c *Client) (*Client, *Client) {
-	isEmpty := r.turn.curr == nil && r.turn.next == nil
-	if isEmpty {
-		rand.Seed(time.Now().UnixNano())
-		if rand.Intn(2) == 0 {
-			r.turn.curr = c
-		} else {
-			r.turn.next = c
+
+func (r *Room) registerClient(c *Client) {
+	r.clients[c.id] = c
+	r.assignTurn(c)
+
+	if r.clients[r.turn.curr] != nil && r.clients[r.turn.next] != nil {
+		r.startGame()
+	}
+}
+
+func (r *Room) unregisterClient(c *Client) {
+	if _, ok := r.clients[c.id]; ok {
+		delete(r.clients, c.id)
+		if r.clients[r.turn.curr] == c {
+			r.turn.curr = ""
+		} else if r.clients[r.turn.next] == c {
+			r.turn.next = ""
 		}
-	} else if r.turn.curr == nil {
-		r.turn.curr = c
-	} else if r.turn.next == nil { // Not 'else'. Could be more than 3 clients in a room
-		r.turn.next = c
+	}
+	if len(r.clients) == 0 {
+		r.stop <- true
+		r.lobby.unregister <- r
+	}
+}
+
+func (r *Room) disconnectClient(c *Client) {
+	log.Println("Client", c.alias, "disconnected")
+	if _, ok := r.timeouts[c.id]; !ok {
+		r.timeouts[c.id] = time.Now().Unix()
+	}
+}
+
+func (r *Room) reconnectClient(c *Client) {
+	// Reconnect user if id is in timeout map
+	_, timeoutOk := r.timeouts[c.id]
+	_, clientsOk := r.clients[c.id]
+	if !timeoutOk || !clientsOk {
+		log.Println("Cannot reconnect client")
+		c.update <- &Action{
+			Name:    "Failed Reconnection",
+			Content: "{}",
+		}
+		return
+	}
+	// Remove from timeout map
+	delete(r.timeouts, c.id)
+
+	// Reuse alias before disconnection, reassign
+	c.alias = r.clients[c.id].alias
+	r.clients[c.id] = c
+
+	log.Println("Client", c.alias, "reconnected")
+}
+
+func (r *Room) assignTurn(c *Client) (ClientId, ClientId) {
+	isEmpty := r.turn.curr == "" && r.turn.next == ""
+	if isEmpty {
+		if rand.Intn(2) == 0 {
+			r.turn.curr = c.id
+		} else {
+			r.turn.next = c.id
+		}
+	} else if r.turn.curr == "" {
+		r.turn.curr = c.id
+	} else if r.turn.next == "" { // Not 'else'. Could be more than 3 clients in a room
+		r.turn.next = c.id
 	}
 	return r.turn.curr, r.turn.next
 }
 
 func (r *Room) isPlayable(c *Client) bool {
-	return r.turn.curr == c && r.turn.next != nil
+	return r.turn.curr == c.id && r.turn.next != ""
 }
 
 func (r *Room) startGame() {
@@ -101,18 +167,18 @@ func (r *Room) startGame() {
 	// Init game stat
 	r.gameStat = GameStat{
 		bombsLeft: DEFAULT_BOMB_COUNT,
-		score:     make(map[*Client]uint),
+		score:     make(map[ClientId]uint),
 	}
 	r.gameStat.score[r.turn.curr] = 0
 	r.gameStat.score[r.turn.next] = 0
 
 	currInfo := PlayerInfo{
-		Alias: r.turn.curr.alias,
+		Alias: r.clients[r.turn.curr].alias,
 		Score: 0,
 	}
 
 	nextInfo := PlayerInfo{
-		Alias: r.turn.next.alias,
+		Alias: r.clients[r.turn.next].alias,
 		Score: 0,
 	}
 
@@ -132,38 +198,14 @@ func (r *Room) startGame() {
 		Opponent:     currInfo,
 	})
 
-	r.turn.curr.update <- &Action{
+	r.clients[r.turn.curr].update <- &Action{
 		Name:    "gameStarted",
 		Content: string(currStartMsg),
 	}
 
-	r.turn.next.update <- &Action{
+	r.clients[r.turn.next].update <- &Action{
 		Name:    "gameStarted",
 		Content: string(nextStartMsg),
-	}
-}
-
-func (r *Room) registerClient(c *Client) {
-	r.clients[c] = true
-	r.assignTurn(c)
-	r.clientCount++
-
-	if r.turn.curr != nil && r.turn.next != nil {
-		r.startGame()
-	}
-}
-
-func (r *Room) unregisterClient(c *Client) {
-	if _, ok := r.clients[c]; ok {
-		delete(r.clients, c)
-		if r.turn.curr == c {
-			r.turn.curr = nil
-		} else if r.turn.next == c {
-			r.turn.next = nil
-		}
-	}
-	if r.clientCount--; r.clientCount == 0 {
-		r.lobby.unregister <- r
 	}
 }
 
@@ -207,20 +249,20 @@ func (r *Room) scoreCurrPlayer() {
 
 	// Check winning condition
 	if r.gameStat.score[r.turn.curr] > DEFAULT_BOMB_COUNT/2 {
-		r.turn.curr.update <- &Action{
+		r.clients[r.turn.curr].update <- &Action{
 			Name:    "gameWon",
 			Content: string(currScore),
 		}
-		r.turn.next.update <- &Action{
+		r.clients[r.turn.next].update <- &Action{
 			Name:    "gameLost",
 			Content: string(nextScore),
 		}
 	} else {
-		r.turn.curr.update <- &Action{
+		r.clients[r.turn.curr].update <- &Action{
 			Name:    "scoreUpdated",
 			Content: string(currScore),
 		}
-		r.turn.next.update <- &Action{
+		r.clients[r.turn.next].update <- &Action{
 			Name:    "scoreUpdated",
 			Content: string(nextScore),
 		}
@@ -259,21 +301,57 @@ func (r *Room) revealBlocks(content string) {
 	})
 }
 
+func (r *Room) checkActivity(now int64) {
+	for cId, t := range r.timeouts {
+		if now-t > TIMELIMIT_IN_SEC {
+			log.Println("Removing client", r.clients[cId].alias, "from room", r.id)
+			delete(r.clients, cId)
+			delete(r.timeouts, cId)
+		}
+	}
+}
+
 func (r *Room) broadcast(action *Action) {
 	for client := range r.clients {
-		client.update <- action
+		r.clients[client].update <- action
 	}
 }
 
 func (r *Room) run() {
+	// Setup ticker
+	ticker := time.NewTicker((time.Second))
+	doneChecking := make(chan bool)
+	defer func() {
+		doneChecking <- true
+		ticker.Stop()
+	}()
+
+	// Check for client activity
+	go func() {
+		for {
+			select {
+			case t := <-ticker.C:
+				r.checkActivity(t.Unix())
+			case <-doneChecking:
+				break
+			}
+		}
+	}()
+
 	for {
 		select {
+		case action := <-r.update:
+			r.actionHandler[action.Name](action.Content)
 		case c := <-r.register:
 			r.registerClient(c)
 		case c := <-r.unregister:
 			r.unregisterClient(c)
-		case action := <-r.update:
-			r.actionHandler[action.Name](action.Content)
+		case c := <-r.disconnect:
+			r.disconnectClient(c)
+		case c := <-r.reconnect:
+			r.reconnectClient(c)
+		case <-r.stop:
+			break
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"encoding/json"
 	"minesweeper/utils"
 )
 
@@ -26,7 +25,7 @@ func CreateLobby() *Lobby {
 	return lobby
 }
 
-func (l *Lobby) createRoom(c *Client) {
+func (l *Lobby) createRoom(c *Client) *Room {
 	var id uint
 	for {
 		id = utils.CreateRoomId()
@@ -37,21 +36,10 @@ func (l *Lobby) createRoom(c *Client) {
 	if c.room != nil {
 		c.room.unregister <- c
 	}
-	c.room = newRoom(id, c, l)
-	go c.room.run()
+	r := newRoom(id, c, l)
 
-	l.register <- c.room
-	content, _ := json.Marshal(struct {
-		RoomId       uint `json:"roomId"`
-		IsPlayerTurn bool `json:"isPlayerTurn"`
-	}{
-		RoomId:       id,
-		IsPlayerTurn: c == c.room.turn.curr,
-	})
-	c.update <- &Action{
-		Name:    "roomCreated",
-		Content: string(content),
-	}
+	l.register <- r
+	return r
 }
 
 func (l *Lobby) findRoom(id uint) (*Room, bool) {
@@ -65,6 +53,7 @@ func (l *Lobby) run() {
 		case r := <-l.register:
 			l.rooms[r.id] = r
 		case r := <-l.unregister:
+			r.stop <- true
 			delete(l.rooms, r.id)
 		}
 	}
