@@ -4,14 +4,13 @@ import Block from './Block.vue'
 import { gameState } from '@/store'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 
-type blockInfo = {
+type BlockInfo = {
     x: number,
     y: number,
     bType: number,
     value: number
 }
 
-const [BLANK, BOMB, NUMBER] = [0, 1, 2]
 
 const reveal = (i: number) => {
     if (gameState.status !== GAMESTATUS.PLAYING) return
@@ -23,14 +22,11 @@ const reveal = (i: number) => {
     }))
 }
 
-addSocketEventHandler('reveal', (data: {blocks:blockInfo[]}) => {
+addSocketEventHandler('reveal', (data: {blocks:BlockInfo[]}) => {
     const { blocks } = data
-    const getDisplayVal = (block: blockInfo) : string => {
-        if (block['bType'] === NUMBER) return block['value'].toString()
-        return block['bType'] === BOMB ? 'BO' : 'BL'
-    }
+    
     blocks.forEach(block => {
-        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = getDisplayVal(block)
+        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = gameState.getDisplayVal(block)
     })
 })
 </script>

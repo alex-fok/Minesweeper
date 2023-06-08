@@ -7,8 +7,26 @@ import Modal from './Modal.vue'
 
 import { ref } from 'vue'
 import { addSocketEventHandler } from '@/socket'
-import { GAMESTATUS } from '@/config'
+import { GAMESTATUS, BOARDSETTING } from '@/config'
 import { gameState, uiState } from '@/store'
+
+type GameStat = {
+    isPlayerTurn: boolean,
+    id: number,
+    bombsLeft: number,
+    player: { alias: string, score: number },
+    opponent: { alias: string, score: number }
+}
+
+type ReconnStat = {
+    stat: GameStat,
+    visible: {
+        x: number,
+        y: number,
+        bType: number,
+        value: number
+    }[]
+}
 
 const { NEW, WAITING_JOIN, PLAYING, WAITING_TURN } = GAMESTATUS
 
@@ -46,13 +64,7 @@ addSocketEventHandler('roomCreated', (data:{ roomId: number }) => {
     history.replaceState({}, '', url)
 })
 
-addSocketEventHandler('gameStarted', (data: {
-    isPlayerTurn: boolean,
-    id: number,
-    bombsLeft: number,
-    player: { alias: string, score: number },
-    opponent: { alias: string, score: number }
-}) => {
+addSocketEventHandler('gameStarted', (data: GameStat) => {
     gameState.resetBoard()
     const { isPlayerTurn, id, bombsLeft, player, opponent } = data
     gameState.status = isPlayerTurn ? PLAYING : WAITING_TURN
@@ -73,6 +85,32 @@ addSocketEventHandler('gameStarted', (data: {
     const url = new URL(window.location.href)
     url.searchParams.set('room', id.toString())
     history.replaceState({}, '', url)
+})
+
+addSocketEventHandler('reconnected', (data: ReconnStat) => {
+    gameState.resetBoard()
+    const { stat, visible } = data
+    const { isPlayerTurn, id, bombsLeft, player, opponent } = stat
+    gameState.status = isPlayerTurn ? PLAYING : WAITING_TURN
+    uiState.active = true
+    roomId.value = id
+
+    gameState.bombsLeft = bombsLeft
+    gameState.player = {
+        name: player.alias,
+        score: player.score
+    }
+    gameState.opponent = {
+        name: opponent.alias,
+        score: opponent.score
+    }
+    visible.forEach(block => {
+        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = gameState.getDisplayVal(block)
+    })
+   // Change search query
+   const url = new URL(window.location.href)
+    url.searchParams.set('room', id.toString())
+    history.replaceState({}, '', url) 
 })
 
 addSocketEventHandler('scoreUpdated', (data: { player: number, opponent: number, bombsLeft: number }) => {

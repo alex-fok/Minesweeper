@@ -19,6 +19,24 @@ type GameStat struct {
 	bombsLeft uint
 }
 
+type PlayerInfo struct {
+	Alias string `json:"alias"`
+	Score uint   `json:"score"`
+}
+
+type StatMsg struct {
+	Id           uint       `json:"id"`
+	IsPlayerTurn bool       `json:"isPlayerTurn"`
+	BombsLeft    uint       `json:"bombsLeft"`
+	Player       PlayerInfo `json:"player"`
+	Opponent     PlayerInfo `json:"opponent"`
+}
+
+type ResumeMsg struct {
+	Stat    StatMsg                 `json:"stat"`
+	Visible []boardhelper.BlockInfo `json:"visible"`
+}
+
 type Room struct {
 	id            uint
 	clients       map[ClientId]*Client
@@ -128,8 +146,40 @@ func (r *Room) reconnectClient(c *Client) {
 	// Reuse alias before disconnection, reassign
 	c.alias = r.clients[c.id].alias
 	r.clients[c.id] = c
+	c.room = r
 
 	log.Println("Client", c.alias, "reconnected")
+
+	// Find Opponent Id
+	var oppId ClientId
+	if r.turn.curr == c.id {
+		oppId = r.turn.next
+	} else {
+		oppId = r.turn.curr
+	}
+
+	// Setup reconnected Message
+	setup, _ := json.Marshal(ResumeMsg{
+		Stat: StatMsg{
+			Id:           r.id,
+			IsPlayerTurn: r.turn.curr == c.id,
+			BombsLeft:    r.gameStat.bombsLeft,
+			Player: PlayerInfo{
+				Alias: c.alias,
+				Score: r.gameStat.score[c.id],
+			},
+			Opponent: PlayerInfo{
+				Alias: r.clients[oppId].alias,
+				Score: r.gameStat.score[oppId],
+			},
+		},
+		Visible: r.getVisibleBlocks(),
+	})
+
+	c.update <- &Action{
+		Name:    "reconnected",
+		Content: string(setup),
+	}
 }
 
 func (r *Room) assignTurn(c *Client) (ClientId, ClientId) {
@@ -153,17 +203,7 @@ func (r *Room) isPlayable(c *Client) bool {
 }
 
 func (r *Room) startGame() {
-	type PlayerInfo struct {
-		Alias string `json:"alias"`
-		Score uint   `json:"score"`
-	}
-	type StartMsg struct {
-		Id           uint       `json:"id"`
-		IsPlayerTurn bool       `json:"isPlayerTurn"`
-		BombsLeft    uint       `json:"bombsLeft"`
-		Player       PlayerInfo `json:"player"`
-		Opponent     PlayerInfo `json:"opponent"`
-	}
+
 	// Init game stat
 	r.gameStat = GameStat{
 		bombsLeft: DEFAULT_BOMB_COUNT,
@@ -182,7 +222,7 @@ func (r *Room) startGame() {
 		Score: 0,
 	}
 
-	currStartMsg, _ := json.Marshal(StartMsg{
+	currStartMsg, _ := json.Marshal(StatMsg{
 		Id:           r.id,
 		IsPlayerTurn: true,
 		BombsLeft:    DEFAULT_BOMB_COUNT,
@@ -190,7 +230,7 @@ func (r *Room) startGame() {
 		Opponent:     nextInfo,
 	})
 
-	nextStartMsg, _ := json.Marshal(StartMsg{
+	nextStartMsg, _ := json.Marshal(StatMsg{
 		Id:           r.id,
 		IsPlayerTurn: false,
 		BombsLeft:    DEFAULT_BOMB_COUNT,
@@ -267,6 +307,22 @@ func (r *Room) scoreCurrPlayer() {
 			Content: string(nextScore),
 		}
 	}
+}
+
+func (r *Room) getVisibleBlocks() []boardhelper.BlockInfo {
+	s := []boardhelper.BlockInfo{}
+	for i := range r.board {
+		for j := range r.board {
+			if r.board[i][j].Visited {
+				s = append(s, boardhelper.BlockInfo{
+					X:     j,
+					Y:     i,
+					Block: r.board[i][j],
+				})
+			}
+		}
+	}
+	return s
 }
 
 func (r *Room) revealBlocks(content string) {
