@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { ref } from 'vue';
-import { socket } from '@/socket';
+import socket from '@/socket';
 
 const props = defineProps({
     close: {

@@ -1,26 +1,19 @@
 <script setup lang='ts'>
-const props = defineProps({
-    roomId: Number,
-    gameState: Number,
-    displayModal: {
-        type: Function,
-        default: (v:string) => {}
-    }
-})
+import { gameState, uiState } from '@/store'
 
 const createRoom = () => {
-    props.displayModal('create')
+    uiState.modal.displayContent('create')
 }
 
 const joinRoom = () => {
-    props.displayModal('join')
+    uiState.modal.displayContent('join')
 }
 </script>
 <template>
     <div class='header-container'>
         <div class='menu-item'>
             <div class='room'>
-                Room #{{ roomId !== undefined && roomId >= 0 ? roomId : ' (Loading...)' }}
+                Room #{{ gameState.roomId !== undefined && gameState.roomId >= 0 ? gameState.roomId : ' (Loading...)' }}
             </div>
         </div>
         <div class='menu-item'>

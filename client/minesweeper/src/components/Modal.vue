@@ -25,7 +25,7 @@ const setFocus = async () => {
 }
 
 const close = () => {
-    uiState.active = true
+    uiState.modal.isActive = false 
 }
 
 const setContent = (v:string) => {

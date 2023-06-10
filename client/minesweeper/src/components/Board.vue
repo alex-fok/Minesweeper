@@ -1,16 +1,8 @@
 <script setup lang='ts'>
-import { socket, addSocketEventHandler } from '@/socket'
+import socket from '@/socket'
 import Block from './Block.vue'
 import { gameState } from '@/store'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
-
-type BlockInfo = {
-    x: number,
-    y: number,
-    bType: number,
-    value: number
-}
-
 
 const reveal = (i: number) => {
     if (gameState.status !== GAMESTATUS.PLAYING) return
@@ -21,14 +13,6 @@ const reveal = (i: number) => {
         content: JSON.stringify({x, y})
     }))
 }
-
-addSocketEventHandler('reveal', (data: {blocks:BlockInfo[]}) => {
-    const { blocks } = data
-    
-    blocks.forEach(block => {
-        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = gameState.getDisplayVal(block)
-    })
-})
 </script>
 <template>
     <div class='board-container'>

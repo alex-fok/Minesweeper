@@ -1,18 +1,17 @@
 <script setup lang='ts'>
-import gameStatus from '@/config/gameStatus';
+import { GAMESTATUS } from '@/config';
 import { gameState } from '@/store';
 import { computed } from 'vue';
 
 const isTurn = computed(() => {
-    return gameState.status === gameStatus.PLAYING
+    return gameState.status === GAMESTATUS.PLAYING
 })
 const isOppTurn = computed(() => {
-    return gameState.status === gameStatus.WAITING_TURN
+    return gameState.status === GAMESTATUS.WAITING_TURN
 })
 const isGameStarted = computed(() => 
-    gameState.status !== gameStatus.NEW &&
-    gameState.status !== gameStatus.WAITING_JOIN
-    
+    gameState.status !== GAMESTATUS.NEW &&
+    gameState.status !== GAMESTATUS.WAITING_JOIN
 )
 </script>
 <template>
@@ -21,14 +20,14 @@ const isGameStarted = computed(() =>
             <div :class='isTurn ? `player-item selected` : `player-item`'>
                 <div class='player-name'>
                     <span :class='isTurn ? `` : `hidden`'>>></span>
-                    <span>{{ gameState.player.name }}</span>
+                    <span>{{ gameState.player.alias }}</span>
                 </div>
                 <div class='score'>{{ gameState.player.score }}</div>
             </div>
             <div :class='isOppTurn ? `player-item selected` : `player-item`'>
                 <div class='player-name'>
                     <span :class='isOppTurn ? `` : `hidden`'>>></span>
-                    <span>{{ gameState.opponent.name }}</span>
+                    <span>{{ gameState.opponent.alias }}</span>
                 </div>
                 <div class='score'>{{ gameState.opponent.score }}</div>
             </div>

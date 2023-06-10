@@ -24,7 +24,19 @@ const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
         show: ''
     })) as BlockView[]
 
+const player = {
+    id: '',
+    alias: "Anonymous",
+    score: 0
+}
+const opponent = {
+    id: '',
+    alias: "Anonymous",
+    score: 0
+}
+
 export default reactive({
+    roomId: -1,
     board,
     status: GAMESTATUS.NEW,
     resetBoard: function() {
@@ -36,14 +48,8 @@ export default reactive({
         if (block['bType'] === NUMBER) return block['value'].toString()
         return block['bType'] === BOMB ? 'BO' : 'BL'
     },
-    player: {
-        name: 'Anonymous',
-        score: 0,
-    },
-    opponent: {
-        name: 'Anonymous',
-        score: 0,
-    },
+    player,
+    opponent,
     bombsLeft: Number.MAX_SAFE_INTEGER,
     isGameOver: false,
 })

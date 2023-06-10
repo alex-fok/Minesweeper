@@ -14,27 +14,22 @@ type Turn struct {
 	next  ClientId
 }
 
-type GameStat struct {
+type Counter struct {
 	score     map[ClientId]uint
 	bombsLeft uint
 }
 
 type PlayerInfo struct {
-	Alias string `json:"alias"`
-	Score uint   `json:"score"`
+	Id     ClientId `json:"id"`
+	Alias  string   `json:"alias"`
+	Score  uint     `json:"score"`
+	IsTurn bool     `json:"isTurn"`
 }
 
-type StatMsg struct {
-	Id           uint       `json:"id"`
-	IsPlayerTurn bool       `json:"isPlayerTurn"`
-	BombsLeft    uint       `json:"bombsLeft"`
-	Player       PlayerInfo `json:"player"`
-	Opponent     PlayerInfo `json:"opponent"`
-}
-
-type ResumeMsg struct {
-	Stat    StatMsg                 `json:"stat"`
-	Visible []boardhelper.BlockInfo `json:"visible"`
+type GameStat struct {
+	BombsLeft uint                    `json:"bombsLeft"`
+	Players   map[ClientId]PlayerInfo `json:"players"`
+	Visible   []boardhelper.BlockInfo `json:"visible"`
 }
 
 type Room struct {
@@ -44,7 +39,7 @@ type Room struct {
 	board         [][]boardhelper.Block
 	actionHandler map[string]func(string)
 	turn          Turn
-	gameStat      GameStat
+	counter       Counter
 	update        chan *Action
 	register      chan *Client
 	unregister    chan *Client
@@ -84,25 +79,36 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 	// Register Client
 	r.registerClient(c)
 
-	// Update client with room id
-	content, _ := json.Marshal(struct {
-		RoomId uint `json:"roomId"`
-	}{
-		RoomId: id,
-	})
+	// Update client
 	c.update <- &Action{
 		Name:    "roomCreated",
-		Content: string(content),
+		Content: "{}",
 	}
 	return r
 }
 
 func (r *Room) registerClient(c *Client) {
 	r.clients[c.id] = c
-	r.assignTurn(c)
+	curr, next := r.assignTurn(c)
 
-	if r.clients[r.turn.curr] != nil && r.clients[r.turn.next] != nil {
+	type RoomIdMsg struct {
+		Id uint `json:"id"`
+	}
+	rId, _ := json.Marshal(RoomIdMsg{Id: r.id})
+
+	c.update <- &Action{
+		Name:    "roomId",
+		Content: string(rId),
+	}
+
+	if r.clients[curr] == nil || r.clients[next] == nil {
+		return
+	}
+	if curr == c.id || next == c.id {
 		r.startGame()
+	} else {
+		// FIXME: Add watch game for non-player
+		// r.watchGame()
 	}
 }
 
@@ -135,7 +141,7 @@ func (r *Room) reconnectClient(c *Client) {
 	if !timeoutOk || !clientsOk {
 		log.Println("Cannot reconnect client")
 		c.update <- &Action{
-			Name:    "Failed Reconnection",
+			Name:    "reconnFailed",
 			Content: "{}",
 		}
 		return
@@ -150,35 +156,12 @@ func (r *Room) reconnectClient(c *Client) {
 
 	log.Println("Client", c.alias, "reconnected")
 
-	// Find Opponent Id
-	var oppId ClientId
-	if r.turn.curr == c.id {
-		oppId = r.turn.next
-	} else {
-		oppId = r.turn.curr
-	}
-
-	// Setup reconnected Message
-	setup, _ := json.Marshal(ResumeMsg{
-		Stat: StatMsg{
-			Id:           r.id,
-			IsPlayerTurn: r.turn.curr == c.id,
-			BombsLeft:    r.gameStat.bombsLeft,
-			Player: PlayerInfo{
-				Alias: c.alias,
-				Score: r.gameStat.score[c.id],
-			},
-			Opponent: PlayerInfo{
-				Alias: r.clients[oppId].alias,
-				Score: r.gameStat.score[oppId],
-			},
-		},
-		Visible: r.getVisibleBlocks(),
-	})
+	// Return Game Stat
+	stat, _ := json.Marshal(r.getGameStat())
 
 	c.update <- &Action{
-		Name:    "reconnected",
-		Content: string(setup),
+		Name:    "gameStat",
+		Content: string(stat),
 	}
 }
 
@@ -205,48 +188,19 @@ func (r *Room) isPlayable(c *Client) bool {
 func (r *Room) startGame() {
 
 	// Init game stat
-	r.gameStat = GameStat{
+	r.counter = Counter{
 		bombsLeft: DEFAULT_BOMB_COUNT,
 		score:     make(map[ClientId]uint),
 	}
-	r.gameStat.score[r.turn.curr] = 0
-	r.gameStat.score[r.turn.next] = 0
+	r.counter.score[r.turn.curr] = 0
+	r.counter.score[r.turn.next] = 0
 
-	currInfo := PlayerInfo{
-		Alias: r.clients[r.turn.curr].alias,
-		Score: 0,
-	}
+	gameStatMsg, _ := json.Marshal(r.getGameStat())
 
-	nextInfo := PlayerInfo{
-		Alias: r.clients[r.turn.next].alias,
-		Score: 0,
-	}
-
-	currStartMsg, _ := json.Marshal(StatMsg{
-		Id:           r.id,
-		IsPlayerTurn: true,
-		BombsLeft:    DEFAULT_BOMB_COUNT,
-		Player:       currInfo,
-		Opponent:     nextInfo,
+	r.broadcast(&Action{
+		Name:    "gameStat",
+		Content: string(gameStatMsg),
 	})
-
-	nextStartMsg, _ := json.Marshal(StatMsg{
-		Id:           r.id,
-		IsPlayerTurn: false,
-		BombsLeft:    DEFAULT_BOMB_COUNT,
-		Player:       nextInfo,
-		Opponent:     currInfo,
-	})
-
-	r.clients[r.turn.curr].update <- &Action{
-		Name:    "gameStarted",
-		Content: string(currStartMsg),
-	}
-
-	r.clients[r.turn.next].update <- &Action{
-		Name:    "gameStarted",
-		Content: string(nextStartMsg),
-	}
 }
 
 func (r *Room) advanceTurn() {
@@ -272,23 +226,23 @@ func (r *Room) scoreCurrPlayer() {
 		Opponent  uint `json:"opponent"`
 		BombsLeft uint `json:"bombsLeft"`
 	}
-	r.gameStat.score[r.turn.curr]++
-	r.gameStat.bombsLeft--
+	r.counter.score[r.turn.curr]++
+	r.counter.bombsLeft--
 
 	currScore, _ := json.Marshal(Score{
-		Player:    r.gameStat.score[r.turn.curr],
-		Opponent:  r.gameStat.score[r.turn.next],
-		BombsLeft: r.gameStat.bombsLeft,
+		Player:    r.counter.score[r.turn.curr],
+		Opponent:  r.counter.score[r.turn.next],
+		BombsLeft: r.counter.bombsLeft,
 	})
 
 	nextScore, _ := json.Marshal(Score{
-		Player:    r.gameStat.score[r.turn.next],
-		Opponent:  r.gameStat.score[r.turn.curr],
-		BombsLeft: r.gameStat.bombsLeft,
+		Player:    r.counter.score[r.turn.next],
+		Opponent:  r.counter.score[r.turn.curr],
+		BombsLeft: r.counter.bombsLeft,
 	})
 
 	// Check winning condition
-	if r.gameStat.score[r.turn.curr] > DEFAULT_BOMB_COUNT/2 {
+	if r.counter.score[r.turn.curr] > DEFAULT_BOMB_COUNT/2 {
 		r.clients[r.turn.curr].update <- &Action{
 			Name:    "gameWon",
 			Content: string(currScore),
@@ -306,6 +260,32 @@ func (r *Room) scoreCurrPlayer() {
 			Name:    "scoreUpdated",
 			Content: string(nextScore),
 		}
+	}
+}
+
+func (r *Room) getGameStat() *GameStat {
+	curr, next := r.turn.curr, r.turn.next
+	if curr == "" || next == "" {
+		return &GameStat{}
+	}
+	currInfo := PlayerInfo{
+		Id:     r.clients[r.turn.curr].id,
+		Alias:  r.clients[r.turn.curr].alias,
+		Score:  r.counter.score[r.turn.curr],
+		IsTurn: true,
+	}
+
+	nextInfo := PlayerInfo{
+		Id:     r.clients[next].id,
+		Alias:  r.clients[next].alias,
+		Score:  r.counter.score[next],
+		IsTurn: false,
+	}
+
+	return &GameStat{
+		BombsLeft: r.counter.bombsLeft,
+		Players:   map[ClientId]PlayerInfo{currInfo.Id: currInfo, nextInfo.Id: nextInfo},
+		Visible:   r.getVisibleBlocks(),
 	}
 }
 
