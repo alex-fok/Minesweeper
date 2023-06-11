@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"log"
+	"minesweeper/types"
 	"minesweeper/utils"
 	"strconv"
 
@@ -32,7 +33,7 @@ type Request struct {
 	Content string `json:"content"`
 }
 
-type ClientId string
+type ClientId = types.ClientId
 
 type Client struct {
 	id     ClientId
@@ -112,7 +113,7 @@ func (c *Client) joinRoom(req *Request) {
 }
 
 func (c *Client) reveal(req *Request) {
-	if c.room == nil || !c.room.isPlayable(c) {
+	if c.room == nil {
 		return
 	}
 	c.room.update <- &Action{

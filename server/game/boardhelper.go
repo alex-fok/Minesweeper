@@ -1,19 +1,9 @@
-package boardhelper
+package game
 
 import (
 	"math/rand"
 	"time"
 )
-
-const (
-	BLANK int = 0
-	BOMB  int = 1
-	NUM   int = 2
-)
-
-type Vertex struct {
-	X, Y int
-}
 
 type Block struct {
 	Type    int `json:"bType"`
@@ -25,6 +15,16 @@ type BlockInfo struct {
 	X int `json:"x"`
 	Y int `json:"y"`
 	Block
+}
+
+const (
+	BLANK int = 0
+	BOMB  int = 1
+	NUM   int = 2
+)
+
+type Vertex struct {
+	X, Y int
 }
 
 func getBombLoc(size int, bombCount int) [][]int {
@@ -67,11 +67,11 @@ func getNeighbors(loc []int, size int) [][]int {
 	return neighbors
 }
 
-func GetRevealables(v *Vertex, b [][]Block) []BlockInfo {
+func GetRevealables(v *Vertex, b [][]*Block) []BlockInfo {
 	source := BlockInfo{
 		X:     v.X,
 		Y:     v.Y,
-		Block: b[v.Y][v.X],
+		Block: *b[v.Y][v.X],
 	}
 	if source.Block.Type != BLANK {
 		return []BlockInfo{source}
@@ -112,20 +112,20 @@ func GetRevealables(v *Vertex, b [][]Block) []BlockInfo {
 			queue = append(queue, BlockInfo{
 				X:     x,
 				Y:     y,
-				Block: b[y][x],
+				Block: *b[y][x],
 			})
 		}
 	}
 }
 
-func GetBoard(size int, bombCount int) [][]Block {
-	board := make([][]Block, size)
+func GetBoard(size int, bombCount int) [][]*Block {
+	board := make([][]*Block, size)
 
 	// Init board
 	for i := range board {
-		board[i] = make([]Block, size)
+		board[i] = make([]*Block, size)
 		for j := range board[i] {
-			board[i][j] = Block{Type: BLANK, Val: 0, Visited: false}
+			board[i][j] = &Block{Type: BLANK, Val: 0, Visited: false}
 		}
 	}
 	// Place bomb blocks
