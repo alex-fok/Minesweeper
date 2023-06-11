@@ -3,10 +3,8 @@ import roomIdHandler from './roomId'
 import roomCreatedHandler from './roomCreated'
 import gameStatHandler from './gameStat'
 import scoreUpdatedHandler from './scoreUpdated'
-import gameWonHandler from './gameWon'
-import gameLostHandler from './gameLost'
 import turnPassedHandler from './turnPassed'
-
+import gameEndedHandler from './gameEnded'
 import revealHandler from './reveal'
 
 type handlerMap = {
@@ -19,11 +17,10 @@ const getAll = () : handlerMap[] => [
     { name: 'roomId', fn: roomIdHandler },
     { name: 'roomCreated', fn: roomCreatedHandler },
     { name: 'gameStat', fn: gameStatHandler },
-    { name: 'scoreUpdate', fn: scoreUpdatedHandler },
-    { name: 'gameWon', fn: gameWonHandler },
-    { name: 'gameLost', fn: gameLostHandler },
+    { name: 'scoreUpdated', fn: scoreUpdatedHandler },
+    { name: 'gameEnded', fn: gameEndedHandler },
     { name: 'turnPassed', fn: turnPassedHandler },
-    { name: 'reveal', fn: revealHandler },
+    { name: 'reveal', fn: revealHandler }
 ]
 
 export default { getAll }

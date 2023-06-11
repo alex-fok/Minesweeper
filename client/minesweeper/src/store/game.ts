@@ -26,12 +26,13 @@ const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
 
 const player = {
     id: '',
-    alias: "Anonymous",
+    alias: 'Anonymous',
     score: 0
 }
+
 const opponent = {
     id: '',
-    alias: "Anonymous",
+    alias: 'Anonymous',
     score: 0
 }
 
@@ -52,4 +53,5 @@ export default reactive({
     opponent,
     bombsLeft: Number.MAX_SAFE_INTEGER,
     isGameOver: false,
+    winner: ''
 })

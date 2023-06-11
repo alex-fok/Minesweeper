@@ -1,5 +1,4 @@
 <script setup lang='ts'>
-import { GAMESTATUS } from '@/config';
 import { gameState } from '@/store';
 defineProps({
     close: {
@@ -7,7 +6,7 @@ defineProps({
         default: () => {}
     }
 })
-const isWon = gameState.status === GAMESTATUS.GAME_WON
+const isWon = gameState.winner === gameState.player.id
 </script>
 <template>
     <div class='modal-item'>
