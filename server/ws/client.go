@@ -116,9 +116,12 @@ func (c *Client) reveal(req *Request) {
 	if c.room == nil {
 		return
 	}
-	c.room.update <- &Action{
-		Name:    req.Name,
-		Content: req.Content,
+	c.room.update <- &RoomUpdate{
+		Client: c.id,
+		Action: &Action{
+			Name:    req.Name,
+			Content: req.Content,
+		},
 	}
 }
 

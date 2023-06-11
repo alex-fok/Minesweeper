@@ -22,14 +22,14 @@ type GameStat struct {
 }
 
 type Driver struct {
-	ActionHandler map[string]func(string) []*Action
+	ActionHandler map[string]func(ClientId, string) []*Action
 	Game          Game
 	Players       map[ClientId]*Client
 }
 
 func NewDriver() *Driver {
 	d := Driver{
-		ActionHandler: make(map[string]func(string) []*Action),
+		ActionHandler: make(map[string]func(ClientId, string) []*Action),
 		Game:          *CreateGame(),
 		Players:       make(map[ClientId]*Client),
 	}
@@ -111,8 +111,12 @@ func (d *Driver) scoreCurrPlayer() []*Action {
 	return actions
 }
 
-func (d *Driver) Reveal(content string) []*Action {
+func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 	actions := []*Action{}
+
+	if cId != d.Game.GetTurn().Curr {
+		return actions
+	}
 
 	// Get revealable blocks
 	var v Vertex

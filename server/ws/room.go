@@ -15,14 +15,19 @@ type GameEnded struct {
 	Winner ClientId `json:"winner"`
 }
 
+type RoomUpdate struct {
+	Client ClientId
+	Action *Action
+}
+
 type Room struct {
 	id            uint
 	clients       map[ClientId]*Client
 	lobby         *Lobby
 	board         [][]game.Block
-	actionHandler map[string]func(string)
+	actionHandler map[string]func(ClientId, string)
 	gameDriver    game.Driver
-	update        chan *Action
+	update        chan *RoomUpdate
 	register      chan *Client
 	unregister    chan *Client
 	disconnect    chan *Client
@@ -41,7 +46,7 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
 		gameDriver: *game.NewDriver(),
-		update:     make(chan *Action),
+		update:     make(chan *RoomUpdate),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 		disconnect: make(chan *Client),
@@ -49,9 +54,9 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 		timeouts:   make(map[ClientId]int64),
 	}
 	// Init handler
-	r.actionHandler = make(map[string]func(string))
-	r.actionHandler["reveal"] = func(content string) {
-		actions := r.gameDriver.Reveal(content)
+	r.actionHandler = make(map[string]func(ClientId, string))
+	r.actionHandler["reveal"] = func(cId ClientId, content string) {
+		actions := r.gameDriver.Reveal(cId, content)
 		for _, a := range actions {
 			r.broadcast(a)
 		}
@@ -178,8 +183,8 @@ func (r *Room) run() {
 
 	for {
 		select {
-		case action := <-r.update:
-			r.actionHandler[action.Name](action.Content)
+		case update := <-r.update:
+			r.actionHandler[update.Action.Name](update.Client, update.Action.Content)
 		case c := <-r.register:
 			r.registerClient(c)
 		case c := <-r.unregister:
