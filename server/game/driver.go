@@ -54,9 +54,12 @@ func (d *Driver) RegisterPlayer(c *Client) []*Action {
 		if !isGameReady {
 			return actions
 		}
-		// Give viewer game stat
-		// FIXME: Add watch game function for non-player
-		// r.watchGame()
+		gameStatMsg, _ := json.Marshal(d.GetGameStat())
+
+		actions = append(actions, &Action{
+			Name:    "gameStat",
+			Content: string(gameStatMsg),
+		})
 	}
 	return actions
 }
