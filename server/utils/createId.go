@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// Refer to: https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-go
 const idLetters string = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 const bits = 6               // Number of bits representing an index; Log2(len(idLetters)) + 1
 const mask = 1<<bits - 1     // Masking for 6 bit value
