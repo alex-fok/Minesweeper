@@ -30,7 +30,7 @@ type Driver struct {
 func NewDriver() *Driver {
 	d := Driver{
 		ActionHandler: make(map[string]func(ClientId, string) []*Action),
-		Game:          *CreateGame(),
+		Game:          *newGame(),
 		Players:       make(map[ClientId]*Client),
 	}
 	d.ActionHandler["reveal"] = d.Reveal
@@ -39,7 +39,7 @@ func NewDriver() *Driver {
 
 func (d *Driver) RegisterPlayer(c *Client) []*Action {
 	actions := []*Action{}
-	currId, nextId := d.Game.AssignTurn(c.Id)
+	currId, nextId := d.Game.assignTurn(c.Id)
 
 	isGameReady := currId != "" && nextId != ""
 	isPlayer := currId == c.Id || nextId == c.Id
@@ -49,7 +49,7 @@ func (d *Driver) RegisterPlayer(c *Client) []*Action {
 		if !isGameReady {
 			return actions
 		}
-		actions = append(actions, d.startGame())
+		actions = append(actions, d.StartGame())
 	} else {
 		if !isGameReady {
 			return actions
@@ -66,7 +66,7 @@ func (d *Driver) RegisterPlayer(c *Client) []*Action {
 
 func (d *Driver) UnregisterPlayer(cId ClientId) []*Action {
 	actions := []*Action{}
-	currId, nextId := d.Game.UnassignTurn(cId)
+	currId, nextId := d.Game.unassignTurn(cId)
 	if currId == "" || nextId == "" {
 		actions = append(actions, &Action{
 			Name:    "gameEnded",
@@ -78,7 +78,7 @@ func (d *Driver) UnregisterPlayer(cId ClientId) []*Action {
 
 func (d *Driver) advanceTurn() []*Action {
 	actions := []*Action{}
-	turn := d.Game.AdvanceTurn()
+	turn := d.Game.advanceTurn()
 	type TurnPassed struct {
 		Count uint     `json:"count"`
 		Curr  ClientId `json:"curr"`
@@ -97,7 +97,7 @@ func (d *Driver) advanceTurn() []*Action {
 
 func (d *Driver) scoreCurrPlayer() []*Action {
 	actions := []*Action{}
-	counter, isWon := d.Game.ScoreCurrPlayer()
+	counter, isWon := d.Game.scoreCurrPlayer()
 
 	scoreUpdated, _ := json.Marshal(counter)
 	actions = append(actions, &Action{
@@ -109,7 +109,7 @@ func (d *Driver) scoreCurrPlayer() []*Action {
 		type GameEnded struct {
 			Winner ClientId `json:"winner"`
 		}
-		gameEnded, _ := json.Marshal(GameEnded{Winner: d.Game.GetWinner()})
+		gameEnded, _ := json.Marshal(GameEnded{Winner: d.Game.getWinner()})
 		actions = append(actions, &Action{
 			Name:    "gameEnded",
 			Content: string(gameEnded),
@@ -121,7 +121,7 @@ func (d *Driver) scoreCurrPlayer() []*Action {
 func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 	actions := []*Action{}
 
-	if cId != d.Game.GetTurn().Curr {
+	if cId != d.Game.getTurn().Curr {
 		return actions
 	}
 
@@ -132,7 +132,7 @@ func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 	if d.Game.Board[v.Y][v.X].Visited {
 		return actions
 	}
-	revealables := GetRevealables(&v, d.Game.Board)
+	revealables := GetRevealables(&v, d.Game.getBoard())
 
 	// Update visited blocks
 	for _, block := range revealables {
@@ -163,7 +163,7 @@ func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 }
 
 func (d *Driver) GetGameStat() *GameStat {
-	counter, turn := d.Game.GetCounter(), d.Game.GetTurn()
+	counter, turn := d.Game.getCounter(), d.Game.getTurn()
 
 	gameStat := GameStat{
 		BombsLeft: counter.BombsLeft,
@@ -181,10 +181,10 @@ func (d *Driver) GetGameStat() *GameStat {
 	return &gameStat
 }
 
-func (d *Driver) startGame() *Action {
+func (d *Driver) StartGame() *Action {
 
 	// Init game stat
-	d.Game.InitCounter()
+	d.Game.initCounter()
 
 	gameStatMsg, _ := json.Marshal(d.GetGameStat())
 
