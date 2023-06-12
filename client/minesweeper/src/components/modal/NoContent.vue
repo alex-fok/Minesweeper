@@ -7,6 +7,8 @@ defineProps({
 })
 </script>
 <template>
-    No Content
-    <div class='modal-close' @click='close()'>&#10005;</div>
+    <div class='modal-row'>
+        No Content
+        <div class='modal-close' @click='close()'>&#10005;</div>
+    </div>
 </template>

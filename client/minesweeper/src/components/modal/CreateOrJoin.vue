@@ -11,16 +11,18 @@ defineProps({
 })
 </script>
 <template>
-    <div class='modal-item'>
-        <span class='btn' @click='setContent(`create`)'>CREATE ROOM</span>
+    <div class='moda-row'>
+        <div class='modal-item'>
+            <span class='btn' @click='setContent(`create`)'>CREATE ROOM</span>
+        </div>
+        <div class='modal-item'>
+            OR
+        </div>
+        <div class='modal-item'>
+            <span class='btn' @click='setContent(`join`)'>JOIN ROOM</span>
+        </div>
+        <div class='modal-close' @click='close()'>&#10005;</div>
     </div>
-    <div class='modal-item'>
-        OR
-    </div>
-    <div class='modal-item'>
-        <span class='btn' @click='setContent(`join`)'>JOIN ROOM</span>
-    </div>
-    <div class='modal-close' @click='close()'>&#10005;</div>
 </template>
 <style scoped>
     @import '@/assets/modal.css';

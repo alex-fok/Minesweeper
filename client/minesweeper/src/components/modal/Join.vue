@@ -44,35 +44,37 @@ onMounted(() => {
 })
 </script>
 <template>
-    <div class='modal-item'>
-        <div class='info'>
-            <label for='roomId'>Room #</label>
-            <input
-                ref='roomIdRef'
-                type='text'
-                id='roomId'
-                class='room-input autofocus'
-                maxlength=4
-                :value='roomId'
-                @input='setRoomId'
-            />
+    <div class='modal-row'>
+        <div class='modal-item'>
+            <div class='info'>
+                <label for='roomId'>Room #</label>
+                <input
+                    ref='roomIdRef'
+                    type='text'
+                    id='roomId'
+                    class='room-input autofocus'
+                    maxlength=4
+                    :value='roomId'
+                    @input='setRoomId'
+                />
+            </div>
+            <div class='info'>
+                <label for='alias'>Your Alias:</label>
+                <input
+                    ref='aliasRef'
+                    type='text'
+                    id='alias'
+                    class='alias-input'
+                    maxlength='12'
+                    v-model='alias'
+                />
+            </div>
         </div>
-        <div class='info'>
-            <label for='alias'>Your Alias:</label>
-            <input
-                ref='aliasRef'
-                type='text'
-                id='alias'
-                class='alias-input'
-                maxlength='12'
-                v-model='alias'
-            />
+        <div class='modal-item'>
+            <span :class='joinBtn' @click='joinRoom'>JOIN</span>
         </div>
+        <div class='modal-close' @click='close()'>&#10005;</div>
     </div>
-    <div class='modal-item'>
-        <span :class='joinBtn' @click='joinRoom'>JOIN</span>
-    </div>
-    <div class='modal-close' @click='close()'>&#10005;</div>
 </template>
 <style scoped>
     @import '@/assets/modal.css';

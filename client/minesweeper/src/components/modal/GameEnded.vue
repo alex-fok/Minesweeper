@@ -11,19 +11,23 @@ const isWon = isPlayer && gameState.winner === gameState.id
 </script>
 <template>
     <template v-if='isPlayer'>
-        <div class='modal-item'>
-            <div class='modal-end-game'>{{ isWon ? 'You Won!' : 'You Lost!' }}</div>
+        <div class='modal-row'>
+            <div class='modal-item'>
+                <div class='modal-end-game'>{{ isWon ? 'You Won!' : 'You Lost!' }}</div>
+            </div>
+            <div class='modal-item'>
+                <span class='btn' @click=''>REMATCH?</span>
+            </div>
+            <div class='modal-close' @click='close()'>&#10005;</div>
         </div>
-        <div class='modal-item'>
-            <span class='btn' @click=''>REMATCH?</span>
-        </div>
-        <div class='modal-close' @click='close()'>&#10005;</div>
     </template>
     <template v-else>
-        <div class='modal-item'>
-            {{ gameState.players[gameState.winner].alias }} Won!
+        <div class='moda-row'>
+            <div class='modal-item'>
+                {{ gameState.players[gameState.winner].alias }} Won!
+            </div>
+            <div class='modal-close' @click='close()'>&#10005;</div>
         </div>
-        <div class='modal-close' @click='close()'>&#10005;</div>
     </template>
 </template>
 <style scoped>
@@ -32,4 +36,3 @@ const isWon = isPlayer && gameState.winner === gameState.id
         font-size: 1.7rem;
     }
 </style>
-

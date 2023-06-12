@@ -33,24 +33,26 @@ onMounted(() => {
 })
 </script>
 <template>
-    <div class='modal-item'>
-        <div class='info'>
-            <label for='alias'>Your Alias:</label>
-            <input
-                ref='aliasRef'
-                type='text'
-                id='alias'
-                class='alias-input autofocus'
-                maxlength=12
-                :value='alias'
-                @input='setAlias'
-            />
+    <div class='modal-row'>
+        <div class='modal-item'>
+            <div class='info'>
+                <label for='alias'>Your Alias:</label>
+                <input
+                    ref='aliasRef'
+                    type='text'
+                    id='alias'
+                    class='alias-input autofocus'
+                    maxlength=12
+                    :value='alias'
+                    @input='setAlias'
+                />
+            </div>
+        </div>    
+        <div class='modal-item'>
+            <span :class='createBtn' @click='createRoom'>CREATE</span>
         </div>
+        <div class='modal-close' @click='close()'>&#10005;</div>
     </div>
-    <div class='modal-item'>
-        <span :class='createBtn' @click='createRoom'>CREATE</span>
-    </div>
-    <div class='modal-close' @click='close()'>&#10005;</div>
 </template>
 <style scoped>
     @import '@/assets/modal.css';

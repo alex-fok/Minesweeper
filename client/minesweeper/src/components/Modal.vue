@@ -66,9 +66,7 @@ watch(showingContent, setFocus)
         margin: 0;
         position: absolute;
         display: flex;
-        flex-direction: row;
-        align-items: stretch;
-        column-gap: 1.5rem;
+        flex-direction: col;
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
