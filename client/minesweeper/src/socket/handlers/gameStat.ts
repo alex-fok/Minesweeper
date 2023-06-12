@@ -19,40 +19,19 @@ type GameStat = {
     }[]
 }
 
-const { PLAYING, WAITING_TURN } = GAMESTATUS
+const { IN_GAME } = GAMESTATUS
 
 export default (data: GameStat) => {
     gameState.resetBoard()
     const { bombsLeft, players, visible } = data
     if (!players) return
 
-    // Update player & opponent info
-    let player, opponent
-
-    for (const id in players ) {
-        if (id === gameState.player.id) {
-            player = players[id]
-        } else {
-            opponent = players[id]
-        }
-    }
-    // No change for non-player
-    // FIXME: Allow non-player to watch game in play
-    if (!player || !opponent) return
-
     uiState.modal.isActive = false 
-    gameState.status =  player.isTurn ? PLAYING : WAITING_TURN
+    gameState.status = IN_GAME 
     gameState.bombsLeft = bombsLeft
     
-    gameState.player.alias = player.alias
-    gameState.player.score = player.score
-
-    gameState.opponent = {
-        id: opponent.id,
-        alias: opponent.alias,
-        score: opponent.score
-    }
-
+    gameState.players= players
+    
     // Update board
     if (!visible) return
     visible.forEach(block => {

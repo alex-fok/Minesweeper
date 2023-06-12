@@ -13,11 +13,9 @@ socket.addEventListener('open', _ => {
     const url = new URL(window.location.href)
     const roomId = url.searchParams.get('room')
     const userId = url.searchParams.get('id')
-    // console.log('open -> roomId:', roomId)
-    // console.log('open -> userId:', userId)
 
     if (!userId) return
-    gameState.player.id = userId
+    gameState.id = userId
 
     if (roomId) gameState.roomId = parseInt(roomId)
 

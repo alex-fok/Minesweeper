@@ -5,7 +5,8 @@ import { gameState } from '@/store'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 
 const reveal = (i: number) => {
-    if (gameState.status !== GAMESTATUS.PLAYING) return
+    if (gameState.status !== GAMESTATUS.IN_GAME) return
+
     const y = Math.floor(i / BOARDSETTING.SIZE)
     const x = i % BOARDSETTING.SIZE
     socket.send(JSON.stringify({
@@ -27,12 +28,6 @@ const reveal = (i: number) => {
                     :reveal='() => { reveal(i) }'
                     :show='block.show'
                 />
-            </div>
-            <div
-                v-if='gameState.status === GAMESTATUS.WAITING_TURN'
-                class='overlay'
-            >
-               <div class='overlay-text'>Waiting for opponent...</div>
             </div>
         </div>
     </div>

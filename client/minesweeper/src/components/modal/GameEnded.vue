@@ -6,7 +6,8 @@ defineProps({
         default: () => {}
     }
 })
-const isWon = gameState.winner === gameState.player.id
+const isPlayer = gameState.players[gameState.id] !== undefined
+const isWon = isPlayer && gameState.winner === gameState.id
 </script>
 <template>
     <div class='modal-item'>

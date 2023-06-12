@@ -3,12 +3,6 @@ import { GAMESTATUS } from '@/config';
 import { gameState } from '@/store';
 import { computed } from 'vue';
 
-const isTurn = computed(() => {
-    return gameState.status === GAMESTATUS.PLAYING
-})
-const isOppTurn = computed(() => {
-    return gameState.status === GAMESTATUS.WAITING_TURN
-})
 const isGameStarted = computed(() => 
     gameState.status !== GAMESTATUS.NEW &&
     gameState.status !== GAMESTATUS.WAITING_JOIN
@@ -17,20 +11,15 @@ const isGameStarted = computed(() =>
 <template>
     <div v-if='isGameStarted' class='side-container'>
         <div class='player-list'>
-            <div :class='isTurn ? `player-item selected` : `player-item`'>
-                <div class='player-name'>
-                    <span :class='isTurn ? `` : `hidden`'>>></span>
-                    <span>{{ gameState.player.alias }}</span>
+            <template v-for='player in gameState.players'>
+                <div :class='player.isTurn ? `player-item selected` : `player-item`'>
+                    <div class='player-name'>
+                        <span :class='player.isTurn ? `` : `hidden`'>>></span>
+                        <span>{{ player.alias }}</span>
+                    </div>
+                    <div class='score'>{{ player.score }}</div>
                 </div>
-                <div class='score'>{{ gameState.player.score }}</div>
-            </div>
-            <div :class='isOppTurn ? `player-item selected` : `player-item`'>
-                <div class='player-name'>
-                    <span :class='isOppTurn ? `` : `hidden`'>>></span>
-                    <span>{{ gameState.opponent.alias }}</span>
-                </div>
-                <div class='score'>{{ gameState.opponent.score }}</div>
-            </div>
+            </template>
         </div>
         <div>Left: {{ gameState.bombsLeft }}</div>
     </div>

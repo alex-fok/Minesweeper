@@ -1,8 +1,7 @@
 export default {
     NEW: 0,
     WAITING_JOIN: 1,
-    PLAYING: 2,
-    WAITING_TURN: 3,
-    WAITING_SERVER: 4,
-    END: 5,
+    IN_GAME: 2, 
+    WAITING_SERVER: 3,
+    END: 4,
 }

@@ -1,6 +1,10 @@
 import { gameState } from '@/store'
-export default (playerScore: number, opponentScore: number, bombsLeft: number) => {
-    gameState.player.score = playerScore
-    gameState.opponent.score = opponentScore
+export default (score: Record<string, number>, bombsLeft: number) => {
+    // gameState.players[gameState.].score = playerScore
+    // gameState.opponent.score = opponentScore
+    const playerIds = Object.getOwnPropertyNames(score)
+    playerIds.forEach(id => {
+        gameState.players[id].score = score[id]
+    })
     gameState.bombsLeft = bombsLeft
 }
