@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import socket from '@/socket';
 import { getAlias, setAlias as saveAlias } from '@/docUtils'
 
@@ -10,13 +10,13 @@ const props = defineProps({
     }
 })
 
-const alias = ref(getAlias() || '')
-const roomId = ref('')
-const joinBtn = ref('btn hidden')
+const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
+const [roomId, roomIdRef] = [ref(''), ref<HTMLInputElement>()]
+
+const joinBtn = computed(() => alias.value !== '' && roomId.value !== '' ? 'btn' : 'btn hidden')
 
 const setRoomId = (event:Event) => {
     roomId.value = (event.target as HTMLInputElement).value
-    joinBtn.value = roomId.value.length ? 'btn' : 'btn hidden'
 }
 
 const joinRoom = () => {
@@ -34,12 +34,21 @@ const joinRoom = () => {
     }))
     props.close()
 }
+
+onMounted(() => {
+    [aliasRef, roomIdRef].forEach(ref => {
+        ref?.value?.addEventListener('keydown', event => {
+            if ((event as KeyboardEvent).key === 'Enter') joinRoom()
+        })
+    })
+})
 </script>
 <template>
     <div class='modal-item'>
         <div class='info'>
             <label for='roomId'>Room #</label>
             <input
+                ref='roomIdRef'
                 type='text'
                 id='roomId'
                 class='room-input autofocus'
@@ -51,6 +60,7 @@ const joinRoom = () => {
         <div class='info'>
             <label for='alias'>Your Alias:</label>
             <input
+                ref='aliasRef'
                 type='text'
                 id='alias'
                 class='alias-input'

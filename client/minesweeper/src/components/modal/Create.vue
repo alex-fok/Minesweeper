@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref } from 'vue'
+import { onMounted, ref, computed } from 'vue'
 import socket from '@/socket'
 import {getAlias, setAlias as saveAlias } from '@/docUtils'
 
@@ -9,12 +9,11 @@ const props = defineProps({
         default: () => {}
     }
 })
-const alias = ref(getAlias() || '')
-const createBtn = ref('btn hidden')
+const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
+const createBtn = computed(() => alias.value !== '' ? 'btn' : 'btn hidden')
 
 const setAlias = (event:Event) => {
     alias.value = (event.target as HTMLInputElement).value
-    createBtn.value = alias.value !== '' ? 'btn' : 'btn hidden'
 }
 
 const createRoom = () => {
@@ -26,12 +25,19 @@ const createRoom = () => {
     }))
     props.close()
 }
+
+onMounted(() => {
+    aliasRef?.value?.addEventListener('keydown', event => {
+        if ((event as KeyboardEvent).key === 'Enter') createRoom()
+    })
+})
 </script>
 <template>
     <div class='modal-item'>
         <div class='info'>
             <label for='alias'>Your Alias:</label>
             <input
+                ref='aliasRef'
                 type='text'
                 id='alias'
                 class='alias-input autofocus'
