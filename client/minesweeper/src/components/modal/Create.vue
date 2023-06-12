@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { ref } from 'vue'
 import socket from '@/socket'
+import {getAlias, setAlias as saveAlias } from '@/docUtils'
 
 const props = defineProps({
     close: {
@@ -8,7 +9,7 @@ const props = defineProps({
         default: () => {}
     }
 })
-const alias = ref('')
+const alias = ref(getAlias() || '')
 const createBtn = ref('btn hidden')
 
 const setAlias = (event:Event) => {
@@ -18,6 +19,7 @@ const setAlias = (event:Event) => {
 
 const createRoom = () => {
     if (alias.value === '') return
+    saveAlias(alias.value)
     socket.send(JSON.stringify({
         name: 'createRoom',
         content: JSON.stringify({alias: alias.value})

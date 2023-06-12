@@ -1,6 +1,7 @@
 <script setup lang='ts'>
 import { ref } from 'vue';
 import socket from '@/socket';
+import { getAlias, setAlias as saveAlias } from '@/docUtils'
 
 const props = defineProps({
     close: {
@@ -9,7 +10,7 @@ const props = defineProps({
     }
 })
 
-const alias = ref('')
+const alias = ref(getAlias() || '')
 const roomId = ref('')
 const joinBtn = ref('btn hidden')
 
@@ -21,6 +22,9 @@ const setRoomId = (event:Event) => {
 const joinRoom = () => {
     const roomIdInt = parseInt(roomId.value, 10)
     if (Number.isNaN(roomIdInt)) return
+
+    if (alias.value !== '') saveAlias(alias.value)
+
     socket.send(JSON.stringify({
         name: 'joinRoom',
         content: JSON.stringify({
