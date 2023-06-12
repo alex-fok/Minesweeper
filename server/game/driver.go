@@ -80,10 +80,14 @@ func (d *Driver) advanceTurn() []*Action {
 	actions := []*Action{}
 	turn := d.Game.AdvanceTurn()
 	type TurnPassed struct {
-		Count uint `json:"count"`
+		Count uint     `json:"count"`
+		Curr  ClientId `json:"curr"`
 	}
 
-	turnPassed, _ := json.Marshal(TurnPassed{Count: turn.Count})
+	turnPassed, _ := json.Marshal(TurnPassed{
+		Count: turn.Count,
+		Curr:  turn.Curr,
+	})
 	actions = append(actions, &Action{
 		Name:    "turnPassed",
 		Content: string(turnPassed),
