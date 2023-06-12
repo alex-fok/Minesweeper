@@ -26,7 +26,7 @@ type Game struct {
 }
 
 const DEFAULT_SIZE = 26
-const DEFAULT_BOMB_COUNT = 1
+const DEFAULT_BOMB_COUNT = 100
 
 func CreateGame() *Game {
 	return &Game{
