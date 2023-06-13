@@ -25,7 +25,7 @@ type Room struct {
 	clients       map[ClientId]*Client
 	lobby         *Lobby
 	board         [][]game.Block
-	actionHandler map[string]func(ClientId, string)
+	actionHandler map[string]func(ClientId, string) []*Action
 	gameDriver    game.Driver
 	update        chan *RoomUpdate
 	register      chan *Client
@@ -36,9 +36,7 @@ type Room struct {
 	stop          chan bool
 }
 
-const DEFAULT_SIZE = 26
-const DEFAULT_BOMB_COUNT = 100
-const TIMELIMIT_IN_SEC = 5 * 60 // 5 minutes
+const TIMELIMIT_IN_SEC = 60 * 5 // 5 minutes
 
 func newRoom(id uint, c *Client, l *Lobby) *Room {
 	r := &Room{
@@ -54,13 +52,9 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 		timeouts:   make(map[ClientId]int64),
 	}
 	// Init handler
-	r.actionHandler = make(map[string]func(ClientId, string))
-	r.actionHandler["reveal"] = func(cId ClientId, content string) {
-		actions := r.gameDriver.Reveal(cId, content)
-		for _, a := range actions {
-			r.broadcast(a)
-		}
-	}
+	r.actionHandler = make(map[string]func(ClientId, string) []*Action)
+	r.actionHandler["reveal"] = r.gameDriver.Reveal
+	r.actionHandler["rematch"] = r.gameDriver.Rematch
 	go r.run()
 
 	// Register Client
@@ -164,6 +158,13 @@ func (r *Room) checkActivity(now int64) {
 	}
 }
 
+func (r *Room) handleGameUpdate(update *RoomUpdate) {
+	actions := r.actionHandler[update.Action.Name](update.Client, update.Action.Content)
+	for _, a := range actions {
+		r.broadcast(a)
+	}
+}
+
 func (r *Room) broadcast(action *Action) {
 	for cId := range r.clients {
 		if r.clients[cId].isOpen {
@@ -196,7 +197,7 @@ func (r *Room) run() {
 	for {
 		select {
 		case update := <-r.update:
-			r.actionHandler[update.Action.Name](update.Client, update.Action.Content)
+			r.handleGameUpdate(update)
 		case c := <-r.register:
 			r.registerClient(c)
 		case c := <-r.unregister:

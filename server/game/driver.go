@@ -24,15 +24,19 @@ type GameStat struct {
 
 type Driver struct {
 	ActionHandler map[string]func(ClientId, string) []*Action
-	game          Game
+	game          *Game
 	Players       map[ClientId]*Client
+	RematchReq    map[ClientId]bool
+	isDone        bool
 }
 
 func NewDriver() *Driver {
 	d := Driver{
 		ActionHandler: make(map[string]func(ClientId, string) []*Action),
-		game:          *newGame(),
+		game:          newGame(),
 		Players:       make(map[ClientId]*Client),
+		RematchReq:    make(map[ClientId]bool),
+		isDone:        false,
 	}
 	d.ActionHandler["reveal"] = d.Reveal
 	return &d
@@ -158,7 +162,7 @@ func (d *Driver) scoreCurrPlayer() []*Action {
 func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 	actions := []*Action{}
 
-	if cId != d.game.getTurn().Curr {
+	if d.isDone || cId != d.game.getTurn().Curr {
 		return actions
 	}
 
@@ -196,6 +200,61 @@ func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 		a = d.scoreCurrPlayer()
 	}
 	actions = append(actions, a...)
+	return actions
+}
+
+func (d *Driver) Rematch(cId ClientId, content string) []*Action {
+	actions := []*Action{}
+
+	if _, ok := d.Players[cId]; d.isDone || !ok {
+		return actions
+	}
+
+	type Req struct {
+		Rematch bool `json:"rematch"`
+	}
+	var r Req
+	json.Unmarshal([]byte(content), &r)
+	d.RematchReq[cId] = r.Rematch
+
+	// If player decides not to rematch, game is closed
+	if !d.RematchReq[cId] {
+		d.isDone = true
+		type Message struct {
+			Message string `json:"message"`
+		}
+		msg, _ := json.Marshal(Message{
+			Message: "Game is closed",
+		})
+		actions = append(actions, &Action{
+			Name:    "message",
+			Content: string(msg),
+		})
+		return actions
+	}
+	// Check if all players select "Rematch"
+	rematch := true
+	for _, client := range d.Players {
+		if _, ok := d.RematchReq[client.Id]; !ok {
+			rematch = false
+			break
+		}
+	}
+
+	if rematch {
+		d.game = newGame()
+		for _, player := range d.Players {
+			d.game.assignTurn(player.Id)
+		}
+		d.game.initCounter()
+		d.RematchReq = make(map[ClientId]bool)
+		gameStatMsg, _ := json.Marshal(d.GetGameStat())
+
+		actions = append(actions, &Action{
+			Name:    "gameStat",
+			Content: string(gameStatMsg),
+		})
+	}
 	return actions
 }
 

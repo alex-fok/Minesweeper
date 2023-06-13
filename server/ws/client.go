@@ -120,7 +120,7 @@ func (c *Client) joinRoom(req *Request) {
 	c.room.register <- c
 }
 
-func (c *Client) reveal(req *Request) {
+func (c *Client) updateRoom(req *Request) {
 	if c.room == nil {
 		return
 	}
@@ -180,8 +180,8 @@ func (c *Client) readBuffer() {
 			go c.createRoom(&req)
 		case "joinRoom":
 			go c.joinRoom(&req)
-		case "reveal":
-			go c.reveal(&req)
+		case "reveal", "rematch":
+			go c.updateRoom(&req)
 		default:
 			continue
 		}
