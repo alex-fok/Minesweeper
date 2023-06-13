@@ -38,7 +38,7 @@ type Room struct {
 
 const DEFAULT_SIZE = 26
 const DEFAULT_BOMB_COUNT = 100
-const TIMELIMIT_IN_SEC = 5 // 5 minutes
+const TIMELIMIT_IN_SEC = 5 * 60 // 5 minutes
 
 func newRoom(id uint, c *Client, l *Lobby) *Room {
 	r := &Room{
@@ -162,7 +162,7 @@ func (r *Room) broadcast(action *Action) {
 
 func (r *Room) run() {
 	// Setup ticker
-	ticker := time.NewTicker((time.Second))
+	ticker := time.NewTicker(time.Minute)
 	doneChecking := make(chan bool)
 	defer func() {
 		doneChecking <- true
