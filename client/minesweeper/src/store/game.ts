@@ -4,7 +4,8 @@ import { BOARDSETTING, GAMESTATUS } from '@/config'
 type BlockView = {
     x: number,
     y: number,
-    show: string
+    show: string,
+    owner: string
 }
 
 type BlockInfo = {
@@ -29,11 +30,12 @@ const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
     .map((_, i) => ({
         x: i % BOARDSETTING.SIZE,
         y: Math.floor(i / BOARDSETTING.SIZE),
-        show: ''
+        show: '',
+        owner: ''
     })) as BlockView[]
 
 const players: Record<string, Player> = {}
-
+const bombColor: Record<string, string> = {}
 export default reactive({
     id: "",
     roomId: -1,
@@ -41,7 +43,7 @@ export default reactive({
     status: GAMESTATUS.NEW,
     resetBoard: function() {
         this.board = this.board.map((_, i) => ({
-            ...this.board[i], ...{ show: '' }
+            ...this.board[i], ...{ show: '', owner: '' }
         }))
     },
     getDisplayVal: function (block: BlockInfo) : string {
@@ -49,6 +51,7 @@ export default reactive({
         return block['bType'] === BOMB ? 'BO' : 'BL'
     },
     players,
+    bombColor,
     bombsLeft: Number.MAX_SAFE_INTEGER,
     isGameOver: false,
     winner: ''

@@ -1,5 +1,5 @@
 import { gameState, uiState } from '@/store'
-import { BOARDSETTING, GAMESTATUS } from '@/config'
+import { BOARDSETTING, COLORSETTING, GAMESTATUS } from '@/config'
 
 type Player = {
     id: string,
@@ -16,7 +16,8 @@ type GameStat = {
         x: number,
         y: number,
         bType: number,
-        value: number
+        value: number,
+        visitedBy: string
     }[]
 }
 
@@ -27,15 +28,22 @@ export default (data: GameStat) => {
     const { bombsLeft, players, visible } = data
     if (!players) return
 
-    uiState.modal.isActive = false 
-    gameState.status = IN_GAME 
+    uiState.modal.isActive = false
+    gameState.status = IN_GAME
     gameState.bombsLeft = bombsLeft
     
-    gameState.players= players
+    gameState.players = players
+    let rand = Math.floor(Math.random() *2)
     
+    Object.getOwnPropertyNames(gameState.players).forEach(id => {
+        uiState.bombColor[id] = rand === 0 ? COLORSETTING.COLOR_1 : COLORSETTING.COLOR_2
+        rand = (rand - 1) % 2
+    })
     // Update board
     if (!visible) return
     visible.forEach(block => {
-        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = gameState.getDisplayVal(block)
+        const b = gameState.board[BOARDSETTING.SIZE * block.y + block.x]
+        b.show = gameState.getDisplayVal(block)
+        b.owner = block.visitedBy
     })
 }

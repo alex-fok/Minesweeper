@@ -5,27 +5,11 @@ import (
 	"time"
 )
 
-type Block struct {
-	Type    int `json:"bType"`
-	Val     int `json:"value"`
-	Visited bool
-}
-
-type BlockInfo struct {
-	X int `json:"x"`
-	Y int `json:"y"`
-	Block
-}
-
 const (
 	BLANK int = 0
 	BOMB  int = 1
 	NUM   int = 2
 )
-
-type Vertex struct {
-	X, Y int
-}
 
 func getBombLoc(size int, bombCount int) [][]int {
 	max := size * size
@@ -67,14 +51,10 @@ func getNeighbors(loc []int, size int) [][]int {
 	return neighbors
 }
 
-func GetRevealables(v *Vertex, b [][]*Block) []BlockInfo {
-	source := BlockInfo{
-		X:     v.X,
-		Y:     v.Y,
-		Block: *b[v.Y][v.X],
-	}
-	if source.Block.Type != BLANK {
-		return []BlockInfo{source}
+func GetRevealableVertices(v *Vertex, b [][]*Block) []*Vertex {
+
+	if b[v.Y][v.X].Type != BLANK {
+		return []*Vertex{v}
 	}
 	// Init isVisited
 	size := len(b)
@@ -86,9 +66,10 @@ func GetRevealables(v *Vertex, b [][]*Block) []BlockInfo {
 	isVisited[v.Y][v.X] = true
 
 	// Get all revealables
-	var curr BlockInfo
-	revealables := []BlockInfo{}
-	queue := []BlockInfo{source}
+	var curr *Vertex
+	revealables := []*Vertex{}
+	queue := []*Vertex{v}
+
 	for {
 		if len(queue) == 0 {
 			return revealables
@@ -109,10 +90,9 @@ func GetRevealables(v *Vertex, b [][]*Block) []BlockInfo {
 				continue
 			}
 			isVisited[y][x] = true
-			queue = append(queue, BlockInfo{
-				X:     x,
-				Y:     y,
-				Block: *b[y][x],
+			queue = append(queue, &Vertex{
+				X: x,
+				Y: y,
 			})
 		}
 	}

@@ -2,28 +2,7 @@ package game
 
 import (
 	"math/rand"
-	"minesweeper/types"
 )
-
-type ClientId = types.ClientId
-
-type Counter struct {
-	Score     map[ClientId]uint `json:"score"`
-	BombsLeft uint              `json:"BombsLeft"`
-}
-
-type Turn struct {
-	Count uint
-	Curr  ClientId
-	Next  ClientId
-}
-
-type Game struct {
-	Counter Counter
-	Turn    Turn
-	Board   [][]*Block
-	Winner  ClientId
-}
 
 const DEFAULT_SIZE = 26
 const DEFAULT_BOMB_COUNT = 100
@@ -63,6 +42,23 @@ func (g *Game) getWinner() ClientId {
 	return g.Winner
 }
 
+func (g *Game) reveal(v *Vertex) []*BlockInfo {
+	vertices := GetRevealableVertices(v, g.Board)
+	curr := g.getTurn().Curr
+	revealables := make([]*BlockInfo, len(vertices))
+
+	for i, v := range vertices {
+		g.Board[v.Y][v.X].Visited = true
+		g.Board[v.Y][v.X].VisitedBy = curr
+		revealables[i] = &BlockInfo{
+			X:     v.X,
+			Y:     v.Y,
+			Block: g.Board[v.Y][v.X],
+		}
+	}
+	return revealables
+}
+
 func (g *Game) getVisibleBlocks() []BlockInfo {
 	s := []BlockInfo{}
 	for i := range g.Board {
@@ -71,7 +67,7 @@ func (g *Game) getVisibleBlocks() []BlockInfo {
 				s = append(s, BlockInfo{
 					X:     j,
 					Y:     i,
-					Block: *g.Board[i][j],
+					Block: g.Board[i][j],
 				})
 			}
 		}

@@ -27,6 +27,7 @@ const reveal = (i: number) => {
                     :key='i'
                     :reveal='() => { reveal(i) }'
                     :show='block.show'
+                    :owner='block.owner'
                 />
             </div>
         </div>

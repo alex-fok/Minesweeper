@@ -173,15 +173,10 @@ func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 	if d.game.Board[v.Y][v.X].Visited {
 		return actions
 	}
-	revealables := GetRevealables(&v, d.game.getBoard())
-
-	// Update visited blocks
-	for _, block := range revealables {
-		d.game.Board[block.Y][block.X].Visited = true
-	}
+	revealables := d.game.reveal(&v)
 
 	type Revealed struct {
-		Blocks []BlockInfo `json:"blocks"`
+		Blocks []*BlockInfo `json:"blocks"`
 	}
 
 	data, _ := json.Marshal(Revealed{
@@ -191,7 +186,6 @@ func (d *Driver) Reveal(cId ClientId, content string) []*Action {
 		Name:    "reveal",
 		Content: string(data),
 	})
-
 	// Advance turn or score current player
 	var a []*Action
 	if revealables[0].Type != BOMB {

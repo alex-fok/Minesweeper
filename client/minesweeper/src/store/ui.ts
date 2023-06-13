@@ -2,6 +2,8 @@ import { reactive } from 'vue'
 
 type Content = 'create' | 'join' | 'createOrJoin' | 'gameEnded'
 
+const bombColor: Record<string, string> = {}
+
 export default reactive({
     modal: {
         isActive: true,
@@ -10,5 +12,6 @@ export default reactive({
             this.content = v,
             this.isActive = true
         }
-    }
+    },
+    bombColor
 })

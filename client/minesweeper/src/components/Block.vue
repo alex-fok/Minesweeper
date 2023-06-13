@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import Flag from './icon/flag.vue'
-
+import { uiState } from '@/store'
 const props = defineProps({
     reveal: {
         type: Function,
@@ -9,13 +9,16 @@ const props = defineProps({
     show: {
         type: String,
         default: ''
+    },
+    owner: {
+        type: String,
+        default: '' 
     }
 })
 
 const emitReveal = () => {
     props.reveal()
 }
-
 const getNumClass = (num: number) => `num-${num}`
 </script>
 <template>
@@ -26,7 +29,7 @@ const getNumClass = (num: number) => `num-${num}`
         <Flag
             v-if='show === `BO`'
             size='3vh'
-            fill='#CCCCCC'
+            :fill='uiState.bombColor[owner]'
         />
         <span
             v-else-if='!Number.isNaN(parseInt(show))'
@@ -48,7 +51,6 @@ const getNumClass = (num: number) => `num-${num}`
     .revealed {
         background-color: #343434;
     }
-
     .num-1 {
         color: cornflowerblue;
     }

@@ -5,13 +5,16 @@ type BlockInfo = {
     x: number,
     y: number,
     bType: number,
-    value: number
+    value: number,
+    visitedBy: string
 }
 
 export default (data: {blocks:BlockInfo[]}) => {
     const { blocks } = data
     
     blocks.forEach(block => {
-        gameState.board[BOARDSETTING.SIZE * block.y + block.x].show = gameState.getDisplayVal(block)
+        const target = gameState.board[BOARDSETTING.SIZE * block.y + block.x]
+        target.show = gameState.getDisplayVal(block)
+        target.owner = block.visitedBy
     })
 }
