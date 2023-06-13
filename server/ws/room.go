@@ -87,8 +87,9 @@ func (r *Room) registerClient(c *Client) {
 		Content: string(rId),
 	}
 	actions := r.gameDriver.RegisterPlayer(&ClientMeta{
-		Id:    c.id,
-		Alias: c.alias,
+		Id:       c.id,
+		Alias:    c.alias,
+		IsOnline: true,
 	})
 	for _, a := range actions {
 		r.broadcast(a)
@@ -110,6 +111,10 @@ func (r *Room) disconnectClient(c *Client) {
 	log.Println("Client", c.alias, "disconnected")
 	if _, ok := r.timeouts[c.id]; !ok {
 		r.timeouts[c.id] = time.Now().Unix()
+
+		if action := r.gameDriver.DisconnectPlayer(c.id); action != nil {
+			r.broadcast(action)
+		}
 	}
 }
 
@@ -127,6 +132,11 @@ func (r *Room) reconnectClient(c *Client) {
 	}
 	// Remove from timeout map
 	delete(r.timeouts, c.id)
+
+	// Notify all if client is player
+	if action := r.gameDriver.ReconnectPlayer(c.id); action != nil {
+		r.broadcast(action)
+	}
 
 	// Reuse alias before disconnection, reassign
 	c.alias = r.clients[c.id].alias
@@ -155,8 +165,10 @@ func (r *Room) checkActivity(now int64) {
 }
 
 func (r *Room) broadcast(action *Action) {
-	for client := range r.clients {
-		r.clients[client].update <- action
+	for cId := range r.clients {
+		if r.clients[cId].isOpen {
+			r.clients[cId].update <- action
+		}
 	}
 }
 

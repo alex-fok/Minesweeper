@@ -19,6 +19,7 @@ type Player = {
     alias: string,
     score: number,
     isTurn: boolean,
+    isOnline: boolean
 }
 
 const [BLANK, BOMB, NUMBER] = [0, 1, 2]

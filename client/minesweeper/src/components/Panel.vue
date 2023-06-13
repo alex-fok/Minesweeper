@@ -15,7 +15,12 @@ const isGameStarted = computed(() =>
                 <div :class='player.isTurn ? `player-item selected` : `player-item`'>
                     <div class='player-name'>
                         <span :class='player.isTurn ? `` : `hidden`'>>></span>
-                        <span>{{ player.alias }}</span>
+                        <span>
+                            {{ player.alias }}
+                            {{ gameState.id === player.id ? '(You)': '' }}
+                            {{ !player.isOnline ? '(Offline)': '' }}
+                        </span>
+                        
                     </div>
                     <div class='score'>{{ player.score }}</div>
                 </div>

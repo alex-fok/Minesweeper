@@ -5,7 +5,8 @@ type Player = {
     id: string,
     alias: string,
     score: number,
-    isTurn: boolean
+    isTurn: boolean,
+    isOnline: boolean,
 }
 
 type GameStat = {

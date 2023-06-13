@@ -38,6 +38,7 @@ type ClientId = types.ClientId
 type Client struct {
 	id     ClientId
 	conn   *websocket.Conn
+	isOpen bool
 	lobby  *Lobby
 	room   *Room
 	alias  string
@@ -46,14 +47,21 @@ type Client struct {
 }
 
 func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
-	return &Client{
+	c := &Client{
 		id:     ClientId(utils.CreateClientId()),
 		conn:   conn,
+		isOpen: true,
 		lobby:  lobby,
 		alias:  "Anonymous",
 		update: make(chan *Action),
 		stop:   make(chan bool),
 	}
+	socketCloseHandler := c.conn.CloseHandler()
+	c.conn.SetCloseHandler(func(code int, text string) error {
+		c.isOpen = false
+		return socketCloseHandler(code, text)
+	})
+	return c
 }
 
 func (c *Client) reconnect(req *Request) {
