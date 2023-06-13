@@ -11,7 +11,7 @@ defineProps({
 })
 </script>
 <template>
-    <div class='moda-row'>
+    <div class='modal-row'>
         <div class='modal-item'>
             <span class='btn' @click='setContent(`create`)'>CREATE ROOM</span>
         </div>
