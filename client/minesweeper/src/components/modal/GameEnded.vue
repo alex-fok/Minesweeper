@@ -7,8 +7,7 @@ defineProps({
         default: () => {}
     }
 })
-const isPlayer = gameState.players[gameState.id] !== undefined
-const isWon = isPlayer && gameState.winner === gameState.id
+const isWon = gameState.isPlayer && gameState.winner === gameState.id
 const oppId = Object.getOwnPropertyNames(gameState.players).find(id => id !== gameState.id)
 const opponent = oppId ? gameState.players[oppId] : null
 
@@ -22,7 +21,7 @@ const requestRematch = () => {
 }
 </script>
 <template>
-    <template v-if='isPlayer'>
+    <template v-if='gameState.isPlayer'>
         <div class='modal-row'>
             <div class='modal-item grow'>
                 <div class='modal-end-game'>{{ isWon ? 'You Won!' : 'You Lost!' }}</div>
@@ -58,7 +57,7 @@ const requestRematch = () => {
     </template>
 </template>
 <style scoped>
-    @import '@/assets/modal.css';
+    @import '@/assets/styles/modal.css';
     .modal-end-game {
         font-size: 1.7rem;
     }

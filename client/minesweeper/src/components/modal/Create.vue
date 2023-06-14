@@ -55,5 +55,5 @@ onMounted(() => {
     </div>
 </template>
 <style scoped>
-    @import '@/assets/modal.css';
+    @import '@/assets/styles/modal.css';
 </style>
