@@ -1,4 +1,5 @@
 import { GAMESTATUS } from '@/config'
+import media from '@/media'
 import { gameState, uiState } from '@/store'
 
 const { END } = GAMESTATUS
@@ -12,4 +13,6 @@ export default (data: GameEnded) => {
     gameState.winner = winner
     uiState.modal.isActive = true
     uiState.modal.content = 'gameEnded'
+    if (gameState.isPlayer) 
+        media.play(winner === gameState.id ? 'win' : 'lose')
 }
