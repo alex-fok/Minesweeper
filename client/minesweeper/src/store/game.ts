@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { BOARDSETTING, GAMESTATUS } from '@/config'
+import { BOARDSETTING, GAMESTATUS, BLOCKTYPE } from '@/config'
 
 type BlockView = {
     x: number,
@@ -23,7 +23,7 @@ type Player = {
     isOnline: boolean
 }
 
-const [BLANK, BOMB, NUMBER] = [0, 1, 2]
+const {BLANK, BOMB, NUMBER} = BLOCKTYPE
 
 const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
     .fill({})
@@ -41,6 +41,7 @@ export default reactive({
     roomId: -1,
     board,
     status: GAMESTATUS.NEW,
+    isPlayer: false,
     resetBoard: function() {
         this.board = this.board.map((_, i) => ({
             ...this.board[i], ...{ show: '', owner: '' }

@@ -1,5 +1,6 @@
 import { gameState, uiState } from '@/store'
 import { BOARDSETTING, COLORSETTING, GAMESTATUS } from '@/config'
+// import media from '@/media'
 
 type Player = {
     id: string,
@@ -33,8 +34,10 @@ export default (data: GameStat) => {
     gameState.bombsLeft = bombsLeft
     
     gameState.players = players
-    let rand = Math.floor(Math.random() *2)
+    gameState.isPlayer = players[gameState.id] !== undefined
     
+    // Set color
+    let rand = Math.floor(Math.random() *2)
     Object.getOwnPropertyNames(gameState.players).forEach(id => {
         uiState.bombColor[id] = rand === 0 ? COLORSETTING.COLOR_1 : COLORSETTING.COLOR_2
         rand = (rand - 1) % 2
@@ -46,4 +49,6 @@ export default (data: GameStat) => {
         b.show = gameState.getDisplayVal(block)
         b.owner = block.visitedBy
     })
+
+    // media.play('start')
 }
