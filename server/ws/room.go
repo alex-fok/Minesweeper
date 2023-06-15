@@ -21,19 +21,20 @@ type RoomUpdate struct {
 }
 
 type Room struct {
-	id            uint
-	clients       map[ClientId]*Client
-	lobby         *Lobby
-	board         [][]game.Block
-	actionHandler map[string]func(ClientId, string) []*Action
-	gameDriver    game.Driver
-	update        chan *RoomUpdate
-	register      chan *Client
-	unregister    chan *Client
-	disconnect    chan *Client
-	reconnect     chan *Client
-	timeouts      map[ClientId]int64
-	stop          chan bool
+	id                uint
+	clients           map[ClientId]*Client
+	lobby             *Lobby
+	board             [][]game.Block
+	gameUpdateHandler map[string]func(ClientId, string) []*Action
+	gameDriver        game.Driver
+	inviteCode        string
+	update            chan *RoomUpdate
+	register          chan *Client
+	unregister        chan *Client
+	disconnect        chan *Client
+	reconnect         chan *Client
+	timeouts          map[ClientId]int64
+	stop              chan bool
 }
 
 const TIMELIMIT_IN_SEC = 60 * 5 // 5 minutes
@@ -44,6 +45,7 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
 		gameDriver: *game.NewDriver(),
+		inviteCode: l.createInviteCode(id),
 		update:     make(chan *RoomUpdate),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
@@ -51,20 +53,13 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 		reconnect:  make(chan *Client),
 		timeouts:   make(map[ClientId]int64),
 	}
-	// Init handler
-	r.actionHandler = make(map[string]func(ClientId, string) []*Action)
-	r.actionHandler["reveal"] = r.gameDriver.Reveal
-	r.actionHandler["rematch"] = r.gameDriver.Rematch
+
+	// Init game update handler
+	r.gameUpdateHandler = make(map[string]func(ClientId, string) []*Action)
+	r.gameUpdateHandler["reveal"] = r.gameDriver.Reveal
+	r.gameUpdateHandler["rematch"] = r.gameDriver.Rematch
 	go r.run()
 
-	// Register Client
-	r.registerClient(c)
-
-	// Update client
-	c.update <- &Action{
-		Name:    "roomCreated",
-		Content: "{}",
-	}
 	return r
 }
 
@@ -148,6 +143,28 @@ func (r *Room) reconnectClient(c *Client) {
 	}
 }
 
+func (r *Room) rename(client ClientId, content string) {
+	type Req struct {
+		Alias string `json:"alias"`
+	}
+	var req Req
+	json.Unmarshal([]byte(content), &req)
+	r.gameDriver.RenamePlayer(client, req.Alias)
+
+	type PlayerAlias struct {
+		Client ClientId `json:"client"`
+		Alias  string   `json:"alias"`
+	}
+	alias, _ := json.Marshal(PlayerAlias{
+		Client: client,
+		Alias:  req.Alias,
+	})
+	r.broadcast(&Action{
+		Name:    "playerAlias",
+		Content: string(alias),
+	})
+}
+
 func (r *Room) checkActivity(now int64) {
 	for cId, t := range r.timeouts {
 		if now-t > TIMELIMIT_IN_SEC {
@@ -158,11 +175,23 @@ func (r *Room) checkActivity(now int64) {
 	}
 }
 
-func (r *Room) handleGameUpdate(update *RoomUpdate) {
-	actions := r.actionHandler[update.Action.Name](update.Client, update.Action.Content)
+func (r *Room) handleGameUpdate(client ClientId, action *Action) {
+	actions := r.gameUpdateHandler[action.Name](client, action.Content)
 	for _, a := range actions {
 		r.broadcast(a)
 	}
+}
+
+func (r *Room) handleRoomUpdate(update *RoomUpdate) {
+	switch update.Action.Name {
+	case "rename":
+		r.rename(update.Client, update.Action.Content)
+	case "reveal", "rematch":
+		r.handleGameUpdate(update.Client, update.Action)
+	default:
+		return
+	}
+
 }
 
 func (r *Room) broadcast(action *Action) {
@@ -197,7 +226,7 @@ func (r *Room) run() {
 	for {
 		select {
 		case update := <-r.update:
-			r.handleGameUpdate(update)
+			r.handleRoomUpdate(update)
 		case c := <-r.register:
 			r.registerClient(c)
 		case c := <-r.unregister:

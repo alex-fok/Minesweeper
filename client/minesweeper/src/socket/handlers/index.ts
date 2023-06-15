@@ -2,6 +2,7 @@ import userIdHandler from './userId'
 import roomIdHandler from './roomId'
 import roomCreatedHandler from './roomCreated'
 import gameStatHandler from './gameStat'
+import playerAliasHandler from './playerAlias'
 import playerOfflineHandler from './playerOffline'
 import playerOnlineHandler from './playerOnline'
 import scoreUpdatedHandler from './scoreUpdated'
@@ -21,6 +22,7 @@ const getAll = () : handlerMap[] => [
     { name: 'roomCreated', fn: roomCreatedHandler },
     { name: 'reconnFailed', fn: reconnFailedHandler },
     { name: 'gameStat', fn: gameStatHandler },
+    { name: 'playerAlias', fn: playerAliasHandler },
     { name: 'playerOffline', fn: playerOfflineHandler },
     { name: 'playerOnline', fn: playerOnlineHandler },
     { name: 'scoreUpdated', fn: scoreUpdatedHandler },

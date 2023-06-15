@@ -23,22 +23,19 @@ type GameStat struct {
 }
 
 type Driver struct {
-	ActionHandler map[string]func(ClientId, string) []*Action
-	game          *Game
-	Players       map[ClientId]*Client
-	RematchReq    map[ClientId]bool
-	isDone        bool
+	game       *Game
+	Players    map[ClientId]*Client
+	RematchReq map[ClientId]bool
+	isDone     bool
 }
 
 func NewDriver() *Driver {
 	d := Driver{
-		ActionHandler: make(map[string]func(ClientId, string) []*Action),
-		game:          newGame(),
-		Players:       make(map[ClientId]*Client),
-		RematchReq:    make(map[ClientId]bool),
-		isDone:        false,
+		game:       newGame(),
+		Players:    make(map[ClientId]*Client),
+		RematchReq: make(map[ClientId]bool),
+		isDone:     false,
 	}
-	d.ActionHandler["reveal"] = d.Reveal
 	return &d
 }
 
@@ -250,6 +247,12 @@ func (d *Driver) Rematch(cId ClientId, content string) []*Action {
 		})
 	}
 	return actions
+}
+
+func (d *Driver) RenamePlayer(cId ClientId, alias string) {
+	if player, ok := d.Players[cId]; !d.isDone && ok {
+		player.Alias = alias
+	}
 }
 
 func (d *Driver) GetGameStat() *GameStat {

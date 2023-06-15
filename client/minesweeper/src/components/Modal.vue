@@ -5,6 +5,7 @@ import Create from './modal/Create.vue'
 import Join from './modal/Join.vue'
 import CreateOrJoin from './modal/CreateOrJoin.vue';
 import GameEnded from './modal/GameEnded.vue';
+import Invited from './modal/Invited.vue'
 import NoContent from './modal/NoContent.vue'
 
 const props = defineProps({
@@ -49,6 +50,9 @@ watch(showingContent, setFocus)
         </template>
         <template v-else-if='showingContent === `gameEnded`'>
             <GameEnded :close='close'/>
+        </template>
+        <template v-else-if='showingContent == `invited`'>
+            <Invited :close='close' />
         </template>
         <template v-else>
            <NoContent :close='close'/>

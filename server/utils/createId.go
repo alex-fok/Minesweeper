@@ -11,11 +11,10 @@ const bits = 6               // Number of bits representing an index; Log2(len(i
 const mask = 1<<bits - 1     // Masking for 6 bit value
 const count = int(63 / bits) // Number of indices per 63 bit
 
-// Generate 16 letter ID
-func CreateClientId() string {
+func createId(length int) string {
 	sb := strings.Builder{}
-	sb.Grow(16)
-	for idIdx, value, remain := 0, rand.Int63(), count; idIdx < 16; {
+	sb.Grow(length)
+	for idIdx, value, remain := 0, rand.Int63(), count; idIdx < length; {
 		if remain == 0 {
 			value, remain = rand.Int63(), count
 		}
@@ -29,6 +28,17 @@ func CreateClientId() string {
 	return sb.String()
 }
 
+// Generate 16 letter ID
+func CreateClientId() string {
+	return createId(16)
+}
+
+// Generate 32 letter ID
+func CreateInvitationId() string {
+	return createId(32)
+}
+
+// Number Only
 func CreateRoomId() uint {
 	return uint(rand.Uint32() % 10000)
 }

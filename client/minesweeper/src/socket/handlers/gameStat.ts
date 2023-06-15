@@ -22,14 +22,17 @@ type GameStat = {
     }[]
 }
 
-const { IN_GAME } = GAMESTATUS
+const { IN_GAME, INVITED } = GAMESTATUS
 
 export default (data: GameStat) => {
     gameState.resetBoard()
     const { bombsLeft, players, visible } = data
     if (!players) return
-
-    uiState.modal.isActive = false
+    if (gameState.status === INVITED) {
+        uiState.modal.displayContent('invited')
+    } else {
+        uiState.modal.isActive = false
+    }
     gameState.status = IN_GAME
     gameState.bombsLeft = bombsLeft
     

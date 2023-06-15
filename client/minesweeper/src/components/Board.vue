@@ -1,11 +1,15 @@
 <script setup lang='ts'>
 import socket from '@/socket'
 import Block from './Block.vue'
+import Copy from './icon/copy.vue'
+
 import { gameState } from '@/store'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 
+const { IN_GAME, WAITING_JOIN } = GAMESTATUS
+
 const reveal = (i: number) => {
-    if (gameState.status !== GAMESTATUS.IN_GAME) return
+    if (gameState.status !== IN_GAME) return
 
     const y = Math.floor(i / BOARDSETTING.SIZE)
     const x = i % BOARDSETTING.SIZE
@@ -14,11 +18,36 @@ const reveal = (i: number) => {
         content: JSON.stringify({x, y})
     }))
 }
+const getInviteUrl = () => {
+    const {  protocol, hostname, port, pathname } = window.location
+    const portNum = port !== '' ? ':' + port : ''
+    const path = pathname !== '/' ? pathname : '' 
+    return `${protocol}//${hostname}${portNum}${path}/?join=${gameState.inviteCode}`
+}
+
+const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
 </script>
 <template>
     <div class='board-container'>
-        <div v-if='gameState.status === GAMESTATUS.WAITING_JOIN'>
-            Waiting for player to join...
+        <div
+            v-if='gameState.status === WAITING_JOIN'
+            class='waiting-text-wrapper'
+        >
+            <div class='waiting-text'>Waiting for player to join...</div>
+            <div>
+                Invite:
+                <input
+                    v-if='gameState.inviteCode !== ``'
+                    id='invite-url'
+                    class='invite-url'
+                    size='60'
+                    :value='getInviteUrl()'
+                    disabled='true'
+                />
+                <span class='copy' title='Copy' @click='copyInviteUrl'>
+                    <Copy fill='white' size='1.5rem'/>
+                </span>
+            </div>
         </div>
         <div v-else class='board-wrapper'>
             <div class='board'>
@@ -43,6 +72,36 @@ const reveal = (i: number) => {
     }
     .board-wrapper {
         position:relative
+    }
+    .waiting-text-wrapper {
+        height: 80%;
+        display: flex;
+        flex-direction: column;
+        row-gap: 1rem;
+    }
+    .waiting-text {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align:center;
+        font-size: 1.2rem;
+        flex-grow: 1;
+    }
+    .invite-url {
+        background: transparent;
+        line-height: 1.4rem;
+        border-right: 0;
+        border-bottom: 1px solid #9F9F9F;
+        color: white;
+        box-sizing: border-box;
+        margin-left: .5rem;
+    }
+    .copy {
+        display: inline-block;
+        text-align:center;
+        vertical-align: middle;
+        margin-left: 1rem;
+        cursor: pointer;
     }
     .board {
         display: grid;

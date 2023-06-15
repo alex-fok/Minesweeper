@@ -5,9 +5,10 @@ import (
 )
 
 type Lobby struct {
-	rooms      map[uint]*Room
-	register   chan *Room
-	unregister chan *Room
+	rooms       map[uint]*Room
+	inviteCodes map[string]uint
+	register    chan *Room
+	unregister  chan *Room
 }
 
 var lobby *Lobby = nil
@@ -17,9 +18,10 @@ func CreateLobby() *Lobby {
 		return lobby
 	}
 	lobby = &Lobby{
-		rooms:      make(map[uint]*Room),
-		register:   make(chan *Room),
-		unregister: make(chan *Room),
+		rooms:       make(map[uint]*Room),
+		inviteCodes: make(map[string]uint),
+		register:    make(chan *Room),
+		unregister:  make(chan *Room),
 	}
 	go lobby.run()
 	return lobby
@@ -47,6 +49,22 @@ func (l *Lobby) findRoom(id uint) (*Room, bool) {
 	return r, ok
 }
 
+func (l *Lobby) createInviteCode(rId uint) string {
+	id := utils.CreateInvitationId()
+	l.inviteCodes[id] = rId
+	return id
+}
+
+func (l *Lobby) findInviteCode(id string) *Room {
+	if rId, idOk := l.inviteCodes[id]; idOk {
+		if r, ok := l.findRoom(rId); ok {
+			return r
+		}
+		return nil
+	}
+	return nil
+}
+
 func (l *Lobby) run() {
 	for {
 		select {
@@ -55,6 +73,7 @@ func (l *Lobby) run() {
 		case r := <-l.unregister:
 			r.stop <- true
 			delete(l.rooms, r.id)
+			delete(l.inviteCodes, r.inviteCode)
 		}
 	}
 }

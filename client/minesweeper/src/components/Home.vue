@@ -9,8 +9,8 @@ import { GAMESTATUS } from '@/config'
 import { gameState, uiState } from '@/store'
 import { computed } from 'vue'
 
-const { UNDETERMINED, NEW } = GAMESTATUS
-const isReady = computed(() => ![UNDETERMINED, NEW].includes(gameState.status))
+const { UNDETERMINED, NEW, INVITED } = GAMESTATUS
+const isReady = computed(() => ![UNDETERMINED, NEW, INVITED].includes(gameState.status))
 </script>
 <template>
     <Modal

@@ -10,24 +10,6 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type ReconnectReq struct {
-	UserId string `json:"userId"`
-	RoomId string `json:"roomId"`
-}
-
-type CreateRequest struct {
-	Alias string `json:"alias"`
-}
-
-type JoinRequest struct {
-	Id    uint   `json:"id"`
-	Alias string `json:"alias"`
-}
-
-type IdMsg struct {
-	Id string `json:"id"`
-}
-
 type Request struct {
 	Name    string `json:"name"`
 	Content string `json:"content"`
@@ -65,6 +47,10 @@ func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 }
 
 func (c *Client) reconnect(req *Request) {
+	type ReconnectReq struct {
+		UserId string `json:"userId"`
+		RoomId string `json:"roomId"`
+	}
 	var reconnectReq ReconnectReq
 	if err := json.Unmarshal([]byte(req.Content), &reconnectReq); err != nil {
 		log.Println(err)
@@ -76,12 +62,19 @@ func (c *Client) reconnect(req *Request) {
 			r.reconnect <- c
 		} else {
 			log.Println("Room", reconnectReq.RoomId, "not found")
+			c.update <- &Action{
+				Name:    "reconnFailed",
+				Content: "{}",
+			}
 		}
 	}
 }
 
 func (c *Client) createRoom(req *Request) {
-	var createReq CreateRequest
+	type CreateReq struct {
+		Alias string `json:"alias"`
+	}
+	var createReq CreateReq
 	if err := json.Unmarshal([]byte(req.Content), &createReq); err != nil {
 		log.Println(err)
 		return
@@ -90,13 +83,33 @@ func (c *Client) createRoom(req *Request) {
 	if c.room != nil {
 		c.room.unregister <- c
 	}
+
 	c.room = c.lobby.createRoom(c)
+	c.room.register <- c
+
+	// Update client
+	type RoomCreated struct {
+		InviteCode string `json:"inviteCode"`
+	}
+
+	roomCreated, _ := json.Marshal(&RoomCreated{
+		InviteCode: c.room.inviteCode,
+	})
+
+	c.update <- &Action{
+		Name:    "roomCreated",
+		Content: string(roomCreated),
+	}
 
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 
 func (c *Client) joinRoom(req *Request) {
-	var joinReq JoinRequest
+	type JoinReq struct {
+		Id    uint   `json:"id"`
+		Alias string `json:"alias"`
+	}
+	var joinReq JoinReq
 	if err := json.Unmarshal([]byte(req.Content), &joinReq); err != nil {
 		log.Println(err)
 		return
@@ -118,6 +131,37 @@ func (c *Client) joinRoom(req *Request) {
 	log.Println("Client", joinReq.Alias, "joined Room", r.id)
 	c.room = r
 	c.room.register <- c
+}
+
+func (c *Client) handleInviteCode(req *Request) {
+	type Inivitation struct {
+		Id string `json:"id"`
+	}
+
+	var invitation Inivitation
+	json.Unmarshal([]byte(req.Content), &invitation)
+	if r := c.lobby.findInviteCode(invitation.Id); r != nil {
+		c.room = r
+		c.room.register <- c
+	} else {
+		log.Println("Invite code", invitation.Id, "not found")
+	}
+}
+
+func (c *Client) rename(req *Request) {
+	type RenameReq struct {
+		Alias string `json:"alias"`
+	}
+	var renameReq RenameReq
+	if err := json.Unmarshal([]byte(req.Content), &renameReq); err != nil {
+		log.Println(err)
+		return
+	}
+	c.alias = renameReq.Alias
+	if c.room == nil {
+		return
+	}
+	c.updateRoom(req)
 }
 
 func (c *Client) updateRoom(req *Request) {
@@ -180,6 +224,10 @@ func (c *Client) readBuffer() {
 			go c.createRoom(&req)
 		case "joinRoom":
 			go c.joinRoom(&req)
+		case "inviteCode":
+			go c.handleInviteCode(&req)
+		case "rename":
+			go c.rename(&req)
 		case "reveal", "rematch":
 			go c.updateRoom(&req)
 		default:
@@ -192,6 +240,9 @@ func (c *Client) run() {
 	go c.readBuffer()
 	go c.writeBuffer()
 
+	type IdMsg struct {
+		Id string `json:"id"`
+	}
 	id, _ := json.Marshal(&IdMsg{
 		Id: string(c.id),
 	})
