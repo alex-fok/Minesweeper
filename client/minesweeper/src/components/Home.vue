@@ -7,16 +7,21 @@ import Modal from './Modal.vue'
 
 import { GAMESTATUS } from '@/config'
 import { gameState, uiState } from '@/store'
+import { computed } from 'vue'
 
-const { NEW } = GAMESTATUS
+const { UNDETERMINED, NEW } = GAMESTATUS
+const isReady = computed(() => ![UNDETERMINED, NEW].includes(gameState.status))
 </script>
 <template>
-    <Modal v-if='uiState.modal.isActive' :content='uiState.modal.content !== `` ? uiState.modal.content : undefined'/>
+    <Modal
+        v-if='uiState.modal.isActive'
+        :content='uiState.modal.content !== `` ? uiState.modal.content : undefined'
+    />
     <GameLayout>
         <template #header>
             <TopMenu/>
         </template>
-        <template #default v-if='gameState.status !== NEW'>
+        <template #default v-if='isReady'>
             <Board/>
             <Panel/> 
         </template>

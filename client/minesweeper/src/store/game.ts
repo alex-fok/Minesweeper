@@ -23,7 +23,8 @@ type Player = {
     isOnline: boolean
 }
 
-const {BLANK, BOMB, NUMBER} = BLOCKTYPE
+const { UNDETERMINED } = GAMESTATUS
+const { BOMB, NUMBER } = BLOCKTYPE
 
 const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
     .fill({})
@@ -36,11 +37,12 @@ const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
 
 const players: Record<string, Player> = {}
 const bombColor: Record<string, string> = {}
+
 export default reactive({
     id: "",
     roomId: -1,
     board,
-    status: GAMESTATUS.NEW,
+    status: UNDETERMINED,
     isPlayer: false,
     resetBoard: function() {
         this.board = this.board.map((_, i) => ({
@@ -54,6 +56,7 @@ export default reactive({
     players,
     bombColor,
     bombsLeft: Number.MAX_SAFE_INTEGER,
+    inviteCode: "",
     isGameOver: false,
     winner: ''
 })
