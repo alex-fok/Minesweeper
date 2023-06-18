@@ -21,7 +21,6 @@ socket.addEventListener('open', _ => {
 
     if (userId) {
         gameState.id = userId
-        if (roomId) gameState.roomId = parseInt(roomId)
 
         socket.send(JSON.stringify({
             name: 'reconnect',

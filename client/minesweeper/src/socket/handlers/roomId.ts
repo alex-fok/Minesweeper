@@ -1,8 +1,11 @@
 import { gameState } from '@/store'
 
 export default (data:{ id: number }) => {
-    gameState.roomId = data.id
-
+    const { id } = data
+    gameState.roomId = id
+    if (![undefined, -1].includes(id)) {
+        document.title = `#${id} Minesweeper`
+    }
     // Change search query
     const url = new URL(window.location.href)
     url.searchParams.set('room', data.id.toString())
