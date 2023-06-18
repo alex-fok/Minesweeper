@@ -98,10 +98,16 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
     }
     .copy {
         display: inline-block;
-        text-align:center;
+        height: 1.5rem;
+        line-height: 1.5rem;
         vertical-align: middle;
         margin-left: 1rem;
+        padding: .2rem;
         cursor: pointer;
+    }
+    .copy:hover {
+        background-color: rgba(128, 128, 128, .5);
+        border-radius: .3rem;
     }
     .board {
         display: grid;
