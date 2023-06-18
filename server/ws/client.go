@@ -131,7 +131,7 @@ func (c *Client) joinRoom(req *Request) {
 	if !ok {
 		log.Println("Room", joinReq.Id, "not found")
 		message, _ := json.Marshal(&Message{
-			Message: "Room " + strconv.FormatUint(uint64(joinReq.Id), 10) + " not found",
+			Message: "Room #" + strconv.FormatUint(uint64(joinReq.Id), 10) + " not found",
 		})
 		c.update <- &Action{
 			Name:    "message",
