@@ -15,21 +15,21 @@
     margin: auto;
     column-gap: 1rem;
 }
-.info {
+.user-input {
     display: flex;
     flex-direction: column;
     row-gap: .5rem;
 }
 
-.info:not(:first-child) {
+.user-input:not(:first-child) {
     border-left: 1px solid #9F9F9F;
     padding-left: 1rem;
 }
 
-.info label {
+.user-input label {
     margin-right: .5rem;
 }
-.info input {
+.user-input input {
     background: transparent;
     border: 0;
     color: white;
@@ -37,7 +37,7 @@
     text-align: center;
     box-sizing: border-box;
 }
-.info input:not(:focus) {
+.user-input input:not(:focus) {
     border-bottom: 1px solid #9F9F9F;
     margin-bottom: -.8px;
 }

@@ -35,7 +35,7 @@ onMounted(() => {
 <template>
     <div class='modal-row'>
         <div class='modal-item'>
-            <div class='info'>
+            <div class='user-input'>
                 <label for='alias'>Your Alias:</label>
                 <input
                     ref='aliasRef'
