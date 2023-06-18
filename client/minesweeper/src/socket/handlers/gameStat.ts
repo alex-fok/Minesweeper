@@ -27,7 +27,9 @@ const { IN_GAME, INVITED } = GAMESTATUS
 export default (data: GameStat) => {
     gameState.resetBoard()
     const { bombsLeft, players, visible } = data
+    
     if (!players) return
+
     if (gameState.status === INVITED) {
         uiState.modal.displayContent('invited')
     } else {
