@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 
-type Content = 'create' | 'join' | 'createOrJoin' | 'gameEnded' | 'invited'
+type Content = 'create' | 'join' | 'createOrJoin' | 'gameEnded' | 'invited' | 'message'
 
 const bombColor: Record<string, string> = {}
 
@@ -8,9 +8,11 @@ export default reactive({
     modal: {
         isActive: false,
         content: 'createOrJoin',
-        displayContent: function(v: Content) {
+        message: '',
+        displayContent: function(v: Content, msg: string ='') {
             this.content = v,
             this.isActive = true
+            this.message = msg
         }
     },
     bombColor

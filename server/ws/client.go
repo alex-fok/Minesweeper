@@ -15,6 +15,10 @@ type Request struct {
 	Content string `json:"content"`
 }
 
+type Message struct {
+	Message string `json:"message"`
+}
+
 type ClientId = types.ClientId
 
 type Client struct {
@@ -126,6 +130,13 @@ func (c *Client) joinRoom(req *Request) {
 	r, ok := c.lobby.findRoom(joinReq.Id)
 	if !ok {
 		log.Println("Room", joinReq.Id, "not found")
+		message, _ := json.Marshal(&Message{
+			Message: "Room " + strconv.FormatUint(uint64(joinReq.Id), 10) + " not found",
+		})
+		c.update <- &Action{
+			Name:    "message",
+			Content: string(message),
+		}
 		return
 	}
 	log.Println("Client", joinReq.Alias, "joined Room", r.id)
