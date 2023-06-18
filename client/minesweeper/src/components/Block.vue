@@ -1,6 +1,8 @@
 <script setup lang='ts'>
+import { gameState } from '@/store'
 import Flag from './icon/flag.vue'
 import { uiState } from '@/store'
+import { computed } from 'vue'
 const props = defineProps({
     reveal: {
         type: Function,
@@ -16,14 +18,18 @@ const props = defineProps({
     }
 })
 
+const { isPlayer, players, id } = gameState
+
 const emitReveal = () => {
     props.reveal()
 }
+
+const isSelectable = computed(() => isPlayer && players[id].isTurn)
 const getNumClass = (num: number) => `num-${num}`
 </script>
 <template>
     <div
-    :class='show === `` ? `block` : `block revealed`'
+    :class='`block${show !== `` ? ` revealed` : ``}${isSelectable ? ` selectable` : ``}`'
     @click='emitReveal'
     >
         <Flag
@@ -47,6 +53,10 @@ const getNumClass = (num: number) => `num-${num}`
         vertical-align: middle;
         text-align: center;
         user-select: none;
+    }
+    .selectable:hover {
+        outline: .1rem solid #CCCCCC;
+        cursor: pointer;
     }
     .revealed {
         background-color: #343434;
