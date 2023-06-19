@@ -86,17 +86,10 @@ func (c *Client) createRoom(req *Request) {
 	c.room.register <- c
 
 	// Update client
-	type RoomCreated struct {
-		InviteCode string `json:"inviteCode"`
-	}
-
-	roomCreated, _ := json.Marshal(&RoomCreated{
-		InviteCode: c.room.inviteCode,
-	})
 
 	c.update <- &Action{
 		Name:    "roomCreated",
-		Content: string(roomCreated),
+		Content: string("{}"),
 	}
 
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)

@@ -21,7 +21,7 @@ socket.addEventListener('open', _ => {
 
     if (userId) {
         gameState.id = userId
-
+        console.log('Trying to reconnect user')
         socket.send(JSON.stringify({
             name: 'reconnect',
             content: JSON.stringify({ userId, roomId })

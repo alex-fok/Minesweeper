@@ -22,7 +22,7 @@ type GameStat = {
     }[]
 }
 
-const { IN_GAME, INVITED } = GAMESTATUS
+const { WAITING_JOIN, IN_GAME, INVITED } = GAMESTATUS
 
 export default (data: GameStat) => {
     gameState.resetBoard()
@@ -35,10 +35,10 @@ export default (data: GameStat) => {
     } else {
         uiState.modal.isActive = false
     }
-    gameState.status = IN_GAME
     gameState.bombsLeft = bombsLeft
     
     gameState.players = players
+    gameState.status = Object.keys(gameState.players).length > 1 ? IN_GAME : WAITING_JOIN
     gameState.isPlayer = players[gameState.id] !== undefined
     
     // Set color

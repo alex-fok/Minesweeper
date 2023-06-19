@@ -1,8 +1,14 @@
 import { gameState } from '@/store'
 
-export default (data:{ id: number }) => {
-    const { id } = data
+type RoomId = {
+    id: number,
+    inviteCode: string
+}
+
+export default (data: RoomId) => {
+    const { id, inviteCode } = data
     gameState.roomId = id
+    gameState.inviteCode = inviteCode
     if (![undefined, -1].includes(id)) {
         document.title = `#${id} Minesweeper`
     }

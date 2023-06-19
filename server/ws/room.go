@@ -66,15 +66,9 @@ func newRoom(id uint, c *Client, l *Lobby) *Room {
 func (r *Room) registerClient(c *Client) {
 	r.clients[c.id] = c
 
-	type RoomIdMsg struct {
-		Id uint `json:"id"`
-	}
-	rId, _ := json.Marshal(RoomIdMsg{Id: r.id})
+	// Notify room info
+	r.notifyRoomInfo(c)
 
-	c.update <- &Action{
-		Name:    "roomId",
-		Content: string(rId),
-	}
 	actions := r.gameDriver.RegisterPlayer(&ClientMeta{
 		Id:       c.id,
 		Alias:    c.alias,
@@ -122,6 +116,9 @@ func (r *Room) reconnectClient(c *Client) {
 	// Remove from timeout map
 	delete(r.timeouts, c.id)
 
+	// Notify room info
+	r.notifyRoomInfo(c)
+
 	// Notify all if client is player
 	if action := r.gameDriver.ReconnectPlayer(c.id); action != nil {
 		r.broadcast(action)
@@ -140,6 +137,22 @@ func (r *Room) reconnectClient(c *Client) {
 	c.update <- &Action{
 		Name:    "gameStat",
 		Content: string(stat),
+	}
+}
+
+func (r *Room) notifyRoomInfo(c *Client) {
+	type RoomInfo struct {
+		Id         uint   `json:"id"`
+		InviteCode string `json:"inviteCode"`
+	}
+	rInfo, _ := json.Marshal(RoomInfo{
+		Id:         r.id,
+		InviteCode: r.inviteCode,
+	})
+
+	c.update <- &Action{
+		Name:    "roomInfo",
+		Content: string(rInfo),
 	}
 }
 

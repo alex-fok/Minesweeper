@@ -1,15 +1,9 @@
 import { gameState } from '@/store'
 import { GAMESTATUS } from '@/config'
 
-type RoomCreated = {
-    inviteCode: string
-}
-
 const { WAITING_JOIN } = GAMESTATUS
 
-export default (data: RoomCreated) => {
-    const { inviteCode } = data
+export default () => {
     gameState.status = WAITING_JOIN
-    gameState.inviteCode = inviteCode
     gameState.resetBoard()
 }
