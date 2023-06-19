@@ -215,7 +215,7 @@ func (d *Driver) Rematch(cId ClientId, content string) []*Action {
 			Message string `json:"message"`
 		}
 		msg, _ := json.Marshal(Message{
-			Message: "Game is closed",
+			Message: "Player " + d.Players[cId].Alias + " declined the rematch.",
 		})
 		actions = append(actions, &Action{
 			Name:    "message",

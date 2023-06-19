@@ -1,23 +1,29 @@
 <script setup lang='ts'>
 import socket from '@/socket';
 import { gameState } from '@/store';
-defineProps({
+import { ref } from 'vue';
+const props = defineProps({
     close: {
         type: Function,
         default: () => {}
     }
 })
+
+const isRematchClicked = ref(false)
+
 const isWon = gameState.isPlayer && gameState.winner === gameState.id
-const oppId = Object.getOwnPropertyNames(gameState.players).find(id => id !== gameState.id)
+const oppId = Object.keys(gameState.players).find(id => id !== gameState.id)
 const opponent = oppId ? gameState.players[oppId] : null
 
-const requestRematch = () => {
+const requestRematch = (rematch: boolean) => {
+    isRematchClicked.value = true
     socket.send(JSON.stringify({
         name: 'rematch',
         content: JSON.stringify({
-            rematch: true
+            rematch
         })
     }))
+    if (!rematch) props.close()
 }
 </script>
 <template>
@@ -32,7 +38,7 @@ const requestRematch = () => {
                 <div class='scoreboard grow'>
                     <div class='score'>
                         <span class='score-text'>{{ gameState.players[gameState.id].score }}</span>
-                        {{ gameState.players[gameState.id].alias }}
+                        {{ gameState.players[gameState.id].alias }} (You)
                     </div>
                     <div class='score-text'> - </div>
                     <div class='score'>
@@ -42,9 +48,20 @@ const requestRematch = () => {
                 </div>
         </div>
         <div class='modal-row'>
-            <div class='modal-item'>
-                <span class='btn' @click='requestRematch'>REMATCH?</span>
+            <div v-if='isRematchClicked' class='modal-item'>
+                Waiting for opponent response...
             </div>
+            <template v-else>
+                <div class='modal-item'>
+                    REMATCH?
+                </div>
+                <div class='modal-item'>
+                    <span class='btn' @click='() => { requestRematch(true) }'>YES</span>
+                </div>
+                <div class='modal-item'>
+                    <span class='btn' @click='() => { requestRematch(false) }'>NO</span>
+                </div>
+            </template>
         </div>
     </template>
     <template v-else>
@@ -52,20 +69,22 @@ const requestRematch = () => {
             <div class='modal-item'>
                 {{ gameState.players[gameState.winner].alias }} Won!
             </div>
-            <div class='modal-close' @click='close()'>&#10005;</div>
+            <div class='modal-close' @click='() => { requestRematch(false) }'>&#10005;</div>
         </div>
     </template>
 </template>
 <style scoped>
     @import '@/assets/styles/modal.css';
     .modal-end-game {
-        font-size: 1.7rem;
+        font-size: 3rem;
+        width: 20rem;
     }
     .scoreboard {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
         column-gap: .5rem;
+        padding: 0rem 0rem 1rem 0rem;
     }
     .score {
         display: flex;
