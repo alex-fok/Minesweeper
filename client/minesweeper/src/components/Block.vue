@@ -18,18 +18,17 @@ const props = defineProps({
     }
 })
 
-const { isPlayer, players, id } = gameState
+const { id } = gameState
 
 const emitReveal = () => {
     props.reveal()
 }
 
-const isSelectable = computed(() => isPlayer && players[id].isTurn)
 const getNumClass = (num: number) => `num-${num}`
 </script>
 <template>
     <div
-    :class='`block${show !== `` ? ` revealed` : ``}${isSelectable ? ` selectable` : ``}`'
+    :class='`block${show !== `` ? ` revealed` : ``}${gameState.isPlayer && gameState.players[id].isTurn ? ` selectable` : ``}`'
     @click='emitReveal'
     >
         <Flag
