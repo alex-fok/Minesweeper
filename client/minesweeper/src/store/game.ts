@@ -57,6 +57,5 @@ export default reactive({
     bombColor,
     bombsLeft: Number.MAX_SAFE_INTEGER,
     inviteCode: "",
-    isGameOver: false,
     winner: ''
 })
