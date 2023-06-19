@@ -43,7 +43,7 @@ export default (data: GameStat) => {
     
     // Set color
     let rand = Math.floor(Math.random() *2)
-    Object.getOwnPropertyNames(gameState.players).forEach(id => {
+    Object.keys(gameState.players).forEach(id => {
         uiState.bombColor[id] = rand === 0 ? COLORSETTING.COLOR_1 : COLORSETTING.COLOR_2
         rand = (rand - 1) % 2
     })

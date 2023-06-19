@@ -16,7 +16,7 @@ const audioMap:Record<string, HTMLAudioElement> = {
     turn: new Audio(turnUrl)
 }
 
-Object.getOwnPropertyNames(audioMap).forEach(se => {
+Object.keys(audioMap).forEach(se => {
     audioMap[se].addEventListener('ended', _ => {
         playing = ''
     })

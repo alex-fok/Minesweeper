@@ -9,7 +9,7 @@ type GameEnded = {
 }
 export default (data: GameEnded) => {
     const { winner } = data
-    gameState.status  = END,
+    gameState.status = END
     gameState.winner = winner
     uiState.modal.displayContent('gameEnded')
     if (gameState.isPlayer) 
