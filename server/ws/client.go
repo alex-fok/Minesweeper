@@ -33,7 +33,7 @@ type Client struct {
 }
 
 func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
-	c := &Client{
+	return &Client{
 		id:     ClientId(utils.CreateClientId()),
 		conn:   conn,
 		isOpen: true,
@@ -42,12 +42,6 @@ func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 		update: make(chan *Action),
 		stop:   make(chan bool),
 	}
-	socketCloseHandler := c.conn.CloseHandler()
-	c.conn.SetCloseHandler(func(code int, text string) error {
-		c.isOpen = false
-		return socketCloseHandler(code, text)
-	})
-	return c
 }
 
 func (c *Client) reconnect(req *Request) {
@@ -191,7 +185,7 @@ func (c *Client) updateRoom(req *Request) {
 func (c *Client) writeBuffer() {
 	defer func() {
 		c.conn.Close()
-		close(c.update)
+		c.isOpen = false
 	}()
 	for {
 		select {
@@ -214,9 +208,12 @@ func (c *Client) writeBuffer() {
 
 func (c *Client) readBuffer() {
 	defer func() {
+		c.conn.Close()
+		c.isOpen = false
+		close(c.update)
+
 		if c.room != nil {
 			c.room.disconnect <- c
-			c.conn.Close()
 		}
 	}()
 
