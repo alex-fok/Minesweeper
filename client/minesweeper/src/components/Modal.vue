@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref, onMounted, watch, nextTick } from 'vue';
+import { onMounted, watch, nextTick } from 'vue';
 import { uiState } from '@/store';
 import Create from './modal/Create.vue'
 import Join from './modal/Join.vue'
@@ -16,8 +16,6 @@ const props = defineProps({
     },
 })
 
-const showingContent = ref(props.content)
-
 // Auto focus when input field is available
 const setFocus = async () => {
     await nextTick()
@@ -30,32 +28,28 @@ const close = () => {
     uiState.modal.isActive = false 
 }
 
-const setContent = (v:string) => {
-    showingContent.value = v
-}
-
 onMounted(setFocus)
-watch(showingContent, setFocus)
+watch(props, setFocus)
 </script>
 <template>
     <div class='overlay'></div>
     <div class='modal'>
-        <template v-if='showingContent === `create`'>
+        <template v-if='props.content === `create`'>
            <Create :close='close'/> 
         </template>
-        <template v-else-if='showingContent === `join`'>
+        <template v-else-if='props.content === `join`'>
            <Join :close='close'/> 
         </template>
-        <template v-else-if='showingContent === `createOrJoin`'>
-           <CreateOrJoin :close='close' :setContent='setContent'/>
+        <template v-else-if='props.content === `createOrJoin`'>
+           <CreateOrJoin :close='close' />
         </template>
-        <template v-else-if='showingContent === `gameEnded`'>
+        <template v-else-if='props.content === `gameEnded`'>
             <GameEnded :close='close'/>
         </template>
-        <template v-else-if='showingContent === `invited`'>
+        <template v-else-if='props.content === `invited`'>
             <Invited :close='close' />
         </template>
-        <template v-else-if='showingContent === `message`'>
+        <template v-else-if='props.content === `message`'>
             <Message :close='close' />
         </template>
         <template v-else>

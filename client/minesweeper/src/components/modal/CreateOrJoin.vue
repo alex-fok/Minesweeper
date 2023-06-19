@@ -1,9 +1,7 @@
 <script setup lang='ts'>
+import { uiState } from '@/store';
+
 defineProps({
-    setContent: {
-        type: Function,
-        default: (content: string) => {}
-    },
     close: {
         type: Function,
         default: () => {}
@@ -13,13 +11,13 @@ defineProps({
 <template>
     <div class='modal-row'>
         <div class='modal-item'>
-            <span class='btn' @click='setContent(`create`)'>CREATE ROOM</span>
+            <span class='btn' @click='uiState.modal.displayContent(`create`)'>CREATE ROOM</span>
         </div>
         <div class='modal-item'>
             OR
         </div>
         <div class='modal-item'>
-            <span class='btn' @click='setContent(`join`)'>JOIN ROOM</span>
+            <span class='btn' @click='uiState.modal.displayContent(`join`)'>JOIN ROOM</span>
         </div>
         <div class='modal-close' @click='close()'>&#10005;</div>
     </div>
