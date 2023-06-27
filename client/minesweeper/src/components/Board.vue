@@ -21,8 +21,7 @@ const reveal = (i: number) => {
 const getInviteUrl = () => {
     const {  protocol, hostname, port, pathname } = window.location
     const portNum = port !== '' ? ':' + port : ''
-    const path = pathname !== '/' ? pathname : '' 
-    return `${protocol}//${hostname}${portNum}${path}/?join=${gameState.inviteCode}`
+    return `${protocol}//${hostname}${portNum}${pathname}?join=${gameState.inviteCode}`
 }
 
 const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
