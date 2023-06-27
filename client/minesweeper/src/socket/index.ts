@@ -6,7 +6,7 @@ const { NEW, INVITED } = GAMESTATUS
 
 // For prod: window.location.hostname
 // For dev : ws://localhost:8080/ws
-const socket = new WebSocket(import.meta.env.VITE_SERVER ? import.meta.env.VITE_SERVER : 'ws://' + window.location.hostname + '/ws')
+const socket = new WebSocket(import.meta.env.VITE_SERVER ? import.meta.env.VITE_SERVER : 'wss://' + window.location.hostname + '/ws')
 const socketEvents: Record<string, (event: any)=>void> = {}
 
 handlers.getAll().forEach(handler => {
