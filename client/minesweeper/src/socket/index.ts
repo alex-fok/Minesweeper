@@ -6,7 +6,7 @@ const { NEW, INVITED } = GAMESTATUS
 
 // For prod: window.location.hostname
 // For dev : ws://localhost:8080/ws
-const socket = new WebSocket(import.meta.env.VITE_SERVER ? import.meta.env.VITE_SERVER : 'wss://' + window.location.hostname + '/ws')
+const socket = new WebSocket(import.meta.env.VITE_SERVER ? import.meta.env.VITE_SERVER : 'ws://' + window.location.hostname + '/ws')
 const socketEvents: Record<string, (event: any)=>void> = {}
 
 handlers.getAll().forEach(handler => {
@@ -19,19 +19,27 @@ socket.addEventListener('open', _ => {
     const userId = url.searchParams.get('id')
     const invitation = url.searchParams.get('join')
 
-    if (userId) {
-        gameState.id = userId
+    const reconnect = () => {
         console.log('Trying to reconnect user')
         socket.send(JSON.stringify({
             name: 'reconnect',
             content: JSON.stringify({ userId, roomId })
         }))
-    } else if (invitation) {
+    }
+
+    const confirmInviteCode = () => {
         gameState.status = INVITED
         socket.send(JSON.stringify({
             name: 'inviteCode',
             content: JSON.stringify({id: invitation})
         }))
+    }
+
+    gameState.id = userId || ""
+    if (userId) {
+        reconnect()
+    } else if (invitation) {
+       confirmInviteCode()
     } else {
         uiState.modal.displayContent('createOrJoin')
         gameState.status = NEW

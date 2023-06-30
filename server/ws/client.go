@@ -55,15 +55,23 @@ func (c *Client) reconnect(req *Request) {
 		return
 	}
 	c.id = ClientId(reconnectReq.UserId)
+
+	roomNotFound := false
+
 	if rId, err := strconv.ParseUint(reconnectReq.RoomId, 10, 64); err == nil {
 		if r, ok := c.lobby.findRoom(uint(rId)); ok {
 			r.reconnect <- c
 		} else {
-			log.Println("Room", reconnectReq.RoomId, "not found")
-			c.update <- &Action{
-				Name:    "reconnFailed",
-				Content: "{}",
-			}
+			roomNotFound = true
+		}
+	} else {
+		roomNotFound = true
+	}
+
+	if roomNotFound {
+		c.update <- &Action{
+			Name:    "reconnFailed",
+			Content: "{}",
 		}
 	}
 }
@@ -142,7 +150,10 @@ func (c *Client) handleInviteCode(req *Request) {
 		c.room = r
 		c.room.register <- c
 	} else {
-		log.Println("Invite code", invitation.Id, "not found")
+		c.update <- &Action{
+			Name:    "reconnFailed",
+			Content: "{}",
+		}
 	}
 }
 
@@ -240,7 +251,6 @@ func (c *Client) readBuffer() {
 func (c *Client) run() {
 	go c.readBuffer()
 	go c.writeBuffer()
-
 	type IdMsg struct {
 		Id string `json:"id"`
 	}
