@@ -6,6 +6,7 @@ import (
 	"minesweeper/types"
 	"minesweeper/utils"
 	"strconv"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -186,6 +187,34 @@ func (c *Client) updateRoom(req *Request) {
 	}
 }
 
+func (c *Client) keepAlive() {
+	ticker := time.NewTicker(15 * time.Second)
+	endConn := make(chan bool)
+	defer func() {
+		endConn <- true
+		ticker.Stop()
+		c.stop <- true
+	}()
+
+	pingMsg := []byte("keep alive")
+
+	sendPing := func() error {
+		err := c.conn.WriteMessage(websocket.PingMessage, pingMsg)
+		return err
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			if err := sendPing(); err != nil {
+				return
+			}
+		case <-endConn:
+			return
+		}
+	}
+}
+
 func (c *Client) writeBuffer() {
 	defer func() {
 		c.conn.Close()
@@ -251,6 +280,7 @@ func (c *Client) readBuffer() {
 func (c *Client) run() {
 	go c.readBuffer()
 	go c.writeBuffer()
+	go c.keepAlive()
 	type IdMsg struct {
 		Id string `json:"id"`
 	}
