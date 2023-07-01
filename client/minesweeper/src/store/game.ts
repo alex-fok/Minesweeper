@@ -20,7 +20,8 @@ type Player = {
     alias: string,
     score: number,
     isTurn: boolean,
-    isOnline: boolean
+    isOnline: boolean,
+    cursor: number
 }
 
 const { UNDETERMINED } = GAMESTATUS
@@ -36,7 +37,6 @@ const board = new Array(BOARDSETTING.SIZE * BOARDSETTING.SIZE)
     })) as BlockView[]
 
 const players: Record<string, Player> = {}
-const bombColor: Record<string, string> = {}
 
 export default reactive({
     id: "",
@@ -53,8 +53,7 @@ export default reactive({
         if (block['bType'] === NUMBER) return block['value'].toString()
         return block['bType'] === BOMB ? 'BO' : 'BL'
     },
-    players,
-    bombColor,
+    players: players,
     bombsLeft: Number.MAX_SAFE_INTEGER,
     inviteCode: "",
     winner: ''

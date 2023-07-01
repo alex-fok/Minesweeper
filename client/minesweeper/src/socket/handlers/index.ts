@@ -2,6 +2,7 @@ import gameEndedHandler from './gameEnded'
 import gameStatHandler from './gameStat'
 import messageHandler from './message'
 import playerAliasHandler from './playerAlias'
+import playerMousePos from './playerMousePos'
 import playerOfflineHandler from './playerOffline'
 import playerOnlineHandler from './playerOnline'
 import reconnFailedHandler from './reconnFailed'
@@ -22,6 +23,7 @@ const getAll = () : handlerMap[] => [
     { name: 'gameStat', fn: gameStatHandler },
     { name: 'message', fn: messageHandler },
     { name: 'playerAlias', fn: playerAliasHandler },
+    { name: 'playerMousePos', fn: playerMousePos },
     { name: 'playerOffline', fn: playerOfflineHandler },
     { name: 'playerOnline', fn: playerOnlineHandler },
     { name: 'reconnFailed', fn: reconnFailedHandler },

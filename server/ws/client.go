@@ -269,7 +269,7 @@ func (c *Client) readBuffer() {
 			go c.handleInviteCode(&req)
 		case "rename":
 			go c.rename(&req)
-		case "reveal", "rematch":
+		case "share", "reveal", "rematch":
 			go c.updateRoom(&req)
 		default:
 			continue

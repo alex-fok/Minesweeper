@@ -3,6 +3,7 @@ import { gameState } from '@/store'
 import Flag from './icon/flag.vue'
 import { uiState } from '@/store'
 import { computed } from 'vue'
+
 const props = defineProps({
     reveal: {
         type: Function,
@@ -15,6 +16,14 @@ const props = defineProps({
     owner: {
         type: String,
         default: '' 
+    },
+    playerHovering: {
+        type: String || undefined,
+        default: undefined
+    },
+    updateMousePosition: {
+        type: Function,
+        default: () => {}
     }
 })
 
@@ -23,18 +32,27 @@ const { id } = gameState
 const emitReveal = () => {
     props.reveal()
 }
+const emitPositionUpdate = () => {
+    props.updateMousePosition()
+}
 
 const getNumClass = (num: number) => `num-${num}`
+const isSelectable = computed(() => gameState.isPlayer && gameState.players[id].isTurn)
 </script>
 <template>
     <div
-    :class='`block${show !== `` ? ` revealed` : ``}${gameState.isPlayer && gameState.players[id].isTurn ? ` selectable` : ``}`'
+    :class='`block
+        ${show !== `` ? ` revealed` : ``}
+        ${isSelectable ? ` selectable` : ``}
+    `'
+    :style='{outline: `${playerHovering ? ".1rem solid " + uiState.playerColor[playerHovering] : ""}`}'
     @click='emitReveal'
+    @mouseover='emitPositionUpdate'
     >
         <Flag
             v-if='show === `BO`'
             size='3vh'
-            :fill='uiState.bombColor[owner]'
+            :fill='uiState.playerColor[owner]'
         />
         <span
             v-else-if='!Number.isNaN(parseInt(show))'

@@ -2,7 +2,7 @@ import { reactive } from 'vue'
 
 type Content = 'create' | 'join' | 'createOrJoin' | 'gameEnded' | 'invited' | 'message'
 
-const bombColor: Record<string, string> = {}
+const playerColor: Record<string, string> = {}
 
 export default reactive({
     modal: {
@@ -15,5 +15,5 @@ export default reactive({
             this.message = msg
         }
     },
-    bombColor
+    playerColor: playerColor
 })

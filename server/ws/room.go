@@ -178,21 +178,32 @@ func (r *Room) rename(client ClientId, content string) {
 	})
 }
 
-func (r *Room) checkActivity(now int64) {
-	for cId, t := range r.timeouts {
-		if now-t > TIMELIMIT_IN_SEC {
-			log.Println("Removing client", r.clients[cId].alias, "from room", r.id)
-			delete(r.clients, cId)
-			delete(r.timeouts, cId)
-		}
-	}
-}
-
 func (r *Room) handleGameUpdate(client ClientId, action *Action) {
 	actions := r.gameUpdateHandler[action.Name](client, action.Content)
 	for _, a := range actions {
 		r.broadcast(a)
 	}
+}
+
+func (r *Room) handleShare(client ClientId, action *Action) {
+	type Content struct {
+		Name    string
+		Content string
+	}
+
+	var req Content
+	innerContent := map[string]interface{}{}
+
+	json.Unmarshal([]byte(action.Content), &req)
+	json.Unmarshal([]byte(req.Content), &innerContent)
+
+	innerContent["id"] = client
+
+	contentBytes, _ := json.Marshal(innerContent)
+	r.broadcast(&Action{
+		Name:    req.Name,
+		Content: string(contentBytes),
+	})
 }
 
 func (r *Room) handleRoomUpdate(update *RoomUpdate) {
@@ -201,6 +212,8 @@ func (r *Room) handleRoomUpdate(update *RoomUpdate) {
 		r.rename(update.Client, update.Action.Content)
 	case "reveal", "rematch":
 		r.handleGameUpdate(update.Client, update.Action)
+	case "share":
+		r.handleShare(update.Client, update.Action)
 	default:
 		return
 	}
@@ -211,6 +224,16 @@ func (r *Room) broadcast(action *Action) {
 	for cId := range r.clients {
 		if r.clients[cId].isOpen {
 			r.clients[cId].update <- action
+		}
+	}
+}
+
+func (r *Room) checkActivity(now int64) {
+	for cId, t := range r.timeouts {
+		if now-t > TIMELIMIT_IN_SEC {
+			log.Println("Removing client", r.clients[cId].alias, "from room", r.id)
+			delete(r.clients, cId)
+			delete(r.timeouts, cId)
 		}
 	}
 }

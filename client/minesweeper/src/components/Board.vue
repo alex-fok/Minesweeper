@@ -2,7 +2,7 @@
 import socket from '@/socket'
 import Block from './Block.vue'
 import Copy from './icon/copy.vue'
-
+import { computed } from 'vue'
 import { gameState } from '@/store'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 
@@ -22,6 +22,29 @@ const getInviteUrl = () => {
     const {  protocol, hostname, port, pathname } = window.location
     const portNum = port !== '' ? ':' + port : ''
     return `${protocol}//${hostname}${portNum}${pathname}?join=${gameState.inviteCode}`
+}
+// Record array of cursor position
+// playerCursor[position] = playerid
+const playerCursors = computed(() => {
+    const playerIds = Object.keys(gameState.players)
+    
+    const result : string[] = []
+    playerIds.forEach((id, _) => {
+        if (id !== gameState.id || (gameState.isPlayer && !gameState.players[gameState.id].isTurn))
+            result[gameState.players[id].cursor] = id
+    })
+    return result
+})
+
+const updateMousePosition = (position: number) => {
+    if (!gameState.isPlayer) return
+    socket.send(JSON.stringify({
+        name: 'share',
+        content: JSON.stringify({
+            name: 'playerMousePos',
+            content: JSON.stringify({position})
+        })
+    }))
 }
 
 const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
@@ -56,6 +79,8 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
                     :reveal='() => { reveal(i) }'
                     :show='block.show'
                     :owner='block.owner'
+                    :playerHovering='playerCursors[i]'
+                    :updateMousePosition = '() => updateMousePosition(i)'
                 />
             </div>
         </div>

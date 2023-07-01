@@ -8,6 +8,7 @@ type Player = {
     score: number,
     isTurn: boolean,
     isOnline: boolean,
+    cursor: number
 }
 
 type GameStat = {
@@ -38,15 +39,17 @@ export default (data: GameStat) => {
     gameState.bombsLeft = bombsLeft
     
     gameState.players = players
+
     gameState.status = Object.keys(gameState.players).length > 1 ? IN_GAME : WAITING_JOIN
     gameState.isPlayer = players[gameState.id] !== undefined
     
     // Set color
     let rand = Math.floor(Math.random() *2)
     Object.keys(gameState.players).forEach(id => {
-        uiState.bombColor[id] = rand === 0 ? COLORSETTING.COLOR_1 : COLORSETTING.COLOR_2
+        uiState.playerColor[id] = rand === 0 ? COLORSETTING.COLOR_1 : COLORSETTING.COLOR_2
         rand = (rand - 1) % 2
     })
+    
     // Update board
     if (!visible) return
     visible.forEach(block => {
