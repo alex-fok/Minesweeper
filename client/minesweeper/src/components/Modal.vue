@@ -6,8 +6,9 @@ import Join from './modal/Join.vue'
 import CreateOrJoin from './modal/CreateOrJoin.vue';
 import GameEnded from './modal/GameEnded.vue';
 import Invited from './modal/Invited.vue'
-import NoContent from './modal/NoContent.vue'
 import Message from './modal/Message.vue'
+import HowToPlay from './modal/HowToPlay.vue';
+import NoContent from './modal/NoContent.vue'
 
 const props = defineProps({
     // create, join, createOrJoin
@@ -51,6 +52,9 @@ watch(props, setFocus)
         </template>
         <template v-else-if='props.content === `message`'>
             <Message :close='close' />
+        </template>
+        <template v-else-if='props.content === `howToPlay`'>
+            <HowToPlay :close='close' />
         </template>
         <template v-else>
            <NoContent :close='close'/>

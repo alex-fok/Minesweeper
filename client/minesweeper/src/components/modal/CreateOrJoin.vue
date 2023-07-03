@@ -14,10 +14,10 @@ defineProps({
             <span class='btn' @click='uiState.modal.displayContent(`create`)'>CREATE ROOM</span>
         </div>
         <div class='modal-item'>
-            OR
+            <span class='btn' @click='uiState.modal.displayContent(`join`)'>JOIN ROOM</span>
         </div>
         <div class='modal-item'>
-            <span class='btn' @click='uiState.modal.displayContent(`join`)'>JOIN ROOM</span>
+            <span class='btn' @click='uiState.modal.displayContent(`howToPlay`)'>HOW TO PLAY?</span>
         </div>
         <div class='modal-close' @click='close()'>&#10005;</div>
     </div>
