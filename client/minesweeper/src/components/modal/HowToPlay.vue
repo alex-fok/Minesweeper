@@ -1,28 +1,30 @@
 <script setup lang='ts'>
 import { GAMESTATUS } from '@/config'
 import { gameState, uiState } from '@/store'
-import { ref } from 'vue'
-const props = defineProps({
+import { computed, ref } from 'vue'
+
+defineProps({
     close: {
         type: Function,
         default: () => {}
     }
 })
+
 const page = ref(1)
 const maxPage = 2
+
+const prevBtn = computed(() => page.value === 1 && gameState.status !== GAMESTATUS.NEW ? 'btn hidden' : 'btn')
+const nextBtn = computed(() => page.value === maxPage ? 'btn hidden' : 'btn')
+
 const nextPage = () => {
     if (page.value < maxPage)
         page.value += 1
 }
 
 const previousPage = () => {
-    if (page.value <= 1) {
-        gameState.status === GAMESTATUS.NEW ?
-            uiState.modal.displayContent('createOrJoin') :
-            props.close()
-    } else {
+    page.value <= 1 ?
+        uiState.modal.displayContent('createOrJoin') :
         page.value -= 1
-    }
 }
 </script>
 <template>
@@ -40,10 +42,12 @@ const previousPage = () => {
 </div>
 <div class='modal-row'>
     <div class='modal-item'>
-        <button class='btn' @click='previousPage()'>&#8592; PREV</button>
+        <button :class='prevBtn' @click='previousPage()'>
+            {{gameState.status === GAMESTATUS.NEW ? 'BACK' : '&#8592; PREV' }}
+        </button>
     </div>
     <div class='modal-item'>
-        <button class='btn' @click='nextPage()'>NEXT &#8594;</button>
+        <button :class='nextBtn' @click='nextPage()'>NEXT &#8594;</button>
     </div>
 </div>
 </template>
