@@ -56,10 +56,10 @@ const requestRematch = (rematch: boolean) => {
                     REMATCH?
                 </div>
                 <div class='modal-item'>
-                    <span class='btn' @click='() => { requestRematch(true) }'>YES</span>
+                    <button class='btn' @click='() => { requestRematch(true) }'>YES</button>
                 </div>
                 <div class='modal-item'>
-                    <span class='btn' @click='() => { requestRematch(false) }'>NO</span>
+                    <button class='btn' @click='() => { requestRematch(false) }'>NO</button>
                 </div>
             </template>
         </div>

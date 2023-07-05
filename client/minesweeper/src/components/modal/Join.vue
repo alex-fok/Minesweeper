@@ -13,7 +13,7 @@ const props = defineProps({
 const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
 const [roomId, roomIdRef] = [ref(''), ref<HTMLInputElement>()]
 
-const joinBtn = computed(() => alias.value !== '' && roomId.value !== '' ? 'btn' : 'btn hidden')
+const joinBtn = computed(() => (alias.value.length === 0 || roomId.value.length === 0) ? 'btn disabled' : 'btn')
 
 const setRoomId = (event:Event) => {
     roomId.value = (event.target as HTMLInputElement).value
@@ -71,7 +71,7 @@ onMounted(() => {
             </div>
         </div>
         <div class='modal-item'>
-            <span :class='joinBtn' @click='joinRoom'>JOIN</span>
+            <button :class='joinBtn' @click='joinRoom'>JOIN</button>
         </div>
         <div class='modal-close' @click='close()'>&#10005;</div>
     </div>

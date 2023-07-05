@@ -11,15 +11,15 @@ defineProps({
 <template>
     <div class='modal-row'>
         <div class='modal-item'>
-            <span class='btn' @click='uiState.modal.displayContent(`create`)'>CREATE ROOM</span>
+            <button class='btn' @click='uiState.modal.displayContent(`create`)'>CREATE ROOM</button>
         </div>
         <div class='modal-item'>
-            <span class='btn' @click='uiState.modal.displayContent(`join`)'>JOIN ROOM</span>
+            <button class='btn' @click='uiState.modal.displayContent(`join`)'>JOIN ROOM</button>
         </div>
         <div class='modal-item'>
-            <span class='btn' @click='uiState.modal.displayContent(`howToPlay`)'>HOW TO PLAY?</span>
+            <button class='btn' @click='uiState.modal.displayContent(`howToPlay`)'>HOW TO PLAY?</button>
         </div>
-        <div class='modal-close' @click='close()'>&#10005;</div>
+        <button class='modal-close' @click='close()'>&#10005;</button>
     </div>
 </template>
 <style scoped>

@@ -1,4 +1,10 @@
 .modal-close {
+    font-size: .8rem;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
     align-self: center;
     cursor: pointer;
     vertical-align: middle;
@@ -49,13 +55,20 @@
 }
 .btn {
     font-size: .8rem;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
     cursor: pointer;
 }
-.btn:hover {
+
+.btn.disabled {
+    opacity: .5;
+    cursor: default;
+}
+
+.btn:not(.disabled):hover {
     border-bottom: 1px solid white;
     margin-bottom: -1px;
 }
-.hidden {
-    visibility: hidden;
-}
-

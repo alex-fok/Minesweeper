@@ -10,14 +10,12 @@ const props = defineProps({
     }
 })
 const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
-const createBtn = computed(() => alias.value !== '' ? 'btn' : 'btn hidden')
-
+const createBtn = computed(() => alias.value.length === 0 ? 'btn disabled' : 'btn')
 const setAlias = (event:Event) => {
     alias.value = (event.target as HTMLInputElement).value
 }
 
 const createRoom = () => {
-    if (alias.value === '') return
     saveAlias(alias.value)
     socket.send(JSON.stringify({
         name: 'createRoom',
@@ -49,7 +47,7 @@ onMounted(() => {
             </div>
         </div>    
         <div class='modal-item'>
-            <span :class='createBtn' @click='createRoom'>CREATE</span>
+            <button :class='createBtn' @click='createRoom' :disabled='alias.length === 0'>CREATE</button>
         </div>
         <div class='modal-close' @click='close()'>&#10005;</div>
     </div>

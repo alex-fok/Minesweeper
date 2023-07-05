@@ -1,7 +1,8 @@
 <script setup lang='ts'>
+import { GAMESTATUS } from '@/config'
 import { gameState, uiState } from '@/store'
 import { ref } from 'vue'
-defineProps({
+const props = defineProps({
     close: {
         type: Function,
         default: () => {}
@@ -16,7 +17,9 @@ const nextPage = () => {
 
 const previousPage = () => {
     if (page.value <= 1) {
-        uiState.modal.displayContent('createOrJoin')
+        gameState.status === GAMESTATUS.NEW ?
+            uiState.modal.displayContent('createOrJoin') :
+            props.close()
     } else {
         page.value -= 1
     }
@@ -37,10 +40,10 @@ const previousPage = () => {
 </div>
 <div class='modal-row'>
     <div class='modal-item'>
-        <span class='btn' @click='previousPage()'>&#8592; PREV</span>
+        <button class='btn' @click='previousPage()'>&#8592; PREV</button>
     </div>
     <div class='modal-item'>
-        <span class='btn' @click='nextPage()'>NEXT &#8594;</span>
+        <button class='btn' @click='nextPage()'>NEXT &#8594;</button>
     </div>
 </div>
 </template>
