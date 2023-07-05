@@ -8,6 +8,11 @@ const createRoom = () => {
 const joinRoom = () => {
     uiState.modal.displayContent('join')
 }
+
+const howToPlay = () => {
+    uiState.modal.displayContent('howToPlay')
+}
+
 </script>
 <template>
     <div class='header-container'>
@@ -24,6 +29,11 @@ const joinRoom = () => {
         <div class='menu-item'>
             <div class='button' @click='joinRoom()'>
                 Join Room
+            </div>
+        </div>
+        <div class='menu-item'>
+            <div class='button' @click='howToPlay()'>
+                How To Play?
             </div>
         </div>
     </div>
