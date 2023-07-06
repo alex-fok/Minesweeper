@@ -16,6 +16,9 @@
     align-items: stretch;
     column-gap: 1.5rem;
 }
+.modal-row.reverse {
+    flex-direction:row-reverse;
+}
 .modal-item {
     display: flex;
     margin: auto;
