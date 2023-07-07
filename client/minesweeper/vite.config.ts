@@ -10,7 +10,7 @@ export default ({ mode }: { mode: string }) => {
   process.env = {...process.env, ...loadEnv(mode, process.cwd())}
 
   return defineConfig({
-    base: process.env.VITE_BASE ? 'https://alex-fok/minesweeper/' : '/',
+    base: process.env.VITE_BASE || '/',
     plugins: [vue(), vueJsx()],
     resolve: {
       alias: {
