@@ -85,7 +85,7 @@ const previousPage = () => {
     user-select: text;
     word-break: keep-all;
 }
-.insruction img {
+.instruction img {
     display: block;
     margin: 0 auto 1rem;
 }
