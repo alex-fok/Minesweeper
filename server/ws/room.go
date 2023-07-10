@@ -107,7 +107,7 @@ func (r *Room) reconnectClient(c *Client) {
 	_, clientsOk := r.clients[c.id]
 	if !timeoutOk || !clientsOk {
 		log.Println("Cannot reconnect client")
-		c.update <- &Action{
+		c.writer.update <- &Action{
 			Name:    "reconnFailed",
 			Content: "{}",
 		}
@@ -134,7 +134,7 @@ func (r *Room) reconnectClient(c *Client) {
 	// Return Game Stat
 	stat, _ := json.Marshal(r.gameDriver.GetGameStat())
 
-	c.update <- &Action{
+	c.writer.update <- &Action{
 		Name:    "gameStat",
 		Content: string(stat),
 	}
@@ -150,7 +150,7 @@ func (r *Room) notifyRoomInfo(c *Client) {
 		InviteCode: r.inviteCode,
 	})
 
-	c.update <- &Action{
+	c.writer.update <- &Action{
 		Name:    "roomInfo",
 		Content: string(rInfo),
 	}
@@ -222,8 +222,8 @@ func (r *Room) handleRoomUpdate(update *RoomUpdate) {
 
 func (r *Room) broadcast(action *Action) {
 	for cId := range r.clients {
-		if r.clients[cId].isOpen {
-			r.clients[cId].update <- action
+		if r.clients[cId].socket.IsOpen {
+			r.clients[cId].writer.update <- action
 		}
 	}
 }

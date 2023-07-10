@@ -20,28 +20,51 @@ type Message struct {
 	Message string `json:"message"`
 }
 
+type Socket struct {
+	conn   *websocket.Conn
+	IsOpen bool
+	close  func()
+}
+
+type Writer struct {
+	update chan *Action
+	ping   chan bool
+	stop   chan bool
+}
+
 type ClientId = types.ClientId
 
 type Client struct {
 	id     ClientId
-	conn   *websocket.Conn
-	isOpen bool
+	socket *Socket
 	lobby  *Lobby
 	room   *Room
 	alias  string
-	update chan *Action
-	stop   chan bool
+	writer *Writer
 }
 
 func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
+	socket := &Socket{
+		conn:   conn,
+		IsOpen: true,
+	}
+	socket.close = func() {
+		if !socket.IsOpen {
+			return
+		}
+		socket.conn.Close()
+		socket.IsOpen = false
+	}
 	return &Client{
 		id:     ClientId(utils.CreateClientId()),
-		conn:   conn,
-		isOpen: true,
+		socket: socket,
 		lobby:  lobby,
 		alias:  "Anonymous",
-		update: make(chan *Action),
-		stop:   make(chan bool),
+		writer: &Writer{
+			update: make(chan *Action),
+			ping:   make(chan bool),
+			stop:   make(chan bool),
+		},
 	}
 }
 
@@ -70,7 +93,7 @@ func (c *Client) reconnect(req *Request) {
 	}
 
 	if roomNotFound {
-		c.update <- &Action{
+		c.writer.update <- &Action{
 			Name:    "reconnFailed",
 			Content: "{}",
 		}
@@ -96,7 +119,7 @@ func (c *Client) createRoom(req *Request) {
 
 	// Update client
 
-	c.update <- &Action{
+	c.writer.update <- &Action{
 		Name:    "roomCreated",
 		Content: string("{}"),
 	}
@@ -129,7 +152,7 @@ func (c *Client) joinRoom(req *Request) {
 		message, _ := json.Marshal(&Message{
 			Message: "Room #" + strconv.FormatUint(uint64(joinReq.Id), 10) + " not found",
 		})
-		c.update <- &Action{
+		c.writer.update <- &Action{
 			Name:    "message",
 			Content: string(message),
 		}
@@ -151,7 +174,7 @@ func (c *Client) handleInviteCode(req *Request) {
 		c.room = r
 		c.room.register <- c
 	} else {
-		c.update <- &Action{
+		c.writer.update <- &Action{
 			Name:    "reconnFailed",
 			Content: "{}",
 		}
@@ -189,51 +212,48 @@ func (c *Client) updateRoom(req *Request) {
 
 func (c *Client) keepAlive() {
 	ticker := time.NewTicker(15 * time.Second)
-	endConn := make(chan bool)
 	defer func() {
-		endConn <- true
 		ticker.Stop()
-		c.stop <- true
 	}()
-
-	pingMsg := []byte("keep alive")
-
-	sendPing := func() error {
-		err := c.conn.WriteMessage(websocket.PingMessage, pingMsg)
-		return err
-	}
 
 	for {
 		select {
 		case <-ticker.C:
-			if err := sendPing(); err != nil {
-				return
+			if c.socket.IsOpen {
+				c.writer.ping <- true
+			} else {
+				break
 			}
-		case <-endConn:
-			return
 		}
 	}
 }
 
 func (c *Client) writeBuffer() {
 	defer func() {
-		c.conn.Close()
-		c.isOpen = false
+		close(c.writer.update)
+		close(c.writer.ping)
+		close(c.writer.stop)
 	}()
+
 	for {
 		select {
-		case action, ok := <-c.update:
+		case action, ok := <-c.writer.update:
 			if !ok {
-				c.conn.WriteMessage(websocket.CloseMessage, []byte{})
-				return
+				c.socket.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				c.socket.close()
 			}
 			if len(action.Content) != 0 {
-				if err := c.conn.WriteJSON(action); err != nil {
+				if err := c.socket.conn.WriteJSON(action); err != nil {
 					log.Println(err)
-					return
+					c.socket.close()
 				}
 			}
-		case <-c.stop:
+		case <-c.writer.ping:
+			if err := c.socket.conn.WriteMessage(websocket.PingMessage, []byte("keep alive")); err != nil {
+				log.Println(err)
+				c.socket.close()
+			}
+		case <-c.writer.stop:
 			break
 		}
 	}
@@ -241,9 +261,7 @@ func (c *Client) writeBuffer() {
 
 func (c *Client) readBuffer() {
 	defer func() {
-		c.conn.Close()
-		c.isOpen = false
-		close(c.update)
+		c.writer.stop <- true
 
 		if c.room != nil {
 			c.room.disconnect <- c
@@ -253,10 +271,12 @@ func (c *Client) readBuffer() {
 	var req Request
 	for {
 		// Get Message Type
-		if err := c.conn.ReadJSON(&req); err != nil {
+		if err := c.socket.conn.ReadJSON(&req); err != nil {
 			log.Println(err)
-			c.stop <- true
-			return
+			break
+		}
+		if !c.socket.IsOpen {
+			break
 		}
 		switch req.Name {
 		case "reconnect":
@@ -287,7 +307,7 @@ func (c *Client) run() {
 	id, _ := json.Marshal(&IdMsg{
 		Id: string(c.id),
 	})
-	c.update <- &Action{
+	c.writer.update <- &Action{
 		Name:    "userId",
 		Content: string(id),
 	}
