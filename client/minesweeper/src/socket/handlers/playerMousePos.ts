@@ -7,8 +7,6 @@ type mousePosition = {
 
 export default (data: mousePosition) => {
     const { id, position } = data
-    console.log(gameState.players)
-    console.log('playerId: ', id)
     if (gameState.players[id])
         gameState.players[id].cursor = position 
 }
