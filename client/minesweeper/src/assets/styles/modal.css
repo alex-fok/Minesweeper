@@ -66,6 +66,11 @@
     cursor: pointer;
 }
 
+.btn.selected {
+    font-weight: 500;
+    border-bottom: 1px solid white;
+}
+
 .btn.disabled {
     opacity: .5;
     cursor: default;
