@@ -8,6 +8,11 @@ import (
 type Action = types.Action
 type Client = types.ClientMeta
 
+type BoardConfig struct {
+	Size uint `json:"size"`
+	Bomb uint `json:"bomb"`
+}
+
 type PlayerInfo struct {
 	Id       ClientId `json:"id"`
 	Alias    string   `json:"alias"`
@@ -17,9 +22,10 @@ type PlayerInfo struct {
 }
 
 type GameStat struct {
-	BombsLeft uint                     `json:"bombsLeft"`
-	Players   map[ClientId]*PlayerInfo `json:"players"`
-	Visible   []BlockInfo              `json:"visible"`
+	BoardConfig *BoardConfig             `json:"boardConfig"`
+	BombsLeft   uint                     `json:"bombsLeft"`
+	Players     map[ClientId]*PlayerInfo `json:"players"`
+	Visible     []BlockInfo              `json:"visible"`
 }
 
 type Driver struct {
@@ -29,9 +35,9 @@ type Driver struct {
 	isDone     bool
 }
 
-func NewDriver() *Driver {
+func NewDriver(size uint, bomb uint) *Driver {
 	d := Driver{
-		game:       newGame(),
+		game:       newGame(size, bomb),
 		Players:    make(map[ClientId]*Client),
 		RematchReq: make(map[ClientId]bool),
 		isDone:     false,
@@ -233,7 +239,7 @@ func (d *Driver) Rematch(cId ClientId, content string) []*Action {
 	}
 
 	if rematch {
-		d.game = newGame()
+		d.game = newGame(d.game.getSize(), d.game.getBombCount())
 		for _, player := range d.Players {
 			d.game.assignTurn(player.Id)
 		}
@@ -259,6 +265,10 @@ func (d *Driver) GetGameStat() *GameStat {
 	counter, turn := d.game.getCounter(), d.game.getTurn()
 
 	gameStat := GameStat{
+		BoardConfig: &BoardConfig{
+			Size: d.game.getSize(),
+			Bomb: d.game.getBombCount(),
+		},
 		BombsLeft: counter.BombsLeft,
 		Players:   make(map[ClientId]*PlayerInfo),
 		Visible:   d.game.getVisibleBlocks(),

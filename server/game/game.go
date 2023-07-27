@@ -4,26 +4,36 @@ import (
 	"math/rand"
 )
 
-const DEFAULT_SIZE = 26
-const DEFAULT_BOMB_COUNT = 100
+// const DEFAULT_SIZE = 26
+// const DEFAULT_BOMB_COUNT = 100
 
-func newGame() *Game {
+func newGame(size uint, bomb uint) *Game {
 	return &Game{
+		Size:    size,
+		Bomb:    bomb,
 		Counter: Counter{},
 		Turn: Turn{
 			Curr: "",
 			Next: "",
 		},
-		Board:  GetBoard(DEFAULT_SIZE, DEFAULT_BOMB_COUNT),
+		Board:  GetBoard(int(size), int(bomb)),
 		Winner: "",
 	}
 }
 
 func (g *Game) initCounter() {
-	g.Counter.BombsLeft = DEFAULT_BOMB_COUNT
+	g.Counter.BombsLeft = g.Bomb
 	g.Counter.Score = make(map[ClientId]uint)
 	g.Counter.Score[g.Turn.Curr] = 0
 	g.Counter.Score[g.Turn.Next] = 0
+}
+
+func (g *Game) getSize() uint {
+	return g.Size
+}
+
+func (g *Game) getBombCount() uint {
+	return g.Bomb
 }
 
 func (g *Game) getCounter() Counter {
@@ -111,7 +121,7 @@ func (g *Game) scoreCurrPlayer() (Counter, bool) {
 	g.Counter.BombsLeft--
 	g.Counter.Score[g.Turn.Curr]++
 
-	isWon := g.Counter.Score[g.Turn.Curr] > DEFAULT_BOMB_COUNT/2
+	isWon := g.Counter.Score[g.Turn.Curr] > g.Bomb/2
 	if isWon {
 		g.Winner = g.Turn.Curr
 	}

@@ -1,5 +1,4 @@
 import { gameState } from '@/store'
-import { BOARDSETTING } from '@/config'
 
 type BlockInfo = {
     x: number,
@@ -13,7 +12,7 @@ export default (data: {blocks:BlockInfo[]}) => {
     const { blocks } = data
     
     blocks.forEach(block => {
-        const target = gameState.board[BOARDSETTING.SIZE * block.y + block.x]
+        const target = gameState.board[gameState.boardConfig.size * block.y + block.x]
         target.show = gameState.getDisplayVal(block)
         target.owner = block.visitedBy
     })

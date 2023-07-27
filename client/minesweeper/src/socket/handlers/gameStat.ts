@@ -14,6 +14,10 @@ type Player = {
 type GameStat = {
     bombsLeft: number,
     players: Record<string, Player>,
+    boardConfig: {
+        size: number,
+        bomb: number
+    }
     visible: {
         x: number,
         y: number,
@@ -26,9 +30,12 @@ type GameStat = {
 const { WAITING_JOIN, IN_GAME, INVITED } = GAMESTATUS
 
 export default (data: GameStat) => {
-    gameState.resetBoard()
-    const { bombsLeft, players, visible } = data
+    const { boardConfig, bombsLeft, players, visible } = data
     
+    gameState.boardConfig = boardConfig
+    gameState.initBoard()
+    console.log(gameState.board)
+
     if (!players) return
 
     if (gameState.status === INVITED) {
@@ -53,7 +60,7 @@ export default (data: GameStat) => {
     // Update board
     if (!visible) return
     visible.forEach(block => {
-        const b = gameState.board[BOARDSETTING.SIZE * block.y + block.x]
+        const b = gameState.board[gameState.boardConfig.size * block.y + block.x]
         b.show = gameState.getDisplayVal(block)
         b.owner = block.visitedBy
     })

@@ -102,7 +102,10 @@ func (c *Client) reconnect(req *Request) {
 
 func (c *Client) createRoom(req *Request) {
 	type CreateReq struct {
-		Alias string `json:"alias"`
+		Alias    string `json:"alias"`
+		RoomType string `json:"roomType"`
+		Size     uint   `json:"size"`
+		Bomb     uint   `json:"bomb"`
 	}
 	var createReq CreateReq
 	if err := json.Unmarshal([]byte(req.Content), &createReq); err != nil {
@@ -114,7 +117,11 @@ func (c *Client) createRoom(req *Request) {
 		c.room.unregister <- c
 	}
 
-	c.room = c.lobby.createRoom(c)
+	c.room = c.lobby.createRoom(c, &RoomConfig{
+		Type: createReq.RoomType,
+		Size: createReq.Size,
+		Bomb: createReq.Bomb,
+	})
 	c.room.register <- c
 
 	// Update client

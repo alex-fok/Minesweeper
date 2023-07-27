@@ -23,7 +23,7 @@ type Vertex struct {
 
 type Counter struct {
 	Score     map[ClientId]uint `json:"score"`
-	BombsLeft uint              `json:"BombsLeft"`
+	BombsLeft uint              `json:"bombsLeft"`
 }
 
 type Turn struct {
@@ -33,6 +33,8 @@ type Turn struct {
 }
 
 type Game struct {
+	Size    uint
+	Bomb    uint
 	Counter Counter
 	Turn    Turn
 	Board   [][]*Block

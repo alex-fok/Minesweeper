@@ -20,6 +20,12 @@ type RoomUpdate struct {
 	Action *Action
 }
 
+type RoomConfig struct {
+	Type string
+	Size uint
+	Bomb uint
+}
+
 type Room struct {
 	id                uint
 	clients           map[ClientId]*Client
@@ -39,12 +45,12 @@ type Room struct {
 
 const TIMELIMIT_IN_SEC = 60 * 5 // 5 minutes
 
-func newRoom(id uint, c *Client, l *Lobby) *Room {
+func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 	r := &Room{
 		id:         id,
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
-		gameDriver: *game.NewDriver(),
+		gameDriver: *game.NewDriver(config.Size, config.Bomb),
 		inviteCode: l.createInviteCode(id),
 		update:     make(chan *RoomUpdate),
 		register:   make(chan *Client),

@@ -1,5 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref, computed } from 'vue'
+import { BOARDSETTING } from '@/config'
 import socket from '@/socket'
 import {getAlias, setAlias as saveAlias } from '@/docUtils'
 
@@ -10,12 +11,15 @@ const props = defineProps({
     }
 })
 
-
 const roomType = ref('public')
 const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
 const [passcode, passcodeRef] = [ref(''), ref<HTMLInputElement>()]
-const size = ref(26)
-const bomb = ref(100)
+
+const { SMALL, MEDIUM, LARGE } = BOARDSETTING.SIZE
+const { LITTLE, NORMAL, MANY } = BOARDSETTING.BOMB
+
+const size = ref(MEDIUM)
+const bomb = ref(NORMAL)
 
 const createBtn = computed(() => alias.value.length === 0 ? 'btn disabled' : 'btn')
 
@@ -23,7 +27,12 @@ const createRoom = () => {
     saveAlias(alias.value)
     socket.send(JSON.stringify({
         name: 'createRoom',
-        content: JSON.stringify({alias: alias.value})
+        content: JSON.stringify({
+            alias: alias.value,
+            roomType: roomType.value,
+            size: size.value,
+            bomb: bomb.value
+        })
     }))
     props.close()
 }
@@ -68,11 +77,11 @@ onMounted(() => {
         <label class='grid-key'>Room Type</label>
         <div class='grid-value btn-group'>
             <button
-                :class='`${roomType === "public" ? "btn selected" : "btn"}`'
+                :class='`${roomType === `public` ? `btn selected` : `btn`}`'
                 @click='() => {setRoomType(`public`)}'
             >Public</button>
             <button
-                :class='`${roomType === "private" ? "btn selected" : "btn"}`'
+                :class='`${roomType === `private` ? `btn selected` : `btn`}`'
                 @click='() => {setRoomType(`private`)}'
             >Private</button>
         </div>
@@ -92,33 +101,33 @@ onMounted(() => {
         <label class='grid-key'>Map size</label>
         <div class='btn-group'>
             <button
-                :class='`${size === 16 ? "btn selected" : "btn"}`'
-                @click='() => {setSize(16)}'
-            >16 x 16</button>
+                :class='`${size === SMALL ? `btn selected` : `btn`}`'
+                @click='() => {setSize(SMALL)}'
+            >{{ SMALL }} x {{ SMALL }}</button>
             <button class='btn'
-                :class='`${size === 26 ? "btn selected" : "btn"}`'
-                @click='() => {setSize(26)}'
-            >26 x 26</button>
+                :class='`${size === MEDIUM ? `btn selected` : `btn`}`'
+                @click='() => {setSize(MEDIUM)}'
+            >{{ MEDIUM }} x {{ MEDIUM }}</button>
             <button
-                :class='`${size === 36 ? "btn selected" : "btn"}`'
-                @click='() => {setSize(36)}'
-            >36 x 36</button>
+                :class='`${size === LARGE ? `btn selected` : `btn`}`'
+                @click='() => {setSize(LARGE)}'
+            >{{ LARGE }} x {{ LARGE }}</button>
         </div>
         <!-- # of bombs -->
         <label class='grid-key'># of bombs</label>
         <div class='btn-group'>
             <button
-                :class='`${bomb === 50 ? "btn selected" : "btn"}`'
-                @click='() => {setBomb(50)}'
-            >50</button>
+                :class='`${bomb === LITTLE ? `btn selected` : `btn`}`'
+                @click='() => {setBomb(LITTLE)}'
+            >{{ LITTLE }}</button>
             <button
-                :class='`${bomb === 100 ? "btn selected" : "btn"}`'
-                @click='() => {setBomb(100)}'
-            >100</button>
+                :class='`${bomb === NORMAL ? `btn selected` : `btn`}`'
+                @click='() => {setBomb(NORMAL)}'
+            >{{ NORMAL }}</button>
             <button
-                :class='`${bomb === 150 ? "btn selected" : "btn"}`'
-                @click='() => {setBomb(150)}'
-            >150</button>
+                :class='`${bomb === LARGE ? `btn selected` : `btn`}`'
+                @click='() => {setBomb(MANY)}'
+            >{{ MANY }}</button>
         </div>
     </div>
    

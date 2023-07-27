@@ -1,8 +1,9 @@
 <script setup lang='ts'>
+import { computed } from 'vue'
+import { BOARDSETTING } from '@/config'
 import { gameState } from '@/store'
 import Flag from './icon/flag.vue'
 import { uiState } from '@/store'
-import { computed } from 'vue'
 
 const props = defineProps({
     reveal: {
@@ -38,20 +39,18 @@ const emitPositionUpdate = () => {
 
 const getNumClass = (num: number) => `num-${num}`
 const isSelectable = computed(() => gameState.isPlayer && gameState.players[id].isTurn)
+const isShrunk = computed(() => gameState.boardConfig.size === BOARDSETTING.SIZE.LARGE)
 </script>
 <template>
     <div
-    :class='`block
-        ${show !== `` ? ` revealed` : ``}
-        ${isSelectable ? ` selectable` : ``}
-    `'
-    :style='{outline: `${playerHovering ? ".1rem solid " + uiState.playerColor[playerHovering] : ""}`}'
-    @click='emitReveal'
-    @mouseover='emitPositionUpdate'
+        :class='`block${show !== `` ? ` revealed` : ``}${isSelectable ? ` selectable` : ``}${isShrunk ? ` shrunk`: ``}`'
+        :style='{outline: `${playerHovering ? `.1rem solid ` + uiState.playerColor[playerHovering] : ``}`}'
+        @click='emitReveal'
+        @mouseover='emitPositionUpdate'
     >
         <Flag
             v-if='show === `BO`'
-            size='3vh'
+            :size='isShrunk ? `2vh` : `3vh`'
             :fill='uiState.playerColor[owner]'
         />
         <span
@@ -70,6 +69,11 @@ const isSelectable = computed(() => gameState.isPlayer && gameState.players[id].
         vertical-align: middle;
         text-align: center;
         user-select: none;
+    }
+    .block.shrunk {
+        width: 2vh;
+        height: 2vh;
+        line-height: 2vh;
     }
     .selectable:hover {
         outline: .1rem solid #CCCCCC;

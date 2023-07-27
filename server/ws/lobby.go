@@ -27,7 +27,7 @@ func CreateLobby() *Lobby {
 	return lobby
 }
 
-func (l *Lobby) createRoom(c *Client) *Room {
+func (l *Lobby) createRoom(c *Client, config *RoomConfig) *Room {
 	var id uint
 	for {
 		id = utils.CreateRoomId()
@@ -38,7 +38,7 @@ func (l *Lobby) createRoom(c *Client) *Room {
 	if c.room != nil {
 		c.room.unregister <- c
 	}
-	r := newRoom(id, c, l)
+	r := newRoom(id, c, l, config)
 
 	l.register <- r
 	return r

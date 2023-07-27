@@ -1,18 +1,18 @@
 <script setup lang='ts'>
+import { computed } from 'vue'
+import { BOARDSETTING, GAMESTATUS } from '@/config'
+import { gameState } from '@/store'
 import socket from '@/socket'
 import Block from './Block.vue'
 import Copy from './icon/copy.vue'
-import { computed } from 'vue'
-import { gameState } from '@/store'
-import { BOARDSETTING, GAMESTATUS } from '@/config'
 
 const { IN_GAME, WAITING_JOIN } = GAMESTATUS
 
 const reveal = (i: number) => {
     if (gameState.status !== IN_GAME) return
 
-    const y = Math.floor(i / BOARDSETTING.SIZE)
-    const x = i % BOARDSETTING.SIZE
+    const y = Math.floor(i / gameState.boardConfig.size)
+    const x = i % gameState.boardConfig.size
     socket.send(JSON.stringify({
         name: 'reveal',
         content: JSON.stringify({x, y})
@@ -23,6 +23,16 @@ const getInviteUrl = () => {
     const portNum = port !== '' ? ':' + port : ''
     return `${protocol}//${hostname}${portNum}${pathname}?join=${gameState.inviteCode}`
 }
+
+const mapSize = computed(() => {
+    const { size } = gameState.boardConfig
+    const { SMALL, MEDIUM } = BOARDSETTING.SIZE
+    return (
+        size === SMALL ? 'small' :
+        size === MEDIUM ? 'medium' :
+        'large'
+    )
+})
 // Record array of cursor position
 // playerCursor[position] = playerid
 const playerCursors = computed(() => {
@@ -72,7 +82,7 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
             </div>
         </div>
         <div v-else class='board-wrapper'>
-            <div class='board'>
+            <div :class='`board ` + mapSize'>
                 <Block
                     v-for='(block, i) in gameState.board'
                     :key='i'
@@ -138,6 +148,15 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
         column-gap: 1px;
         row-gap: 1px;
         grid-template-columns: repeat(26, auto);
+    }
+    .board.small {
+        grid-template-columns: repeat(16, auto);
+    }
+    .board.medium {
+        grid-template-columns: repeat(26, auto);
+    }
+    .board.large {
+        grid-template-columns: repeat(36, auto);
     }
     .overlay {
         position:absolute;
