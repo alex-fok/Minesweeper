@@ -43,7 +43,7 @@ const requestRematch = (rematch: boolean) => {
                     <div class='score-text'> - </div>
                     <div class='score'>
                         <span class='score-text'>{{ opponent?.score }}</span>
-                        {{ opponent?.alias || "Anonymous" }}
+                        {{ opponent?.alias || 'Anonymous' }}
                     </div>
                 </div>
         </div>

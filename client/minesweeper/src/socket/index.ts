@@ -35,7 +35,7 @@ socket.addEventListener('open', _ => {
         }))
     }
 
-    gameState.id = userId || ""
+    gameState.id = userId || ''
     if (userId) {
         reconnect()
     } else if (invitation) {
