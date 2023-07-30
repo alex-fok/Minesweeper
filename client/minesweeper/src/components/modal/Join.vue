@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import socket from '@/socket';
 import { getAlias, setAlias as saveAlias } from '@/docUtils'
 
@@ -14,10 +14,6 @@ const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
 const [roomId, roomIdRef] = [ref(''), ref<HTMLInputElement>()]
 
 const joinBtn = computed(() => (alias.value.length === 0 || roomId.value.length === 0) ? 'btn disabled' : 'btn')
-
-const setRoomId = (event:Event) => {
-    roomId.value = (event.target as HTMLInputElement).value
-}
 
 const joinRoom = () => {
     const roomIdInt = parseInt(roomId.value, 10)
@@ -35,11 +31,17 @@ const joinRoom = () => {
     props.close()
 }
 
+const keyDownEventHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') joinRoom()
+}
 onMounted(() => {
     [aliasRef, roomIdRef].forEach(ref => {
-        ref?.value?.addEventListener('keydown', event => {
-            if ((event as KeyboardEvent).key === 'Enter') joinRoom()
-        })
+        ref?.value?.addEventListener('keydown', keyDownEventHandler)
+    })
+})
+onUnmounted(() => {
+    [aliasRef, roomIdRef].forEach(ref => {
+        ref?.value?.removeEventListener('keydown', keyDownEventHandler)
     })
 })
 </script>
@@ -54,8 +56,7 @@ onMounted(() => {
                     id='roomId'
                     class='room-input autofocus'
                     maxlength=4
-                    :value='roomId'
-                    @input='setRoomId'
+                    v-model='roomId'
                 />
             </div>
             <div class='user-input'>
