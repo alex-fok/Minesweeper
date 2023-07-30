@@ -1,8 +1,9 @@
 <script setup lang='ts'>
 import { onMounted, ref, computed } from 'vue'
-import { BOARDSETTING } from '@/config'
+import { BOARDSETTING, GAMESTATUS } from '@/config'
 import socket from '@/socket'
 import {getAlias, setAlias as saveAlias } from '@/docUtils'
+import { gameState, uiState } from '@/store'
 
 const props = defineProps({
     close: {
@@ -36,6 +37,13 @@ const createRoom = () => {
         })
     }))
     props.close()
+}
+const cancel = () => {
+    if (gameState.status === GAMESTATUS.NEW) {
+        uiState.modal.displayContent('createOrJoin')
+    } else {
+        props.close()
+    }
 }
 const setRoomType = (rType: 'private' | 'public') => {
     roomType.value = rType
@@ -127,6 +135,7 @@ onMounted(() => {
    
     <div class='modal-row reverse'>
         <button :class='createBtn' @click='createRoom' :disabled='alias.length === 0'>CREATE</button>
+        <button :class='createBtn' @click='cancel' :disabled='alias.length === 0'>CANCEL</button>
     </div>
 </template>
 <style scoped>
