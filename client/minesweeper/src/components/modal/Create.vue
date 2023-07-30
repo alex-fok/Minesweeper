@@ -30,20 +30,15 @@ const createRoom = () => {
         content: JSON.stringify({
             alias: alias.value,
             roomType: roomType.value,
+            passcode: roomType.value === 'private' ? passcode.value : '',
             size: size.value,
             bomb: bomb.value
         })
     }))
     props.close()
 }
-const setAlias = (event:Event) => {
-    alias.value = (event.target as HTMLInputElement).value
-}
 const setRoomType = (rType: 'private' | 'public') => {
     roomType.value = rType
-}
-const setPasscode = (event:Event) => {
-    passcode.value = (event.target as HTMLInputElement).value
 }
 const setSize = (num:number) => {
     size.value = num
@@ -69,8 +64,7 @@ onMounted(() => {
                 id='alias'
                 class='autofocus'
                 maxlength=12
-                :value='alias'
-                @input='setAlias'
+                v-model='alias'
             />
         </div>
         <!-- Room Type --> 
@@ -91,9 +85,9 @@ onMounted(() => {
             <div class='grid-value'>
                 <input
                     ref='passcodeRef'
-                    type='text'
+                    type='password'
                     maxlength=4
-                    @input='setPasscode'
+                    v-model='passcode'
                 />
             </div>
         </template>
@@ -159,10 +153,5 @@ onMounted(() => {
         border-radius: .2rem;
         color: white;
         padding: .3rem .3rem .2rem .3rem;
-    }
-    .btn-group {
-        display: flex;
-        align-items: center;
-        justify-content: space-around;
     }
 </style>

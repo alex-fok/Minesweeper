@@ -29,12 +29,10 @@
     flex-direction: column;
     row-gap: .5rem;
 }
-
 .user-input:not(:first-child) {
     border-left: 1px solid #9F9F9F;
     padding-left: 1rem;
 }
-
 .user-input label {
     margin-right: .5rem;
 }
@@ -65,22 +63,23 @@
     padding: 0;
     cursor: pointer;
 }
-
 .btn.selected {
     font-weight: 500;
     border-bottom: 1px solid white;
 }
-
 .btn.disabled {
     opacity: .5;
     cursor: default;
 }
-
 .btn:not(.disabled):hover {
     border-bottom: 1px solid white;
     margin-bottom: -1px;
 }
-
+.btn-group {
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+}
 .hidden {
     visibility: hidden;
 }
