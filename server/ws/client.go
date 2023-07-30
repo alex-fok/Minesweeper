@@ -69,34 +69,26 @@ func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 }
 
 func (c *Client) reconnect(req *Request) {
-	type ReconnectReq struct {
+	type ReconnReq struct {
 		UserId string `json:"userId"`
 		RoomId string `json:"roomId"`
 	}
-	var reconnectReq ReconnectReq
-	if err := json.Unmarshal([]byte(req.Content), &reconnectReq); err != nil {
+	var reconnReq ReconnReq
+	if err := json.Unmarshal([]byte(req.Content), &reconnReq); err != nil {
 		log.Println(err)
 		return
 	}
-	c.id = ClientId(reconnectReq.UserId)
+	c.id = ClientId(reconnReq.UserId)
 
-	roomNotFound := false
-
-	if rId, err := strconv.ParseUint(reconnectReq.RoomId, 10, 64); err == nil {
+	if rId, err := strconv.ParseUint(reconnReq.RoomId, 10, 64); err == nil {
 		if r, ok := c.lobby.findRoom(uint(rId)); ok {
 			r.reconnect <- c
-		} else {
-			roomNotFound = true
+			return
 		}
-	} else {
-		roomNotFound = true
 	}
-
-	if roomNotFound {
-		c.writer.update <- &Action{
-			Name:    "reconnFailed",
-			Content: "{}",
-		}
+	c.writer.update <- &Action{
+		Name:    "reconnFailed",
+		Content: "{}",
 	}
 }
 
@@ -104,6 +96,7 @@ func (c *Client) createRoom(req *Request) {
 	type CreateReq struct {
 		Alias    string `json:"alias"`
 		RoomType string `json:"roomType"`
+		Pass     string `json:"passcode"`
 		Size     uint   `json:"size"`
 		Bomb     uint   `json:"bomb"`
 	}
@@ -116,21 +109,21 @@ func (c *Client) createRoom(req *Request) {
 	if c.room != nil {
 		c.room.unregister <- c
 	}
-
 	c.room = c.lobby.createRoom(c, &RoomConfig{
 		Type: createReq.RoomType,
+		Pass: createReq.Pass,
 		Size: createReq.Size,
 		Bomb: createReq.Bomb,
 	})
-	c.room.register <- c
-
+	c.room.register <- &RoomLogin{
+		client: c,
+		pass:   createReq.Pass,
+	}
 	// Update client
-
 	c.writer.update <- &Action{
 		Name:    "roomCreated",
 		Content: string("{}"),
 	}
-
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 
@@ -165,9 +158,19 @@ func (c *Client) joinRoom(req *Request) {
 		}
 		return
 	}
-	log.Println("Client", joinReq.Alias, "joined Room", r.id)
 	c.room = r
-	c.room.register <- c
+	if c.room.roomType == "private" {
+		c.writer.update <- &Action{
+			Name:    "passcode",
+			Content: "{}",
+		}
+	} else {
+		c.room.register <- &RoomLogin{
+			client: c,
+			pass:   "",
+		}
+		log.Println("Client", joinReq.Alias, "joined Room", r.id)
+	}
 }
 
 func (c *Client) handleInviteCode(req *Request) {
@@ -179,11 +182,35 @@ func (c *Client) handleInviteCode(req *Request) {
 	json.Unmarshal([]byte(req.Content), &invitation)
 	if r := c.lobby.findInviteCode(invitation.Id); r != nil {
 		c.room = r
-		c.room.register <- c
+		if c.room.roomType == "private" {
+			c.writer.update <- &Action{
+				Name:    "passcode",
+				Content: "{}",
+			}
+		} else {
+			c.room.register <- &RoomLogin{
+				client: c,
+				pass:   "",
+			}
+		}
 	} else {
 		c.writer.update <- &Action{
 			Name:    "reconnFailed",
 			Content: "{}",
+		}
+	}
+}
+
+func (c *Client) confirmPasscode(req *Request) {
+	type Login struct {
+		Pass string `json:"passcode"`
+	}
+	var login Login
+	json.Unmarshal([]byte(req.Content), &login)
+	if c.room != nil {
+		c.room.register <- &RoomLogin{
+			client: c,
+			pass:   login.Pass,
 		}
 	}
 }
@@ -294,6 +321,8 @@ func (c *Client) readBuffer() {
 			go c.joinRoom(&req)
 		case "inviteCode":
 			go c.handleInviteCode(&req)
+		case "passcode":
+			go c.confirmPasscode(&req)
 		case "rename":
 			go c.rename(&req)
 		case "share", "reveal", "rematch":

@@ -1,6 +1,6 @@
 import { reactive } from 'vue'
 
-type Content = 'create' | 'join' | 'createOrJoin' | 'gameEnded' | 'invited' | 'message' | 'howToPlay'
+type Content = 'create' | 'join' | 'createOrJoin' | 'gameEnded' | 'invited' | 'message' | 'howToPlay' | 'passcode'
 
 const playerColor: Record<string, string> = {}
 

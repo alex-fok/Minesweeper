@@ -35,9 +35,6 @@ func (l *Lobby) createRoom(c *Client, config *RoomConfig) *Room {
 			break
 		}
 	}
-	if c.room != nil {
-		c.room.unregister <- c
-	}
 	r := newRoom(id, c, l, config)
 
 	l.register <- r

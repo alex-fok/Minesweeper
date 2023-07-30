@@ -15,19 +15,27 @@ type GameEnded struct {
 	Winner ClientId `json:"winner"`
 }
 
+type RoomConfig struct {
+	Type string
+	Pass string
+	Size uint
+	Bomb uint
+}
+
 type RoomUpdate struct {
 	Client ClientId
 	Action *Action
 }
 
-type RoomConfig struct {
-	Type string
-	Size uint
-	Bomb uint
+type RoomLogin struct {
+	client *Client
+	pass   string
 }
 
 type Room struct {
 	id                uint
+	roomType          string // "private" or "public"
+	pass              string
 	clients           map[ClientId]*Client
 	lobby             *Lobby
 	board             [][]game.Block
@@ -35,7 +43,7 @@ type Room struct {
 	gameDriver        game.Driver
 	inviteCode        string
 	update            chan *RoomUpdate
-	register          chan *Client
+	register          chan *RoomLogin
 	unregister        chan *Client
 	disconnect        chan *Client
 	reconnect         chan *Client
@@ -48,18 +56,19 @@ const TIMELIMIT_IN_SEC = 60 * 5 // 5 minutes
 func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 	r := &Room{
 		id:         id,
+		roomType:   config.Type,
+		pass:       config.Pass,
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
 		gameDriver: *game.NewDriver(config.Size, config.Bomb),
 		inviteCode: l.createInviteCode(id),
 		update:     make(chan *RoomUpdate),
-		register:   make(chan *Client),
+		register:   make(chan *RoomLogin),
 		unregister: make(chan *Client),
 		disconnect: make(chan *Client),
 		reconnect:  make(chan *Client),
 		timeouts:   make(map[ClientId]int64),
 	}
-
 	// Init game update handler
 	r.gameUpdateHandler = make(map[string]func(ClientId, string) []*Action)
 	r.gameUpdateHandler["reveal"] = r.gameDriver.Reveal
@@ -69,15 +78,22 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 	return r
 }
 
-func (r *Room) registerClient(c *Client) {
-	r.clients[c.id] = c
+func (r *Room) registerClient(rLogin *RoomLogin) {
+	if r.roomType == "private" && rLogin.pass != r.pass {
+		rLogin.client.writer.update <- &Action{
+			Name:    "reconnFailed",
+			Content: "{}",
+		}
+		return
+	}
+	r.clients[rLogin.client.id] = rLogin.client
 
 	// Notify room info
-	r.notifyRoomInfo(c)
+	r.notifyRoomInfo(rLogin.client)
 
 	actions := r.gameDriver.RegisterPlayer(&ClientMeta{
-		Id:       c.id,
-		Alias:    c.alias,
+		Id:       rLogin.client.id,
+		Alias:    rLogin.client.alias,
 		IsOnline: true,
 	})
 	for _, a := range actions {
@@ -97,6 +113,9 @@ func (r *Room) unregisterClient(c *Client) {
 }
 
 func (r *Room) disconnectClient(c *Client) {
+	if _, ok := r.clients[c.id]; !ok {
+		return
+	}
 	log.Println("Client", c.alias, "disconnected")
 	if _, ok := r.timeouts[c.id]; !ok {
 		r.timeouts[c.id] = time.Now().Unix()

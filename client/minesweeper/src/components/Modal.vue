@@ -8,6 +8,7 @@ import GameEnded from './modal/GameEnded.vue';
 import Invited from './modal/Invited.vue'
 import Message from './modal/Message.vue'
 import HowToPlay from './modal/HowToPlay.vue';
+import Passcode from './modal/Passcode.vue';
 import NoContent from './modal/NoContent.vue'
 
 const props = defineProps({
@@ -55,6 +56,9 @@ watch(props, setFocus)
         </template>
         <template v-else-if='props.content === `howToPlay`'>
             <HowToPlay :close='close' />
+        </template>
+        <template v-else-if='props.content === `passcode`'>
+            <Passcode :close='close' />
         </template>
         <template v-else>
            <NoContent :close='close'/>
