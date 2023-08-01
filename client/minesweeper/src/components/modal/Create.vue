@@ -16,11 +16,13 @@ const roomType = ref('public')
 const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
 const [passcode, passcodeRef] = [ref(''), ref<HTMLInputElement>()]
 
-const { SMALL, MEDIUM, LARGE } = BOARDSETTING.SIZE
-const { LITTLE, NORMAL, MANY } = BOARDSETTING.BOMB
 
-const size = ref(MEDIUM)
-const bomb = ref(NORMAL)
+const {SIZE, BOMB, TIME_LIMIT} = BOARDSETTING
+
+
+const size = ref(SIZE.MEDIUM)
+const bomb = ref(BOMB.NORMAL)
+const timeLimit = ref(TIME_LIMIT.NONE)
 
 const createBtn = computed(() => alias.value.length === 0 ? 'btn disabled' : 'btn')
 
@@ -33,7 +35,8 @@ const createRoom = () => {
             roomType: roomType.value,
             passcode: roomType.value === 'private' ? passcode.value : '',
             size: size.value,
-            bomb: bomb.value
+            bomb: bomb.value,
+            timeLimit: timeLimit.value
         })
     }))
     props.close()
@@ -53,6 +56,9 @@ const setSize = (num:number) => {
 }
 const setBomb = (num:number) => {
     bomb.value = num
+}
+const setTimeLimit = (num:number) => {
+    timeLimit.value = num
 }
 
 onMounted(() => {
@@ -103,36 +109,55 @@ onMounted(() => {
         <label class='grid-key'>Map size</label>
         <div class='btn-group'>
             <button
-                :class='`${size === SMALL ? `btn selected` : `btn`}`'
-                @click='() => {setSize(SMALL)}'
-            >{{ SMALL }} x {{ SMALL }}</button>
+                :class='`${size === SIZE.SMALL ? `btn selected` : `btn`}`'
+                @click='() => {setSize(SIZE.SMALL)}'
+            >{{ SIZE.SMALL }} x {{ SIZE.SMALL }}</button>
             <button class='btn'
-                :class='`${size === MEDIUM ? `btn selected` : `btn`}`'
-                @click='() => {setSize(MEDIUM)}'
-            >{{ MEDIUM }} x {{ MEDIUM }}</button>
+                :class='`${size === SIZE.MEDIUM ? `btn selected` : `btn`}`'
+                @click='() => {setSize(SIZE.MEDIUM)}'
+            >{{ SIZE.MEDIUM }} x {{ SIZE.MEDIUM }}</button>
             <button
-                :class='`${size === LARGE ? `btn selected` : `btn`}`'
-                @click='() => {setSize(LARGE)}'
-            >{{ LARGE }} x {{ LARGE }}</button>
+                :class='`${size === SIZE.LARGE ? `btn selected` : `btn`}`'
+                @click='() => {setSize(SIZE.LARGE)}'
+            >{{ SIZE.LARGE }} x {{ SIZE.LARGE }}</button>
         </div>
         <!-- # of bombs -->
         <label class='grid-key'># of bombs</label>
         <div class='btn-group'>
             <button
-                :class='`${bomb === LITTLE ? `btn selected` : `btn`}`'
-                @click='() => {setBomb(LITTLE)}'
-            >{{ LITTLE }}</button>
+                :class='`${bomb === BOMB.LITTLE ? `btn selected` : `btn`}`'
+                @click='() => {setBomb(BOMB.LITTLE)}'
+            >{{ BOMB.LITTLE }}</button>
             <button
-                :class='`${bomb === NORMAL ? `btn selected` : `btn`}`'
-                @click='() => {setBomb(NORMAL)}'
-            >{{ NORMAL }}</button>
+                :class='`${bomb === BOMB.NORMAL ? `btn selected` : `btn`}`'
+                @click='() => {setBomb(BOMB.NORMAL)}'
+            >{{ BOMB.NORMAL }}</button>
             <button
-                :class='`${bomb === LARGE ? `btn selected` : `btn`}`'
-                @click='() => {setBomb(MANY)}'
-            >{{ MANY }}</button>
+                :class='`${bomb === BOMB.MANY ? `btn selected` : `btn`}`'
+                @click='() => {setBomb(BOMB.MANY)}'
+            >{{ BOMB.MANY }}</button>
+        </div>
+        <!-- Time Limit -->
+        <label class='grid-key'>Time Limit</label>
+        <div class='btn-group'>
+            <button
+                :class='`${timeLimit === TIME_LIMIT.NONE ? `btn selected` : `btn`}`'
+                @click='() => {setTimeLimit(TIME_LIMIT.NONE)}'
+            >None</button>
+            <button
+                :class='`${timeLimit === TIME_LIMIT.SHORT ? `btn selected` : `btn`}`'
+                @click='() => {setTimeLimit(TIME_LIMIT.SHORT)}'
+            >{{ TIME_LIMIT.SHORT }}s</button>
+            <button
+                :class='`${timeLimit === TIME_LIMIT.NORMAL ? `btn selected` : `btn`}`'
+                @click='() => {setTimeLimit(TIME_LIMIT.NORMAL)}'
+            >{{ TIME_LIMIT.NORMAL }}s</button>
+            <button
+                :class='`${timeLimit === TIME_LIMIT.LONG ? `btn selected` : `btn`}`'
+                @click='() => {setTimeLimit(TIME_LIMIT.LONG)}'
+            >{{ TIME_LIMIT.LONG }}s</button>
         </div>
     </div>
-   
     <div class='modal-row reverse'>
         <button :class='createBtn' @click='createRoom' :disabled='alias.length === 0'>CREATE</button>
         <button :class='createBtn' @click='cancel' :disabled='alias.length === 0'>CANCEL</button>
