@@ -4,6 +4,6 @@ import { GAMESTATUS } from '@/config'
 const { WAITING_JOIN } = GAMESTATUS
 
 export default () => {
-    gameState.status = WAITING_JOIN
-    gameState.resetBoard()
+    // gameState.status = WAITING_JOIN
+    // gameState.resetBoard()
 }

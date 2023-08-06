@@ -65,7 +65,10 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
             v-if='gameState.status === WAITING_JOIN'
             class='waiting-text-wrapper'
         >
-            <div class='waiting-text'>Waiting for player to join...</div>
+            <div class='waiting-text'>
+                <div>Waiting for player to join...</div>
+                <div class='subtitle'>{{`${Object.keys(gameState.players).length}/${gameState.capacity}`}}</div>
+            </div>
             <div>
                 Invite:
                 <input
@@ -118,8 +121,14 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
         flex-direction: column;
         justify-content: center;
         text-align:center;
-        font-size: 1.2rem;
         flex-grow: 1;
+        font-size: 1.2rem;
+    }
+    .waiting-text div:not(:last-child) {
+        margin-bottom: 1rem;
+    }
+    .waiting-text .subtitle {
+        font-size: .8rem;
     }
     .invite-url {
         background: transparent;

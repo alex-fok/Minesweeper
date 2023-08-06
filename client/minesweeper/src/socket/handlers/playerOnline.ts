@@ -1,6 +1,11 @@
 import { gameState } from '@/store'
 
-export default (data: { client: string}) => {
-    const { client } = data
-    gameState.players[client].isOnline = true
+type PlayerOnline = {
+    player: string
+    isOnline: boolean
+}
+
+export default (data: PlayerOnline) => {
+    const { player, isOnline } = data
+    gameState.players[player].isOnline = isOnline 
 }

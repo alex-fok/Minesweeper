@@ -4,8 +4,8 @@ import messageHandler from './message'
 import passcodeHandler from './passcode'
 import playerAliasHandler from './playerAlias'
 import playerMousePos from './playerMousePos'
-import playerOfflineHandler from './playerOffline'
 import playerOnlineHandler from './playerOnline'
+import playerReadyHandler from './playerReady'
 import reconnFailedHandler from './reconnFailed'
 import revealHandler from './reveal'
 import roomCreatedHandler from './roomCreated'
@@ -13,6 +13,7 @@ import roomInfoHandler from './roomInfo'
 import scoreUpdatedHandler from './scoreUpdated'
 import turnPassedHandler from './turnPassed'
 import userIdHandler from './userId'
+import waitingRoomHandler from './waitingRoom'
 
 type handlerMap = {
     name: string,
@@ -26,8 +27,8 @@ const getAll = () : handlerMap[] => [
     { name: 'passcode', fn: passcodeHandler },
     { name: 'playerAlias', fn: playerAliasHandler },
     { name: 'playerMousePos', fn: playerMousePos },
-    { name: 'playerOffline', fn: playerOfflineHandler },
     { name: 'playerOnline', fn: playerOnlineHandler },
+    { name: 'playerReady', fn: playerReadyHandler },
     { name: 'reconnFailed', fn: reconnFailedHandler },
     { name: 'reveal', fn: revealHandler },
     { name: 'roomCreated', fn: roomCreatedHandler },
@@ -35,6 +36,7 @@ const getAll = () : handlerMap[] => [
     { name: 'scoreUpdated', fn: scoreUpdatedHandler },
     { name: 'turnPassed', fn: turnPassedHandler },
     { name: 'userId', fn: userIdHandler },
+    { name: 'waitingRoom', fn: waitingRoomHandler }
 ]
 
 export default { getAll }

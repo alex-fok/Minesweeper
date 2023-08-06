@@ -27,6 +27,7 @@ const timeLimit = ref(TIME_LIMIT.NONE)
 const createBtn = computed(() => alias.value.length === 0 ? 'btn disabled' : 'btn')
 
 const createRoom = () => {
+    gameState.reset();
     saveAlias(alias.value)
     socket.send(JSON.stringify({
         name: 'createRoom',
@@ -107,7 +108,7 @@ onMounted(() => {
         </template>
         <!-- Map size -->
         <label class='grid-key'>Map size</label>
-        <div class='btn-group'>
+        <div class='grid-value btn-group'>
             <button
                 :class='`${size === SIZE.SMALL ? `btn selected` : `btn`}`'
                 @click='() => {setSize(SIZE.SMALL)}'
@@ -123,7 +124,7 @@ onMounted(() => {
         </div>
         <!-- # of bombs -->
         <label class='grid-key'># of bombs</label>
-        <div class='btn-group'>
+        <div class='grid-value btn-group'>
             <button
                 :class='`${bomb === BOMB.LITTLE ? `btn selected` : `btn`}`'
                 @click='() => {setBomb(BOMB.LITTLE)}'
@@ -139,7 +140,7 @@ onMounted(() => {
         </div>
         <!-- Time Limit -->
         <label class='grid-key'>Time Limit</label>
-        <div class='btn-group'>
+        <div class='grid-value btn-group'>
             <button
                 :class='`${timeLimit === TIME_LIMIT.NONE ? `btn selected` : `btn`}`'
                 @click='() => {setTimeLimit(TIME_LIMIT.NONE)}'
@@ -165,27 +166,5 @@ onMounted(() => {
 </template>
 <style scoped>
 @import '@/assets/styles/modal.css';
-    .grid-container {
-        display: grid;
-        grid-template-columns: auto auto;
-        row-gap: .5rem;
-    }
-    .grid-key {
-        padding-right: 2rem;
-        text-align:center;
-    }
-    .grid-value {
-        background: transparent;
-        color: white;
-        outline-width: 0;
-        text-align: center;
-        box-sizing: border-box;
-    }
-    .grid-value input {
-        background: transparent;
-        border: 1px solid whitesmoke;
-        border-radius: .2rem;
-        color: white;
-        padding: .3rem .3rem .2rem .3rem;
-    }
+    
 </style>

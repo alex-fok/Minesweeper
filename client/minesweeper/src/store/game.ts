@@ -21,6 +21,7 @@ type Player = {
     score: number,
     isTurn: boolean,
     isOnline: boolean,
+    isReady: boolean,
     cursor: number
 }
 
@@ -56,12 +57,25 @@ export default reactive({
             ...this.board[i], ...{ show: '', owner: '' }
         }))
     },
+    
     getDisplayVal: function (block: BlockInfo) : string {
         if (block['bType'] === NUMBER) return block['value'].toString()
         return block['bType'] === BOMB ? 'BO' : 'BL'
     },
     players: players,
+    capacity: 0,
     bombsLeft: Number.MAX_SAFE_INTEGER,
     inviteCode: '',
-    winner: ''
+    winner: '',
+    reset: function() {
+        this.resetBoard()
+        this.roomId = -1
+        this.status = UNDETERMINED
+        this.isPlayer = false
+        this.players = {}
+        this.capacity = 0
+        this.bombsLeft = Number.MAX_SAFE_INTEGER
+        this.inviteCode = ''
+        this.winner = ''
+    },
 })

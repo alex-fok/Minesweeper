@@ -73,6 +73,7 @@ func (c *Client) reconnect(req *Request) {
 		UserId string `json:"userId"`
 		RoomId string `json:"roomId"`
 	}
+
 	var reconnReq ReconnReq
 	if err := json.Unmarshal([]byte(req.Content), &reconnReq); err != nil {
 		log.Println(err)
@@ -82,7 +83,8 @@ func (c *Client) reconnect(req *Request) {
 
 	if rId, err := strconv.ParseUint(reconnReq.RoomId, 10, 64); err == nil {
 		if r, ok := c.lobby.findRoom(uint(rId)); ok {
-			r.reconnect <- c
+			c.room = r
+			c.room.reconnect <- c
 			return
 		}
 	}
@@ -94,11 +96,12 @@ func (c *Client) reconnect(req *Request) {
 
 func (c *Client) createRoom(req *Request) {
 	type CreateReq struct {
-		Alias    string `json:"alias"`
-		RoomType string `json:"roomType"`
-		Pass     string `json:"passcode"`
-		Size     uint   `json:"size"`
-		Bomb     uint   `json:"bomb"`
+		Alias     string `json:"alias"`
+		RoomType  string `json:"roomType"`
+		Pass      string `json:"passcode"`
+		Size      uint   `json:"size"`
+		Bomb      uint   `json:"bomb"`
+		TimeLimit uint   `json:"timeLimit"`
 	}
 	var createReq CreateReq
 	if err := json.Unmarshal([]byte(req.Content), &createReq); err != nil {
@@ -110,20 +113,21 @@ func (c *Client) createRoom(req *Request) {
 		c.room.unregister <- c
 	}
 	c.room = c.lobby.createRoom(c, &RoomConfig{
-		Type: createReq.RoomType,
-		Pass: createReq.Pass,
-		Size: createReq.Size,
-		Bomb: createReq.Bomb,
+		Type:      createReq.RoomType,
+		Pass:      createReq.Pass,
+		Size:      createReq.Size,
+		Bomb:      createReq.Bomb,
+		TimeLimit: createReq.TimeLimit,
 	})
 	c.room.register <- &RoomLogin{
 		client: c,
 		pass:   createReq.Pass,
 	}
-	// Update client
-	c.writer.update <- &Action{
-		Name:    "roomCreated",
-		Content: string("{}"),
-	}
+	// Update clien
+	// c.writer.update <- &Action{
+	// 	Name:    "roomCreated",
+	// 	Content: string("{}"),
+	// }
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 
@@ -177,7 +181,6 @@ func (c *Client) handleInviteCode(req *Request) {
 	type Inivitation struct {
 		Id string `json:"id"`
 	}
-
 	var invitation Inivitation
 	json.Unmarshal([]byte(req.Content), &invitation)
 	if r := c.lobby.findInviteCode(invitation.Id); r != nil {
@@ -325,7 +328,7 @@ func (c *Client) readBuffer() {
 			go c.confirmPasscode(&req)
 		case "rename":
 			go c.rename(&req)
-		case "share", "reveal", "rematch":
+		case "share", "reveal", "rematch", "ready":
 			go c.updateRoom(&req)
 		default:
 			continue

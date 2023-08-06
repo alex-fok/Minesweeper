@@ -1,9 +1,12 @@
+import gameStatus from '@/config/gameStatus'
 import { gameState } from '@/store'
 
 type RoomId = {
     id: number,
     inviteCode: string
 }
+
+const { WAITING_JOIN } = gameStatus
 
 export default (data: RoomId) => {
     const { id, inviteCode } = data
@@ -16,4 +19,7 @@ export default (data: RoomId) => {
     const url = new URL(window.location.href)
     url.searchParams.set('room', data.id.toString())
     history.replaceState({}, '', url)
+
+    gameState.status = WAITING_JOIN
+    gameState.resetBoard()
 }

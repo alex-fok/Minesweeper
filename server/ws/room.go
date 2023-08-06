@@ -10,16 +10,19 @@ import (
 
 type Game = game.Game
 type ClientMeta = types.ClientMeta
+type OnlineStatus = types.OnlineStatus
 
 type GameEnded struct {
 	Winner ClientId `json:"winner"`
 }
 
 type RoomConfig struct {
-	Type string
-	Pass string
-	Size uint
-	Bomb uint
+	Type      string
+	Pass      string
+	GameMode  string
+	Size      uint
+	Bomb      uint
+	TimeLimit uint
 }
 
 type RoomUpdate struct {
@@ -33,22 +36,22 @@ type RoomLogin struct {
 }
 
 type Room struct {
-	id                uint
-	roomType          string // "private" or "public"
-	pass              string
-	clients           map[ClientId]*Client
-	lobby             *Lobby
-	board             [][]game.Block
-	gameUpdateHandler map[string]func(ClientId, string) []*Action
-	gameDriver        game.Driver
-	inviteCode        string
-	update            chan *RoomUpdate
-	register          chan *RoomLogin
-	unregister        chan *Client
-	disconnect        chan *Client
-	reconnect         chan *Client
-	timeouts          map[ClientId]int64
-	stop              chan bool
+	id         uint
+	roomType   string // "private" or "public"
+	pass       string
+	clients    map[ClientId]*Client
+	lobby      *Lobby
+	board      [][]game.Block
+	gameDriver game.Driver
+	inviteCode string
+	update     chan *RoomUpdate
+	register   chan *RoomLogin
+	unregister chan *Client
+	disconnect chan *Client
+	reconnect  chan *Client
+	test       chan *Client
+	timeouts   map[ClientId]int64
+	stop       chan bool
 }
 
 const TIMELIMIT_IN_SEC = 60 * 5 // 5 minutes
@@ -60,19 +63,17 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 		pass:       config.Pass,
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
-		gameDriver: *game.NewDriver(config.Size, config.Bomb),
+		gameDriver: *game.NewDriver(config.TimeLimit, config.Size, config.Bomb),
 		inviteCode: l.createInviteCode(id),
 		update:     make(chan *RoomUpdate),
 		register:   make(chan *RoomLogin),
 		unregister: make(chan *Client),
 		disconnect: make(chan *Client),
 		reconnect:  make(chan *Client),
+		test:       make(chan *Client),
 		timeouts:   make(map[ClientId]int64),
 	}
-	// Init game update handler
-	r.gameUpdateHandler = make(map[string]func(ClientId, string) []*Action)
-	r.gameUpdateHandler["reveal"] = r.gameDriver.Reveal
-	r.gameUpdateHandler["rematch"] = r.gameDriver.Rematch
+	r.gameDriver.SetBroadcast(r.broadcast)
 	go r.run()
 
 	return r
@@ -91,13 +92,21 @@ func (r *Room) registerClient(rLogin *RoomLogin) {
 	// Notify room info
 	r.notifyRoomInfo(rLogin.client)
 
-	actions := r.gameDriver.RegisterPlayer(&ClientMeta{
+	isPlayer := r.gameDriver.RegisterPlayer(&ClientMeta{
 		Id:       rLogin.client.id,
 		Alias:    rLogin.client.alias,
 		IsOnline: true,
+		IsReady:  false,
 	})
-	for _, a := range actions {
-		r.broadcast(a)
+	// If user is not a player and the game has started. Send GameStat
+	if !isPlayer && r.gameDriver.IsGameReady() {
+		gameStatMsg, _ := json.Marshal(r.gameDriver.GetGameStat())
+		rLogin.client.writer.update <- &Action{
+			Name:    "gameStat",
+			Content: string(gameStatMsg),
+		}
+	} else {
+		r.notifyWaitingRoomInfo()
 	}
 }
 
@@ -113,15 +122,16 @@ func (r *Room) unregisterClient(c *Client) {
 }
 
 func (r *Room) disconnectClient(c *Client) {
+	log.Println("disconnecting client")
 	if _, ok := r.clients[c.id]; !ok {
 		return
 	}
 	log.Println("Client", c.alias, "disconnected")
 	if _, ok := r.timeouts[c.id]; !ok {
 		r.timeouts[c.id] = time.Now().Unix()
-
-		if action := r.gameDriver.DisconnectPlayer(c.id); action != nil {
-			r.broadcast(action)
+		isPlayer := r.gameDriver.DisconnectPlayer(c.id)
+		if isPlayer {
+			r.notifyWaitingRoomInfo()
 		}
 	}
 }
@@ -144,10 +154,7 @@ func (r *Room) reconnectClient(c *Client) {
 	// Notify room info
 	r.notifyRoomInfo(c)
 
-	// Notify all if client is player
-	if action := r.gameDriver.ReconnectPlayer(c.id); action != nil {
-		r.broadcast(action)
-	}
+	r.gameDriver.ReconnectPlayer(c.id)
 
 	// Reuse alias before disconnection, reassign
 	c.alias = r.clients[c.id].alias
@@ -156,13 +163,18 @@ func (r *Room) reconnectClient(c *Client) {
 
 	log.Println("Client", c.alias, "reconnected")
 
-	// Return Game Stat
-	stat, _ := json.Marshal(r.gameDriver.GetGameStat())
+	if r.gameDriver.IsGameReady() {
+		// Return Game Stat
+		stat, _ := json.Marshal(r.gameDriver.GetGameStat())
 
-	c.writer.update <- &Action{
-		Name:    "gameStat",
-		Content: string(stat),
+		c.writer.update <- &Action{
+			Name:    "gameStat",
+			Content: string(stat),
+		}
+	} else {
+		r.notifyWaitingRoomInfo()
 	}
+
 }
 
 func (r *Room) notifyRoomInfo(c *Client) {
@@ -179,6 +191,22 @@ func (r *Room) notifyRoomInfo(c *Client) {
 		Name:    "roomInfo",
 		Content: string(rInfo),
 	}
+}
+
+func (r *Room) notifyWaitingRoomInfo() {
+	type WaitingRoom struct {
+		Players  map[ClientId]game.OnlineStatus `json:"players"`
+		Capacity int                            `json:"capacity"`
+	}
+	waitingRoom, _ := json.Marshal(&WaitingRoom{
+		Players:  r.gameDriver.GetPlayerOnlineStatus(),
+		Capacity: r.gameDriver.GetPlayerCap(),
+	})
+
+	r.broadcast(&Action{
+		Name:    "waitingRoom",
+		Content: string(waitingRoom),
+	})
 }
 
 func (r *Room) rename(client ClientId, content string) {
@@ -201,13 +229,6 @@ func (r *Room) rename(client ClientId, content string) {
 		Name:    "playerAlias",
 		Content: string(alias),
 	})
-}
-
-func (r *Room) handleGameUpdate(client ClientId, action *Action) {
-	actions := r.gameUpdateHandler[action.Name](client, action.Content)
-	for _, a := range actions {
-		r.broadcast(a)
-	}
 }
 
 func (r *Room) handleShare(client ClientId, action *Action) {
@@ -235,14 +256,13 @@ func (r *Room) handleRoomUpdate(update *RoomUpdate) {
 	switch update.Action.Name {
 	case "rename":
 		r.rename(update.Client, update.Action.Content)
-	case "reveal", "rematch":
-		r.handleGameUpdate(update.Client, update.Action)
+	case "reveal", "rematch", "ready":
+		r.gameDriver.HandleGameUpdate(update.Client, update.Action)
 	case "share":
 		r.handleShare(update.Client, update.Action)
 	default:
 		return
 	}
-
 }
 
 func (r *Room) broadcast(action *Action) {
