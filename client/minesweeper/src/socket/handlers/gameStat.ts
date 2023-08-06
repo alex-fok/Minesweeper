@@ -8,6 +8,7 @@ type Player = {
     score: number,
     isTurn: boolean,
     isOnline: boolean,
+    isReady: boolean,
     cursor: number
 }
 
