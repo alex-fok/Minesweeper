@@ -43,12 +43,12 @@ type Driver struct {
 	mu         sync.Mutex
 	game       *Game
 	timer      Timer
-	stopTimer  chan bool
 	playerCap  int
 	players    map[ClientId]*Client
 	rematchReq map[ClientId]bool
 	broadcast  func(action *Action)
 	lastPlayed time.Time
+	isStarted  bool
 	isDone     bool
 }
 
@@ -91,7 +91,7 @@ func (d *Driver) UnregisterPlayer(cId ClientId) {
 func (d *Driver) DisconnectPlayer(cId ClientId) bool {
 	if _, ok := d.players[cId]; ok {
 		if d.timer.limit != 0 && d.IsGameReady() {
-			d.stopTimer <- true
+			d.timer.stop <- true
 		}
 		d.players[cId].IsOnline = false
 		d.players[cId].IsReady = false
@@ -195,31 +195,35 @@ func (d *Driver) updateLastPlayed() {
 }
 
 func (d *Driver) startTimer() {
-	d.stopTimer = make(chan bool)
-	timesup := make(chan bool)
-	timer := func() {
-		time.Sleep(time.Second * time.Duration(int64(d.timer.limit)))
-		if d.isExpired() {
-			timesup <- true
+	var timer *time.Timer
+
+	defer func() {
+		if timer != nil {
+			timer.Stop()
 		}
+	}()
+	resetTimer := func() {
+		if timer != nil {
+			timer.Stop()
+		}
+		timer = time.NewTimer(time.Second * time.Duration(int64(d.timer.limit)))
 	}
-	go timer()
+	timer = time.NewTimer(time.Second * time.Duration(int64(d.timer.limit)))
 	for {
 		select {
-		case <-d.stopTimer:
+		case <-d.timer.stop:
 			return
-		case <-timesup:
+		case <-timer.C:
 			d.mu.Lock()
 			if d.isExpired() {
 				d.advanceTurn()
 				d.updateLastPlayed()
-				go timer()
+				resetTimer()
 			}
 			d.mu.Unlock()
 		case <-d.timer.reset:
-			go timer()
+			resetTimer()
 		}
-
 	}
 }
 
@@ -255,7 +259,7 @@ func (d *Driver) scoreCurrPlayer() {
 		}
 
 		if d.timer.limit != 0 {
-			d.stopTimer <- true
+			d.timer.stop <- true
 		}
 		gameEnded, _ := json.Marshal(GameEnded{Winner: d.game.getWinner()})
 		d.broadcast(&Action{
@@ -415,8 +419,12 @@ func (d *Driver) HandleGameUpdate(cId ClientId, update *Action) {
 }
 
 func (d *Driver) StartGame() {
-	// Init game stat
-	d.game.initCounter()
+	if !d.isStarted {
+		d.isStarted = true
+		// Init game stat
+		d.game.initCounter()
+	}
+
 	gameStat, _ := json.Marshal(d.GetGameStat())
 	d.updateLastPlayed()
 
