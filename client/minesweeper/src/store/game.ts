@@ -42,6 +42,16 @@ export default reactive({
         bomb: BOARDSETTING.BOMB.NORMAL,
         size: BOARDSETTING.SIZE.MEDIUM
     },
+    players: players,
+    capacity: 0,
+    bombsLeft: Number.MAX_SAFE_INTEGER,
+    lastHand: {
+        x: -1,
+        y: -1,
+        owner: ''
+    },
+    inviteCode: '',
+    winner: '',
     initBoard: function() {
         this.board = new Array(this.boardConfig.size * this.boardConfig.size)
         .fill({})
@@ -57,17 +67,11 @@ export default reactive({
             ...this.board[i], ...{ show: '', owner: '' }
         }))
     },
-    
     getDisplayVal: function (block: BlockInfo) : string {
         if (block['bType'] === NUMBER) return block['value'].toString()
         return block['bType'] === BOMB ? 'BO' : 'BL'
     },
-    players: players,
-    capacity: 0,
-    bombsLeft: Number.MAX_SAFE_INTEGER,
-    inviteCode: '',
-    winner: '',
-    reset: function() {
+        reset: function() {
         this.resetBoard()
         this.roomId = -1
         this.status = UNDETERMINED

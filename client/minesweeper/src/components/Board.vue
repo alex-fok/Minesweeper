@@ -58,6 +58,11 @@ const updateMousePosition = (position: number) => {
 }
 
 const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
+const lastPlayedBlock = computed(() => {
+    const { size } = gameState.boardConfig
+    const { x, y } = gameState.lastHand
+    return size * y + x
+})
 </script>
 <template>
     <div class='board-container'>
@@ -92,6 +97,7 @@ const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
                     :reveal='() => { reveal(i) }'
                     :show='block.show'
                     :owner='block.owner'
+                    :isLastHand='lastPlayedBlock === i'
                     :playerHovering='playerCursors[i]'
                     :updateMousePosition = '() => updateMousePosition(i)'
                 />

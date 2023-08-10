@@ -54,7 +54,7 @@ export default (data: GameStat) => {
     // Set color
     let rand = Math.floor(Math.random() *2)
     Object.keys(gameState.players).forEach(id => {
-        uiState.playerColor[id] = rand === 0 ? COLORSETTING.COLOR_1 : COLORSETTING.COLOR_2
+        uiState.playerColor[id] = rand === 0 ? COLORSETTING.COLOR_1.rgb : COLORSETTING.COLOR_2.rgb
         rand = (rand - 1) % 2
     })
     

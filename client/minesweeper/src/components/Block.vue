@@ -1,9 +1,8 @@
 <script setup lang='ts'>
 import { computed } from 'vue'
 import { BOARDSETTING } from '@/config'
-import { gameState } from '@/store'
+import { gameState, uiState } from '@/store'
 import Flag from './icon/flag.vue'
-import { uiState } from '@/store'
 
 const props = defineProps({
     reveal: {
@@ -17,6 +16,10 @@ const props = defineProps({
     owner: {
         type: String,
         default: '' 
+    },
+    isLastHand: {
+        type: Boolean,
+        default: false
     },
     playerHovering: {
         type: String || undefined,
@@ -40,18 +43,31 @@ const emitPositionUpdate = () => {
 const getNumClass = (num: number) => `num-${num}`
 const isSelectable = computed(() => gameState.isPlayer && gameState.players[id].isTurn)
 const isShrunk = computed(() => gameState.boardConfig.size === BOARDSETTING.SIZE.LARGE)
+const outline = computed(() => {
+    // Last Hand
+    if (props.isLastHand) {
+        const playerColor = uiState.playerColor[gameState.lastHand.owner]
+        return `.1rem dashed rgba(${playerColor})`
+    }
+    // Hovering
+    if (!props.playerHovering) return ''
+    const { isTurn } = gameState.players[props.playerHovering]
+    const playerColor = uiState.playerColor[props.playerHovering]
+
+    return `.1rem solid ${isTurn ? `rgba(${playerColor})` : `rgba(${playerColor}, .5)`}`
+})
 </script>
 <template>
     <div
         :class='`block${show !== `` ? ` revealed` : ``}${isSelectable ? ` selectable` : ``}${isShrunk ? ` shrunk`: ``}`'
-        :style='{outline: `${playerHovering ? `.1rem solid ` + uiState.playerColor[playerHovering] : ``}`}'
+        :style='{outline: outline}'
         @click='emitReveal'
         @mouseover='emitPositionUpdate'
     >
         <Flag
             v-if='show === `BO`'
             :size='isShrunk ? `2vh` : `3vh`'
-            :fill='uiState.playerColor[owner]'
+            :fill='`rgba(${uiState.playerColor[owner]})`'
         />
         <span
             v-else-if='!Number.isNaN(parseInt(show))'
@@ -76,8 +92,9 @@ const isShrunk = computed(() => gameState.boardConfig.size === BOARDSETTING.SIZE
         line-height: 2vh;
     }
     .selectable:hover {
-        outline: .1rem solid #CCCCCC;
+        outline: .1rem solid #CCCCCC !important;
         cursor: pointer;
+        
     }
     .revealed {
         background-color: #343434;
