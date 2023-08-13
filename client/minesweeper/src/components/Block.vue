@@ -47,14 +47,14 @@ const outline = computed(() => {
     // Last Hand
     if (props.isLastPlayed) {
         const playerColor = uiState.playerColor[gameState.lastPlayed.owner]
-        return `1px dashed rgba(${playerColor})`
+        return `2px dashed rgba(${playerColor})`
     }
     // Hovering
     if (!props.playerHovering) return ''
     const { isTurn } = gameState.players[props.playerHovering]
     const playerColor = uiState.playerColor[props.playerHovering]
 
-    return `1px solid ${isTurn ? `rgba(${playerColor})` : `rgba(${playerColor}, .5)`}`
+    return `2px solid ${isTurn ? `rgba(${playerColor})` : `rgba(${playerColor}, .5)`}`
 })
 </script>
 <template>
@@ -92,7 +92,7 @@ const outline = computed(() => {
         line-height: 2vh;
     }
     .selectable:hover {
-        outline: 1px solid #CCCCCC !important;
+        outline: 2px solid #CCCCCC !important;
         cursor: pointer;
     }
     .revealed {

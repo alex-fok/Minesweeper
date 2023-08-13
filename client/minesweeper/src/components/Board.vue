@@ -215,8 +215,8 @@ watch(() => gameState.lastPlayed.timestamp, () => {
         max-width:fit-content;
         max-height: fit-content;
         display: grid;
-        column-gap: 1px;
-        row-gap: 1px;
+        column-gap: 2px;
+        row-gap: 2px;
         grid-template-columns: repeat(26, auto);
     }
     .board.small {
