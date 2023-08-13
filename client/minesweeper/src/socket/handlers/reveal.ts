@@ -12,10 +12,11 @@ export default (data: {blocks:BlockInfo[]}) => {
     const { blocks } = data
     if (blocks.length) {
         const {x, y, visitedBy} = blocks[0]
-        gameState.lastHand = {
+        gameState.lastPlayed = {
             x,
             y,
-            owner: visitedBy
+            owner: visitedBy,
+            timestamp: gameState.lastPlayed.timestamp
         }
     } 
     blocks.forEach(block => {

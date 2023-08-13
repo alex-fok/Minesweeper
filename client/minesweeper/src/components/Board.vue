@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 import { gameState } from '@/store'
 import socket from '@/socket'
@@ -7,6 +7,7 @@ import Block from './Block.vue'
 import Copy from './icon/copy.vue'
 
 const { IN_GAME, WAITING_JOIN } = GAMESTATUS
+const timeLeft = ref(-1)
 
 const reveal = (i: number) => {
     if (gameState.status !== IN_GAME) return
@@ -60,12 +61,40 @@ const updateMousePosition = (position: number) => {
 const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
 const lastPlayedBlock = computed(() => {
     const { size } = gameState.boardConfig
-    const { x, y } = gameState.lastHand
+    const { x, y } = gameState.lastPlayed
     return size * y + x
 })
+
+const timerVisible = computed(() => {
+    return gameState.winner == '' && gameState.timeLimit
+})
+
+watch(() => gameState.lastPlayed.timestamp, () => {
+    const compared = gameState.lastPlayed.timestamp
+    const timeLimitInSec = gameState.timeLimit * 1000
+    if (!compared) {
+        timeLeft.value = -1
+        return
+    }
+    const interval = setInterval(() => {
+        const isUpdated = compared !== gameState.lastPlayed.timestamp
+        if (isUpdated) {
+            clearInterval(interval)
+            return
+        }
+        const result = compared + timeLimitInSec - (Date.parse(new Date().toString()))
+        if (result > 0) {
+            timeLeft.value = Math.floor(result / 1000)
+        } else {
+            clearInterval(interval)
+            timeLeft.value = 0 
+        }
+    }, 200)
+}, {immediate: true})
+
 </script>
 <template>
-    <div class='board-container'>
+    <div v-if='gameState.status === WAITING_JOIN' class='waiting-container'>
         <div
             v-if='gameState.status === WAITING_JOIN'
             class='waiting-text-wrapper'
@@ -89,7 +118,13 @@ const lastPlayedBlock = computed(() => {
                 </span>
             </div>
         </div>
-        <div v-else class='board-wrapper'>
+    </div>
+    <div v-else class='board-container'>
+        <div
+            class='timer'
+            :style='{visibility: timerVisible ? `visible` : `hidden`}'
+        ><div>Time Left: {{ timeLeft }}</div></div>
+        <div class='board-wrapper'>
             <div :class='`board ` + mapSize'>
                 <Block
                     v-for='(block, i) in gameState.board'
@@ -97,24 +132,42 @@ const lastPlayedBlock = computed(() => {
                     :reveal='() => { reveal(i) }'
                     :show='block.show'
                     :owner='block.owner'
-                    :isLastHand='lastPlayedBlock === i'
+                    :isLastPlayed='lastPlayedBlock === i'
                     :playerHovering='playerCursors[i]'
                     :updateMousePosition = '() => updateMousePosition(i)'
                 />
             </div>
         </div>
     </div>
+
 </template>
 <style scoped>
     .board-container {
         flex-grow: 1;
         height: 100%;
+        width: 100%;
         display: flex;
-        align-items:center;
-        justify-content: center;
+        flex-direction: column;
+        
     }
     .board-wrapper {
-        position:relative
+        display: flex;
+        justify-content: center;
+    }
+    .waiting-container {
+        flex-grow: 1;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .timer {
+        display: flex;
+        flex-direction: row-reverse;
+        align-items:center;
+        height: 4vh;
+        padding-right: 1rem;
+        margin-bottom: 1rem;
     }
     .waiting-text-wrapper {
         height: 80%;
@@ -159,6 +212,8 @@ const lastPlayedBlock = computed(() => {
         border-radius: .3rem;
     }
     .board {
+        max-width:fit-content;
+        max-height: fit-content;
         display: grid;
         column-gap: 1px;
         row-gap: 1px;

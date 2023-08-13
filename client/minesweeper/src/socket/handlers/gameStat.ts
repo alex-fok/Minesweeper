@@ -25,17 +25,18 @@ type GameStat = {
         bType: number,
         value: number,
         visitedBy: string
-    }[]
+    }[],
+    timeLimit: number,
+    lastPlayed: string 
 }
 
 const { WAITING_JOIN, IN_GAME, INVITED } = GAMESTATUS
 
 export default (data: GameStat) => {
-    const { boardConfig, bombsLeft, players, visible } = data
+    const { boardConfig, bombsLeft, players, visible, timeLimit, lastPlayed } = data
     
     gameState.boardConfig = boardConfig
     gameState.initBoard()
-    console.log(gameState.board)
 
     if (!players) return
 
@@ -65,6 +66,7 @@ export default (data: GameStat) => {
         b.show = gameState.getDisplayVal(block)
         b.owner = block.visitedBy
     })
-
+    gameState.timeLimit = timeLimit
+    gameState.lastPlayed.timestamp = Date.parse(lastPlayed)
     // media.play('start')
 }

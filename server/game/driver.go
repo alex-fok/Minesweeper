@@ -31,6 +31,8 @@ type GameStat struct {
 	BombsLeft   uint                     `json:"bombsLeft"`
 	Players     map[ClientId]*PlayerInfo `json:"players"`
 	Visible     []BlockInfo              `json:"visible"`
+	TimeLimit   float64                  `json:"timeLimit"`
+	LastPlayed  time.Time                `json:"lastPlayed"`
 }
 
 type Timer struct {
@@ -138,9 +140,11 @@ func (d *Driver) GetGameStat() *GameStat {
 			Size: d.game.getSize(),
 			Bomb: d.game.getBombCount(),
 		},
-		BombsLeft: counter.BombsLeft,
-		Players:   make(map[ClientId]*PlayerInfo),
-		Visible:   d.game.getVisibleBlocks(),
+		BombsLeft:  counter.BombsLeft,
+		Players:    make(map[ClientId]*PlayerInfo),
+		Visible:    d.game.getVisibleBlocks(),
+		TimeLimit:  d.timer.limit,
+		LastPlayed: d.lastPlayed,
 	}
 	for _, p := range d.players {
 		gameStat.Players[p.Id] = &PlayerInfo{
@@ -190,8 +194,9 @@ func (d *Driver) isExpired() bool {
 	return d.timer.limit != 0 && time.Since(d.lastPlayed).Seconds() > (d.timer.limit-.1)
 }
 
-func (d *Driver) updateLastPlayed() {
+func (d *Driver) updateLastPlayed() time.Time {
 	d.lastPlayed = time.Now()
+	return d.lastPlayed
 }
 
 func (d *Driver) startTimer() {
@@ -217,7 +222,6 @@ func (d *Driver) startTimer() {
 			d.mu.Lock()
 			if d.isExpired() {
 				d.advanceTurn()
-				d.updateLastPlayed()
 				resetTimer()
 			}
 			d.mu.Unlock()
@@ -230,13 +234,14 @@ func (d *Driver) startTimer() {
 func (d *Driver) advanceTurn() {
 	turn := d.game.advanceTurn()
 	type TurnPassed struct {
-		Count uint     `json:"count"`
-		Curr  ClientId `json:"curr"`
+		Count      uint      `json:"count"`
+		Curr       ClientId  `json:"curr"`
+		LastPlayed time.Time `json:"lastPlayed"`
 	}
-
 	turnPassed, _ := json.Marshal(TurnPassed{
-		Count: turn.Count,
-		Curr:  turn.Curr,
+		Count:      turn.Count,
+		Curr:       turn.Curr,
+		LastPlayed: d.updateLastPlayed(),
 	})
 	d.broadcast(&Action{
 		Name:    "turnPassed",
@@ -246,8 +251,17 @@ func (d *Driver) advanceTurn() {
 
 func (d *Driver) scoreCurrPlayer() {
 	counter, isWon := d.game.scoreCurrPlayer()
-
-	scoreUpdated, _ := json.Marshal(counter)
+	type Score struct {
+		BombsLeft  uint              `json:"bombsLeft"`
+		Score      map[ClientId]uint `json:"score"`
+		LastPlayed time.Time         `json:"lastPlayed"`
+	}
+	counterWithDate := Score{
+		BombsLeft:  counter.BombsLeft,
+		Score:      counter.Score,
+		LastPlayed: d.updateLastPlayed(),
+	}
+	scoreUpdated, _ := json.Marshal(counterWithDate)
 	d.broadcast(&Action{
 		Name:    "scoreUpdated",
 		Content: string(scoreUpdated),
@@ -278,10 +292,10 @@ func (d *Driver) reveal(cId ClientId, content string) {
 	d.mu.Lock()
 
 	isDone := d.isDone
-	expired := d.isExpired()
+	isExpired := d.isExpired()
 	notTurn := cId != d.game.getTurn().Curr
 
-	if isDone || expired || notTurn {
+	if isDone || isExpired || notTurn {
 		return
 	}
 
@@ -315,7 +329,6 @@ func (d *Driver) reveal(cId ClientId, content string) {
 	// If time limit is set, reset timer
 
 	if d.timer.limit != 0 {
-		d.updateLastPlayed()
 		d.timer.reset <- true
 	}
 }
@@ -425,8 +438,8 @@ func (d *Driver) StartGame() {
 		d.game.initCounter()
 	}
 
-	gameStat, _ := json.Marshal(d.GetGameStat())
 	d.updateLastPlayed()
+	gameStat, _ := json.Marshal(d.GetGameStat())
 
 	if d.timer.limit != 0 {
 		go d.startTimer()

@@ -31,7 +31,6 @@ const { BOMB, NUMBER } = BLOCKTYPE
 const board: BlockView[] = [];
 
 const players: Record<string, Player> = {}
-
 export default reactive({
     id: '',
     roomId: -1,
@@ -45,10 +44,12 @@ export default reactive({
     players: players,
     capacity: 0,
     bombsLeft: Number.MAX_SAFE_INTEGER,
-    lastHand: {
+    timeLimit: 0,
+    lastPlayed: {
         x: -1,
         y: -1,
-        owner: ''
+        owner: '',
+        timestamp: 0
     },
     inviteCode: '',
     winner: '',

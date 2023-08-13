@@ -17,7 +17,7 @@ const props = defineProps({
         type: String,
         default: '' 
     },
-    isLastHand: {
+    isLastPlayed: {
         type: Boolean,
         default: false
     },
@@ -45,16 +45,16 @@ const isSelectable = computed(() => gameState.isPlayer && gameState.players[id].
 const isShrunk = computed(() => gameState.boardConfig.size === BOARDSETTING.SIZE.LARGE)
 const outline = computed(() => {
     // Last Hand
-    if (props.isLastHand) {
-        const playerColor = uiState.playerColor[gameState.lastHand.owner]
-        return `.1rem dashed rgba(${playerColor})`
+    if (props.isLastPlayed) {
+        const playerColor = uiState.playerColor[gameState.lastPlayed.owner]
+        return `1px dashed rgba(${playerColor})`
     }
     // Hovering
     if (!props.playerHovering) return ''
     const { isTurn } = gameState.players[props.playerHovering]
     const playerColor = uiState.playerColor[props.playerHovering]
 
-    return `.1rem solid ${isTurn ? `rgba(${playerColor})` : `rgba(${playerColor}, .5)`}`
+    return `1px solid ${isTurn ? `rgba(${playerColor})` : `rgba(${playerColor}, .5)`}`
 })
 </script>
 <template>
@@ -92,9 +92,8 @@ const outline = computed(() => {
         line-height: 2vh;
     }
     .selectable:hover {
-        outline: .1rem solid #CCCCCC !important;
+        outline: 1px solid #CCCCCC !important;
         cursor: pointer;
-        
     }
     .revealed {
         background-color: #343434;
