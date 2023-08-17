@@ -1,8 +1,7 @@
 package game
 
 import (
-	"math/rand"
-	"time"
+	"minesweeper/utils"
 )
 
 const (
@@ -13,17 +12,7 @@ const (
 
 func getBombLoc(size int, bombCount int) [][]int {
 	max := size * size
-	randArr := make([]int, max)
-	rand.Seed(time.Now().UnixNano())
-	// Assign init values
-	for i := range randArr {
-		randArr[i] = i
-	}
-	// Fisher-Yates Shuffle
-	for i := max; i > 0; i-- {
-		target := rand.Intn(int(i))
-		randArr[i-1], randArr[target] = randArr[target], randArr[i-1]
-	}
+	randArr := *utils.GetRandArray(max)
 	// Trasform to x, y location slice
 	loc := make([][]int, bombCount)
 	for i, v := range randArr[:bombCount] {
