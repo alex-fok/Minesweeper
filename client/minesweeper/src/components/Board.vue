@@ -148,11 +148,6 @@ watch(() => gameState.lastPlayed.timestamp, () => {
         width: 100%;
         display: flex;
         flex-direction: column;
-        
-    }
-    .board-wrapper {
-        display: flex;
-        justify-content: center;
     }
     .waiting-container {
         flex-grow: 1;
@@ -210,6 +205,12 @@ watch(() => gameState.lastPlayed.timestamp, () => {
     .copy:hover {
         background-color: rgba(128, 128, 128, .5);
         border-radius: .3rem;
+    }
+    .board-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items:center;
+        height: 100%;
     }
     .board {
         max-width:fit-content;

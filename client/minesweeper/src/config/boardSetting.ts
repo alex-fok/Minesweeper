@@ -1,4 +1,9 @@
 export default {
+    PLAYER: {
+        TWO: 2,
+        THREE: 3,
+        FOUR: 4
+    },
     SIZE: {
         SMALL: 16,
         MEDIUM: 26,

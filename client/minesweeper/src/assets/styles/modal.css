@@ -93,6 +93,7 @@
     width: 4rem;
 }
 .btn {
+    min-width: 1rem;
     font-size: .8rem;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     color: white;

@@ -17,9 +17,9 @@ const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
 const [passcode, passcodeRef] = [ref(''), ref<HTMLInputElement>()]
 
 
-const {SIZE, BOMB, TIME_LIMIT} = BOARDSETTING
+const {PLAYER, SIZE, BOMB, TIME_LIMIT} = BOARDSETTING
 
-
+const player = ref(PLAYER.TWO)
 const size = ref(SIZE.MEDIUM)
 const bomb = ref(BOMB.NORMAL)
 const timeLimit = ref(TIME_LIMIT.NONE)
@@ -35,6 +35,7 @@ const createRoom = () => {
             alias: alias.value,
             roomType: roomType.value,
             passcode: roomType.value === 'private' ? passcode.value : '',
+            player: player.value,
             size: size.value,
             bomb: bomb.value,
             timeLimit: timeLimit.value
@@ -51,6 +52,9 @@ const cancel = () => {
 }
 const setRoomType = (rType: 'private' | 'public') => {
     roomType.value = rType
+}
+const setPlayer = (num:number) => {
+    player.value = num
 }
 const setSize = (num:number) => {
     size.value = num
@@ -106,6 +110,22 @@ onMounted(() => {
                 />
             </div>
         </template>
+        <!--# of Players -->
+        <label class='grid-key'># of players</label>
+        <div class='grid-value btn-group'>
+            <button
+                :class='`${player === PLAYER.TWO ? `btn selected` : `btn`}`'
+                @click='() => {setPlayer(PLAYER.TWO)}'
+            >{{ PLAYER.TWO }}</button>
+            <button
+                :class='`${player === PLAYER.THREE ? `btn selected` : `btn`}`'
+                @click='() => {setPlayer(PLAYER.THREE)}'
+            >{{ PLAYER.THREE }}</button>
+            <button
+                :class='`${player === PLAYER.FOUR ? `btn selected` : `btn`}`'
+                @click='() => {setPlayer(PLAYER.FOUR)}'
+            >{{ PLAYER.FOUR }}</button>
+        </div>
         <!-- Map size -->
         <label class='grid-key'>Map size</label>
         <div class='grid-value btn-group'>
@@ -113,7 +133,7 @@ onMounted(() => {
                 :class='`${size === SIZE.SMALL ? `btn selected` : `btn`}`'
                 @click='() => {setSize(SIZE.SMALL)}'
             >{{ SIZE.SMALL }} x {{ SIZE.SMALL }}</button>
-            <button class='btn'
+            <button
                 :class='`${size === SIZE.MEDIUM ? `btn selected` : `btn`}`'
                 @click='() => {setSize(SIZE.MEDIUM)}'
             >{{ SIZE.MEDIUM }} x {{ SIZE.MEDIUM }}</button>

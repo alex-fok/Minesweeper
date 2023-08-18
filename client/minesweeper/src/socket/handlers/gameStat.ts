@@ -53,10 +53,8 @@ export default (data: GameStat) => {
     gameState.isPlayer = players[gameState.id] !== undefined
     
     // Set color
-    let rand = Math.floor(Math.random() *2)
-    Object.keys(gameState.players).forEach(id => {
-        uiState.playerColor[id] = rand === 0 ? COLORSETTING.COLOR_1.rgb : COLORSETTING.COLOR_2.rgb
-        rand = (rand - 1) % 2
+    Object.keys(gameState.players).forEach((id, i) => {
+        uiState.playerColor[id] = COLORSETTING.COLORS[i].rgb
     })
     
     // Update board

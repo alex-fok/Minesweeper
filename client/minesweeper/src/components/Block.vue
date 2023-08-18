@@ -92,7 +92,7 @@ const outline = computed(() => {
         line-height: 2vh;
     }
     .selectable:hover {
-        outline: 2px solid #CCCCCC !important;
+        outline: 2px solid #FFFFFF !important;
         cursor: pointer;
     }
     .revealed {

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import socket from '@/socket';
-import { gameState } from '@/store';
-import { ref } from 'vue';
+import { gameState, uiState } from '@/store';
+import { computed, ref } from 'vue';
 const props = defineProps({
     close: {
         type: Function,
@@ -25,6 +25,28 @@ const requestRematch = (rematch: boolean) => {
     }))
     if (!rematch) props.close()
 }
+
+const fillStyle = computed(() => {
+    return (id: string) => {
+        const color = uiState.playerColor[id] || '0, 0, 0'
+        const score = gameState.players[id].score || 0
+        const opacity = gameState.winner === id ? 1 : .2
+        return ({
+            width: `${score/gameState.boardConfig.bomb * 100}%`,
+            backgroundColor: `rgba(${color}, ${opacity})`
+        })
+    }
+})
+
+const playerStyle = computed(() => {
+    return (id: string) => {
+        const color = uiState.playerColor[id] || '0, 0, 0'
+        const opacity = gameState.winner === id ? 1 : .2
+        return ({
+            border: `1px solid rgba(${color}, ${opacity})`,
+        })
+    }
+})
 </script>
 <template>
     <template v-if='gameState.isPlayer'>
@@ -36,14 +58,15 @@ const requestRematch = (rematch: boolean) => {
         </div>
         <div class='modal-row'>
                 <div class='scoreboard grow'>
-                    <div class='score'>
-                        <span class='score-text'>{{ gameState.players[gameState.id].score }}</span>
-                        {{ gameState.players[gameState.id].alias }} (You)
-                    </div>
-                    <div class='score-text'> - </div>
-                    <div class='score'>
-                        <span class='score-text'>{{ opponent?.score }}</span>
-                        {{ opponent?.alias || 'Anonymous' }}
+                    <div v-for='player in gameState.players'
+                        class='score-wrapper'
+                        :style='playerStyle(player.id)'
+                    >
+                        <div class='score-fill' :style='fillStyle(player.id)'></div>
+                        <div class='score'>
+                            <span>{{ player.alias }}{{ gameState.id === player.id ? ' (You)': '' }}</span>
+                            <span>{{ player.score }}</span>
+                        </div>
                     </div>
                 </div>
         </div>
@@ -81,16 +104,29 @@ const requestRematch = (rematch: boolean) => {
     }
     .scoreboard {
         display: flex;
-        flex-direction: row;
-        justify-content: space-between;
-        column-gap: .5rem;
-        padding: 0rem 0rem 1rem 0rem;
+        flex-direction: column;
+        row-gap: .5rem;
+        user-select: none;
+        color: white;
+    }
+    .score-wrapper {
+        border-radius: .5rem;
+        position: relative;
+        overflow: hidden;
+    }
+    .score-fill {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        background-color: rgba(159, 159, 159, .2);
+        z-index: -99;
     }
     .score {
         display: flex;
-        flex-direction: column;
-        flex-grow: 1;
-        text-align: center;
+        flex-direction: row;
+        justify-content: space-between;
+        padding: .5rem;
     }
     .score-text {
         font-size: 4rem;

@@ -20,6 +20,7 @@ type RoomConfig struct {
 	Type      string
 	Pass      string
 	GameMode  string
+	Player    uint
 	Size      uint
 	Bomb      uint
 	TimeLimit uint
@@ -63,7 +64,7 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 		pass:       config.Pass,
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
-		gameDriver: *game.NewDriver(config.TimeLimit, config.Size, config.Bomb),
+		gameDriver: *game.NewDriver(config.TimeLimit, config.Player, config.Size, config.Bomb),
 		inviteCode: l.createInviteCode(id),
 		update:     make(chan *RoomUpdate),
 		register:   make(chan *RoomLogin),

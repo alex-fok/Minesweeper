@@ -45,7 +45,6 @@ type Driver struct {
 	mu         sync.Mutex
 	game       *Game
 	timer      Timer
-	playerCap  int
 	players    map[ClientId]*Client
 	rematchReq map[ClientId]bool
 	broadcast  func(action *Action)
@@ -54,15 +53,14 @@ type Driver struct {
 	isDone     bool
 }
 
-func NewDriver(timeLimit uint, size uint, bomb uint) *Driver {
+func NewDriver(timeLimit uint, player uint, size uint, bomb uint) *Driver {
 	d := Driver{
-		game: newGame(size, bomb),
+		game: newGame(player, size, bomb),
 		timer: Timer{
 			limit: float64(timeLimit),
 			reset: make(chan bool),
 			stop:  make(chan bool),
 		},
-		playerCap:  2,
 		players:    make(map[ClientId]*Client),
 		rematchReq: make(map[ClientId]bool),
 		isDone:     false,
@@ -71,7 +69,7 @@ func NewDriver(timeLimit uint, size uint, bomb uint) *Driver {
 }
 
 func (d *Driver) RegisterPlayer(c *Client) bool {
-	isPlayer := len(d.players) < d.playerCap
+	isPlayer := len(d.players) < d.game.getPlayerCap()
 
 	if isPlayer {
 		d.game.assignTurn(c.Id)
@@ -81,8 +79,8 @@ func (d *Driver) RegisterPlayer(c *Client) bool {
 }
 
 func (d *Driver) UnregisterPlayer(cId ClientId) {
-	currId, nextId := d.game.unassignTurn(cId)
-	if currId == "" || nextId == "" {
+	isUnassigned := d.game.unassignTurn(cId)
+	if isUnassigned {
 		d.broadcast(&Action{
 			Name:    "gameEnded",
 			Content: "{}",
@@ -171,7 +169,7 @@ func (d *Driver) GetPlayerOnlineStatus() map[ClientId]OnlineStatus {
 }
 
 func (d *Driver) GetPlayerCap() int {
-	return d.playerCap
+	return d.game.getPlayerCap()
 }
 
 func (d *Driver) SetBroadcast(b func(*Action)) {
@@ -179,7 +177,7 @@ func (d *Driver) SetBroadcast(b func(*Action)) {
 }
 
 func (d *Driver) IsGameReady() bool {
-	if len(d.players) != d.playerCap {
+	if len(d.players) != d.game.getPlayerCap() {
 		return false
 	}
 	for _, p := range d.players {
@@ -370,7 +368,7 @@ func (d *Driver) rematch(cId ClientId, content string) {
 	}
 
 	if rematch {
-		d.game = newGame(d.game.getSize(), d.game.getBombCount())
+		d.game = newGame(d.game.getSize(), d.game.getBombCount(), uint(d.game.getPlayerCap()))
 		for _, player := range d.players {
 			d.game.assignTurn(player.Id)
 		}

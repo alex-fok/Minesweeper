@@ -99,6 +99,7 @@ func (c *Client) createRoom(req *Request) {
 		Alias     string `json:"alias"`
 		RoomType  string `json:"roomType"`
 		Pass      string `json:"passcode"`
+		Player    uint   `json:"player"`
 		Size      uint   `json:"size"`
 		Bomb      uint   `json:"bomb"`
 		TimeLimit uint   `json:"timeLimit"`
@@ -115,6 +116,7 @@ func (c *Client) createRoom(req *Request) {
 	c.room = c.lobby.createRoom(c, &RoomConfig{
 		Type:      createReq.RoomType,
 		Pass:      createReq.Pass,
+		Player:    createReq.Player,
 		Size:      createReq.Size,
 		Bomb:      createReq.Bomb,
 		TimeLimit: createReq.TimeLimit,
@@ -123,11 +125,6 @@ func (c *Client) createRoom(req *Request) {
 		client: c,
 		pass:   createReq.Pass,
 	}
-	// Update clien
-	// c.writer.update <- &Action{
-	// 	Name:    "roomCreated",
-	// 	Content: string("{}"),
-	// }
 	log.Println("Room", c.room.id, "created by Client", createReq.Alias)
 }
 

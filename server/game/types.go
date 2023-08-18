@@ -27,14 +27,15 @@ type Counter struct {
 }
 
 type Turn struct {
+	idx   int
 	Count uint
 	Curr  ClientId
-	Next  ClientId
 }
 
 type Game struct {
 	Size     uint
 	Bomb     uint
+	Player   []ClientId
 	Counter  Counter
 	GameMode string
 	Turn     Turn

@@ -1,20 +1,22 @@
 package game
 
 import (
-	"math/rand"
+	"log"
+	"minesweeper/utils"
 )
 
 // const DEFAULT_SIZE = 26
 // const DEFAULT_BOMB_COUNT = 100
 
-func newGame(size uint, bomb uint) *Game {
+func newGame(player uint, size uint, bomb uint) *Game {
 	return &Game{
 		Size:    size,
 		Bomb:    bomb,
+		Player:  make([]ClientId, player),
 		Counter: Counter{},
 		Turn: Turn{
+			idx:  0,
 			Curr: "",
-			Next: "",
 		},
 		Board:  GetBoard(int(size), int(bomb)),
 		Winner: "",
@@ -24,8 +26,9 @@ func newGame(size uint, bomb uint) *Game {
 func (g *Game) initCounter() {
 	g.Counter.BombsLeft = g.Bomb
 	g.Counter.Score = make(map[ClientId]uint)
-	g.Counter.Score[g.Turn.Curr] = 0
-	g.Counter.Score[g.Turn.Next] = 0
+	for _, p := range g.Player {
+		g.Counter.Score[p] = 0
+	}
 }
 
 func (g *Game) getSize() uint {
@@ -34,6 +37,10 @@ func (g *Game) getSize() uint {
 
 func (g *Game) getBombCount() uint {
 	return g.Bomb
+}
+
+func (g *Game) getPlayerCap() int {
+	return len(g.Player)
 }
 
 func (g *Game) getCounter() Counter {
@@ -54,12 +61,11 @@ func (g *Game) getWinner() ClientId {
 
 func (g *Game) reveal(v *Vertex) []*BlockInfo {
 	vertices := GetRevealableVertices(v, g.Board)
-	curr := g.getTurn().Curr
 	revealables := make([]*BlockInfo, len(vertices))
 
 	for i, v := range vertices {
 		g.Board[v.Y][v.X].Visited = true
-		g.Board[v.Y][v.X].VisitedBy = curr
+		g.Board[v.Y][v.X].VisitedBy = g.Turn.Curr
 		revealables[i] = &BlockInfo{
 			X:     v.X,
 			Y:     v.Y,
@@ -85,35 +91,34 @@ func (g *Game) getVisibleBlocks() []BlockInfo {
 	return s
 }
 
-func (g *Game) assignTurn(cId ClientId) (ClientId, ClientId) {
-	isEmpty := g.Turn.Curr == "" && g.Turn.Next == ""
-
-	if isEmpty {
-		if rand.Intn(2) == 0 {
-			g.Turn.Curr = cId
-		} else {
-			g.Turn.Next = cId
+func (g *Game) assignTurn(cId ClientId) {
+	randArr := *utils.GetRandArray(len(g.Player))
+	log.Println("assignTurn Arr: ", randArr)
+	for _, i := range randArr {
+		if g.Player[i] == "" {
+			g.Player[i] = cId
+			if i == 0 {
+				g.Turn.Curr = cId
+			}
+			return
 		}
-	} else if g.Turn.Curr == "" {
-		g.Turn.Curr = cId
-	} else if g.Turn.Next == "" { // Not 'else'. Could be more than 3 clients in a room
-		g.Turn.Next = cId
 	}
-	return g.Turn.Curr, g.Turn.Next
 }
 
-func (g *Game) unassignTurn(cId ClientId) (ClientId, ClientId) {
-	if g.Turn.Curr == cId {
-		g.Turn.Curr = ""
-	} else if g.Turn.Next == cId {
-		g.Turn.Next = ""
+func (g *Game) unassignTurn(cId ClientId) bool {
+	for i, p := range g.Player {
+		if p == cId {
+			g.Player[i] = ""
+			return true
+		}
 	}
-	return g.Turn.Curr, g.Turn.Next
+	return false
 }
 
 func (g *Game) advanceTurn() Turn {
 	g.Turn.Count++
-	g.Turn.Curr, g.Turn.Next = g.Turn.Next, g.Turn.Curr
+	g.Turn.idx = (g.Turn.idx + 1) % len(g.Player)
+	g.Turn.Curr = g.Player[g.Turn.idx]
 	return g.Turn
 }
 
@@ -121,7 +126,7 @@ func (g *Game) scoreCurrPlayer() (Counter, bool) {
 	g.Counter.BombsLeft--
 	g.Counter.Score[g.Turn.Curr]++
 
-	isWon := g.Counter.Score[g.Turn.Curr] > g.Bomb/2
+	isWon := g.Counter.Score[g.Turn.Curr] > g.Bomb/uint(len(g.Player))
 	if isWon {
 		g.Winner = g.Turn.Curr
 	}
