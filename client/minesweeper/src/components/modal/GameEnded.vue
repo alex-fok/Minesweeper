@@ -11,9 +11,19 @@ const props = defineProps({
 
 const isRematchClicked = ref(false)
 
-const isWon = gameState.isPlayer && gameState.winner === gameState.id
-const oppId = Object.keys(gameState.players).find(id => id !== gameState.id)
-const opponent = oppId ? gameState.players[oppId] : null
+const result = computed(() => {
+    if (gameState.winner === '') {
+        if (!gameState.isPlayer) return 'Draw!'
+        const { players, id } = gameState
+        const playerIds = Object.keys(players)
+        const highestScore = playerIds.reduce((prev, curr) => players[curr].score > prev ? players[curr].score : prev, 0)
+        return players[id].score === highestScore ? 'Draw!' : 'You Lose!'
+    }
+    if (!gameState.isPlayer) return `${gameState.winner} Won!`
+
+    const isWon = gameState.isPlayer && gameState.winner === gameState.id
+    return isWon ? 'You Win!' : 'You Lose!'
+})
 
 const requestRematch = (rematch: boolean) => {
     isRematchClicked.value = true
@@ -30,7 +40,7 @@ const fillStyle = computed(() => {
     return (id: string) => {
         const color = uiState.playerColor[id] || '0, 0, 0'
         const score = gameState.players[id].score || 0
-        const opacity = gameState.winner === id ? 1 : .2
+        const opacity = gameState.winner === '' || gameState.winner === id ? .7 : .2
         return ({
             width: `${score/gameState.boardConfig.bomb * 100}%`,
             backgroundColor: `rgba(${color}, ${opacity})`
@@ -41,7 +51,7 @@ const fillStyle = computed(() => {
 const playerStyle = computed(() => {
     return (id: string) => {
         const color = uiState.playerColor[id] || '0, 0, 0'
-        const opacity = gameState.winner === id ? 1 : .2
+        const opacity = gameState.winner === '' || gameState.winner === id ? .7 : .2
         return ({
             border: `1px solid rgba(${color}, ${opacity})`,
         })
@@ -49,52 +59,42 @@ const playerStyle = computed(() => {
 })
 </script>
 <template>
-    <template v-if='gameState.isPlayer'>
-        <div class='modal-row'>
-            <div class='modal-item grow'>
-                <div class='modal-end-game'>{{ isWon ? 'You Won!' : 'You Lost!' }}</div>
-            </div>
-            <div class='modal-close' @click='close()'>&#10005;</div>
+    <div class='modal-row'>
+        <div class='modal-item grow'>
+            <div class='modal-end-game'>{{ result }}</div>
         </div>
-        <div class='modal-row'>
-                <div class='scoreboard grow'>
-                    <div v-for='player in gameState.players'
-                        class='score-wrapper'
-                        :style='playerStyle(player.id)'
-                    >
-                        <div class='score-fill' :style='fillStyle(player.id)'></div>
-                        <div class='score'>
-                            <span>{{ player.alias }}{{ gameState.id === player.id ? ' (You)': '' }}</span>
-                            <span>{{ player.score }}</span>
-                        </div>
+        <div class='modal-close' @click='close()'>&#10005;</div>
+    </div>
+    <div class='modal-row'>
+            <div class='scoreboard grow'>
+                <div v-for='player in gameState.players'
+                    class='score-wrapper'
+                    :style='playerStyle(player.id)'
+                >
+                    <div class='score-fill' :style='fillStyle(player.id)'></div>
+                    <div class='score'>
+                        <span>{{ player.alias }}{{ gameState.id === player.id ? ' (You)': '' }}</span>
+                        <span>{{ player.score }}</span>
                     </div>
                 </div>
-        </div>
-        <div class='modal-row'>
-            <div v-if='isRematchClicked' class='modal-item'>
-                Waiting for opponent response...
             </div>
-            <template v-else>
-                <div class='modal-item'>
-                    REMATCH?
-                </div>
-                <div class='modal-item'>
-                    <button class='btn' @click='() => { requestRematch(true) }'>YES</button>
-                </div>
-                <div class='modal-item'>
-                    <button class='btn' @click='() => { requestRematch(false) }'>NO</button>
-                </div>
-            </template>
+    </div>
+    <div v-if='gameState.isPlayer' class='modal-row'>
+        <div v-if='isRematchClicked' class='modal-item'>
+            Waiting for opponent response...
         </div>
-    </template>
-    <template v-else>
-        <div class='moda-row'>
+        <template v-else>
             <div class='modal-item'>
-                {{ gameState.players[gameState.winner].alias }} Won!
+                REMATCH?
             </div>
-            <div class='modal-close' @click='() => { requestRematch(false) }'>&#10005;</div>
-        </div>
-    </template>
+            <div class='modal-item'>
+                <button class='btn' @click='() => { requestRematch(true) }'>YES</button>
+            </div>
+            <div class='modal-item'>
+                <button class='btn' @click='() => { requestRematch(false) }'>NO</button>
+            </div>
+        </template>
+    </div>
 </template>
 <style scoped>
     @import '@/assets/styles/modal.css';

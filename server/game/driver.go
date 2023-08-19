@@ -80,10 +80,18 @@ func (d *Driver) RegisterPlayer(c *Client) bool {
 
 func (d *Driver) UnregisterPlayer(cId ClientId) {
 	isUnassigned := d.game.unassignTurn(cId)
+	type GameEnded struct {
+		IsCanceled bool     `json:"isCanceled"`
+		Winner     ClientId `json:"winner"`
+	}
+	gameEnded, _ := json.Marshal(&GameEnded{
+		IsCanceled: true,
+		Winner:     "",
+	})
 	if isUnassigned {
 		d.broadcast(&Action{
 			Name:    "gameEnded",
-			Content: "{}",
+			Content: string(gameEnded),
 		})
 	}
 }
@@ -265,15 +273,18 @@ func (d *Driver) scoreCurrPlayer() {
 		Content: string(scoreUpdated),
 	})
 
-	if isWon {
-		type GameEnded struct {
-			Winner ClientId `json:"winner"`
-		}
-
+	if isWon || counter.BombsLeft == 0 {
 		if d.timer.limit != 0 {
 			d.timer.stop <- true
 		}
-		gameEnded, _ := json.Marshal(GameEnded{Winner: d.game.getWinner()})
+		type GameEnded struct {
+			IsCanceled bool     `json:"isCanceled"`
+			Winner     ClientId `json:"winner"`
+		}
+		gameEnded, _ := json.Marshal(GameEnded{
+			IsCanceled: false,
+			Winner:     d.game.getWinner(),
+		})
 		d.broadcast(&Action{
 			Name:    "gameEnded",
 			Content: string(gameEnded),
