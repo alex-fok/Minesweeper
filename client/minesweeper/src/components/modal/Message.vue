@@ -11,9 +11,6 @@ defineProps({
 <template>
 <div class='modal-row'>
     <div class='modal-item'>
-        SERVER:
-    </div>
-    <div class='modal-item'>
         {{ uiState.modal.message }}
     </div>
     <div class='modal-item'>
