@@ -6,7 +6,7 @@ import socket from '@/socket'
 import Block from './Block.vue'
 import Copy from './icon/copy.vue'
 
-const { IN_GAME, WAITING_JOIN } = GAMESTATUS
+const { END, IN_GAME, WAITING_JOIN } = GAMESTATUS
 const timeLeft = ref(-1)
 
 const reveal = (i: number) => {
@@ -65,8 +65,8 @@ const lastPlayedBlock = computed(() => {
     return size * y + x
 })
 
-const timerVisible = computed(() => {
-    return gameState.winner == '' && gameState.timeLimit
+const isTimerExist = computed(() => {
+    return gameState.status === END && gameState.timeLimit
 })
 
 watch(() => gameState.lastPlayed.timestamp, () => {
@@ -122,7 +122,7 @@ watch(() => gameState.lastPlayed.timestamp, () => {
     <div v-else class='board-container'>
         <div
             class='timer'
-            :style='{visibility: timerVisible ? `visible` : `hidden`}'
+            :style='{display: isTimerExist ? `block` : `none`}'
         ><div>Time Left: {{ timeLeft }}</div></div>
         <div class='board-wrapper'>
             <div :class='`board ` + mapSize'>
