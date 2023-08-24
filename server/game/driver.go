@@ -379,7 +379,7 @@ func (d *Driver) rematch(cId ClientId, content string) {
 	}
 
 	if rematch {
-		d.game = newGame(d.game.getSize(), d.game.getBombCount(), uint(d.game.getPlayerCap()))
+		d.game = newGame(uint(d.game.getPlayerCap()), d.game.getSize(), d.game.getBombCount())
 		for _, player := range d.players {
 			d.game.assignTurn(player.Id)
 		}

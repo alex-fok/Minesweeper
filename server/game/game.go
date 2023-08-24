@@ -1,7 +1,6 @@
 package game
 
 import (
-	"log"
 	"minesweeper/utils"
 )
 
@@ -93,7 +92,6 @@ func (g *Game) getVisibleBlocks() []BlockInfo {
 
 func (g *Game) assignTurn(cId ClientId) {
 	randArr := *utils.GetRandArray(len(g.Player))
-	log.Println("assignTurn Arr: ", randArr)
 	for _, i := range randArr {
 		if g.Player[i] == "" {
 			g.Player[i] = cId
