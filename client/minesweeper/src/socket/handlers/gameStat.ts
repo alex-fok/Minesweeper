@@ -1,6 +1,6 @@
 import { gameState, uiState } from '@/store'
 import { BOARDSETTING, COLORSETTING, GAMESTATUS } from '@/config'
-// import media from '@/media'
+import media from '@/media'
 
 type Player = {
     id: string,
@@ -66,5 +66,5 @@ export default (data: GameStat) => {
     })
     gameState.timeLimit = timeLimit
     gameState.lastPlayed.timestamp = Date.parse(lastPlayed)
-    // media.play('start')
+    media.play('start')
 }
