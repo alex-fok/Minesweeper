@@ -33,6 +33,14 @@ type GameStat struct {
 	Visible     []BlockInfo              `json:"visible"`
 	TimeLimit   float64                  `json:"timeLimit"`
 	LastPlayed  time.Time                `json:"lastPlayed"`
+	IsGameEnded bool                     `json:"isGameEnded"`
+}
+
+type GameEnded struct {
+	IsCanceled bool                     `json:"isCanceled"`
+	Winner     ClientId                 `json:"winner"`
+	Players    map[ClientId]*PlayerInfo `json:"players"`
+	BombsLeft  uint                     `json:"bombsLeft"`
 }
 
 type Timer struct {
@@ -80,14 +88,8 @@ func (d *Driver) RegisterPlayer(c *Client) bool {
 
 func (d *Driver) UnregisterPlayer(cId ClientId) {
 	isUnassigned := d.game.unassignTurn(cId)
-	type GameEnded struct {
-		IsCanceled bool     `json:"isCanceled"`
-		Winner     ClientId `json:"winner"`
-	}
-	gameEnded, _ := json.Marshal(&GameEnded{
-		IsCanceled: true,
-		Winner:     "",
-	})
+
+	gameEnded, _ := json.Marshal(d.GetGameEnded())
 	if isUnassigned {
 		d.broadcast(&Action{
 			Name:    "gameEnded",
@@ -111,10 +113,12 @@ func (d *Driver) DisconnectPlayer(cId ClientId) bool {
 			Player:   cId,
 			IsOnline: false,
 		})
-		d.broadcast(&Action{
-			Name:    "playerOnline",
-			Content: string(disconnPlayer),
-		})
+		if !d.game.getIsEnded() {
+			d.broadcast(&Action{
+				Name:    "playerOnline",
+				Content: string(disconnPlayer),
+			})
+		}
 		return true
 	}
 	return false
@@ -131,29 +135,21 @@ func (d *Driver) ReconnectPlayer(cId ClientId) {
 			Player:   cId,
 			IsOnline: true,
 		})
-		d.broadcast(&Action{
-			Name:    "playerOnline",
-			Content: string(reconnPlayer),
-		})
+		if !d.game.getIsEnded() {
+			d.broadcast(&Action{
+				Name:    "playerOnline",
+				Content: string(reconnPlayer),
+			})
+		}
 	}
 }
 
-func (d *Driver) GetGameStat() *GameStat {
+func (d *Driver) GetPlayers() map[ClientId]*PlayerInfo {
+	players := make(map[ClientId]*PlayerInfo)
 	counter, turn := d.game.getCounter(), d.game.getTurn()
 
-	gameStat := GameStat{
-		BoardConfig: &BoardConfig{
-			Size: d.game.getSize(),
-			Bomb: d.game.getBombCount(),
-		},
-		BombsLeft:  counter.BombsLeft,
-		Players:    make(map[ClientId]*PlayerInfo),
-		Visible:    d.game.getVisibleBlocks(),
-		TimeLimit:  d.timer.limit,
-		LastPlayed: d.lastPlayed,
-	}
 	for _, p := range d.players {
-		gameStat.Players[p.Id] = &PlayerInfo{
+		players[p.Id] = &PlayerInfo{
 			Id:       p.Id,
 			Alias:    p.Alias,
 			Score:    counter.Score[p.Id],
@@ -161,7 +157,35 @@ func (d *Driver) GetGameStat() *GameStat {
 			IsOnline: p.IsOnline,
 		}
 	}
+	return players
+}
+
+func (d *Driver) GetGameStat() *GameStat {
+	counter := d.game.getCounter()
+
+	gameStat := GameStat{
+		BoardConfig: &BoardConfig{
+			Size: d.game.getSize(),
+			Bomb: d.game.getBombCount(),
+		},
+		BombsLeft:   counter.BombsLeft,
+		Players:     d.GetPlayers(),
+		Visible:     d.game.getVisibleBlocks(),
+		TimeLimit:   d.timer.limit,
+		LastPlayed:  d.lastPlayed,
+		IsGameEnded: d.game.getIsEnded(),
+	}
 	return &gameStat
+}
+
+func (d *Driver) GetGameEnded() *GameEnded {
+	counter := d.game.getCounter()
+	return &GameEnded{
+		IsCanceled: d.game.getIsCanceled(),
+		Winner:     d.game.getWinner(),
+		Players:    d.GetPlayers(),
+		BombsLeft:  counter.BombsLeft,
+	}
 }
 
 func (d *Driver) GetPlayerOnlineStatus() map[ClientId]OnlineStatus {
@@ -176,12 +200,20 @@ func (d *Driver) GetPlayerOnlineStatus() map[ClientId]OnlineStatus {
 	return result
 }
 
+func (d *Driver) GetIsEnded() bool {
+	return d.game.getIsEnded()
+}
+
 func (d *Driver) GetPlayerCap() int {
 	return d.game.getPlayerCap()
 }
 
 func (d *Driver) SetBroadcast(b func(*Action)) {
 	d.broadcast = b
+}
+
+func (d *Driver) IsGameEnded() bool {
+	return d.game.getIsEnded()
 }
 
 func (d *Driver) IsGameReady() bool {
@@ -277,14 +309,7 @@ func (d *Driver) scoreCurrPlayer() {
 		if d.timer.limit != 0 {
 			d.timer.stop <- true
 		}
-		type GameEnded struct {
-			IsCanceled bool     `json:"isCanceled"`
-			Winner     ClientId `json:"winner"`
-		}
-		gameEnded, _ := json.Marshal(GameEnded{
-			IsCanceled: false,
-			Winner:     d.game.getWinner(),
-		})
+		gameEnded, _ := json.Marshal(d.GetGameEnded())
 		d.broadcast(&Action{
 			Name:    "gameEnded",
 			Content: string(gameEnded),

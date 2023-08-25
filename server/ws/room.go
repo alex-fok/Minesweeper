@@ -12,10 +12,6 @@ type Game = game.Game
 type ClientMeta = types.ClientMeta
 type OnlineStatus = types.OnlineStatus
 
-type GameEnded struct {
-	Winner ClientId `json:"winner"`
-}
-
 type RoomConfig struct {
 	Type      string
 	Pass      string
@@ -131,7 +127,7 @@ func (r *Room) disconnectClient(c *Client) {
 	if _, ok := r.timeouts[c.id]; !ok {
 		r.timeouts[c.id] = time.Now().Unix()
 		isPlayer := r.gameDriver.DisconnectPlayer(c.id)
-		if isPlayer {
+		if !r.gameDriver.GetIsEnded() && isPlayer {
 			r.notifyWaitingRoomInfo()
 		}
 	}
@@ -163,8 +159,14 @@ func (r *Room) reconnectClient(c *Client) {
 	c.room = r
 
 	log.Println("Client", c.alias, "reconnected")
+	if r.gameDriver.IsGameEnded() {
 
-	if r.gameDriver.IsGameReady() {
+		gameEnded, _ := json.Marshal(r.gameDriver.GetGameEnded())
+		c.writer.update <- &Action{
+			Name:    "gameEnded",
+			Content: string(gameEnded),
+		}
+	} else if r.gameDriver.IsGameReady() {
 		// Return Game Stat
 		stat, _ := json.Marshal(r.gameDriver.GetGameStat())
 
@@ -278,6 +280,7 @@ func (r *Room) checkActivity(now int64) {
 	for cId, t := range r.timeouts {
 		if now-t > TIMELIMIT_IN_SEC {
 			log.Println("Removing client", r.clients[cId].alias, "from room", r.id)
+			r.gameDriver.UnregisterPlayer(cId)
 			delete(r.clients, cId)
 			delete(r.timeouts, cId)
 		}
@@ -286,7 +289,7 @@ func (r *Room) checkActivity(now int64) {
 
 func (r *Room) run() {
 	// Setup ticker
-	ticker := time.NewTicker(time.Minute)
+	ticker := time.NewTicker(time.Second * 5)
 	doneChecking := make(chan bool)
 	defer func() {
 		doneChecking <- true

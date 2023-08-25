@@ -33,12 +33,14 @@ type Turn struct {
 }
 
 type Game struct {
-	Size     uint
-	Bomb     uint
-	Player   []ClientId
-	Counter  Counter
-	GameMode string
-	Turn     Turn
-	Board    [][]*Block
-	Winner   ClientId
+	Size       uint
+	Bomb       uint
+	Player     []ClientId
+	Counter    Counter
+	GameMode   string
+	Turn       Turn
+	Board      [][]*Block
+	Winner     ClientId
+	IsEnded    bool
+	IsCanceled bool
 }

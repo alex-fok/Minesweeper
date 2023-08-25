@@ -17,8 +17,10 @@ func newGame(player uint, size uint, bomb uint) *Game {
 			idx:  0,
 			Curr: "",
 		},
-		Board:  GetBoard(int(size), int(bomb)),
-		Winner: "",
+		Board:      GetBoard(int(size), int(bomb)),
+		Winner:     "",
+		IsEnded:    false,
+		IsCanceled: false,
 	}
 }
 
@@ -56,6 +58,14 @@ func (g *Game) getBoard() [][]*Block {
 
 func (g *Game) getWinner() ClientId {
 	return g.Winner
+}
+
+func (g *Game) getIsEnded() bool {
+	return g.IsEnded
+}
+
+func (g *Game) getIsCanceled() bool {
+	return g.IsCanceled
 }
 
 func (g *Game) reveal(v *Vertex) []*BlockInfo {
@@ -107,6 +117,8 @@ func (g *Game) unassignTurn(cId ClientId) bool {
 	for i, p := range g.Player {
 		if p == cId {
 			g.Player[i] = ""
+			g.IsEnded = true
+			g.IsCanceled = true
 			return true
 		}
 	}
@@ -127,6 +139,7 @@ func (g *Game) scoreCurrPlayer() (Counter, bool) {
 	isWon := g.Counter.Score[g.Turn.Curr] > g.Bomb/uint(len(g.Player))
 	if isWon {
 		g.Winner = g.Turn.Curr
+		g.IsEnded = true
 	}
 	return g.Counter, isWon
 }
