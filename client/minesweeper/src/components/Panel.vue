@@ -4,7 +4,9 @@ import { gameState, uiState } from '@/store';
 import { computed, ref } from 'vue';
 import Edit from './icon/edit.vue';
 
-const [hovering, setHovering] = [ref(''), (id: string) => { hovering.value = id }]
+const [hoveringId, setHoveringId] = [ref(''), (id: string) => {
+    hoveringId.value = id
+}]
 
 const isGameStarted = computed(() => 
     gameState.status !== GAMESTATUS.NEW &&
@@ -12,7 +14,7 @@ const isGameStarted = computed(() =>
 )
 const getPlayerColor = (id: string) => {
     const color = uiState.playerColor[id] || '0, 0, 0'
-    const isHovering = id === hovering.value
+    const isHovering = id === hoveringId.value
     const opacity = gameState.players[id].isTurn ? 1 : isHovering ? .4 : .2
     return `rgba(${color}, ${opacity})`
 }
@@ -25,36 +27,43 @@ const playerStyle = computed(() =>
         })
     }
 )
-
 const editName = (id: string) => {
     if (id !== gameState.id) return
     uiState.modal.displayContent('playerAlias')
 }
+const editStyle = computed(() => ({
+    visibility: hoveringId.value === gameState.id ? 'visible' : 'hidden'
+}))
 </script>
 <template>
     <div v-if='isGameStarted' class='side-container'>
-        <div v-if='gameState.capacity > 2' class='player-container'>
+        <div v-if='gameState.capacity <= 2' class='player-container'>
             <div
                 v-for='player in gameState.players'
                 class='player-expand-item'
                 :style='playerStyle(player.id)'
             >
                 <div class='player'
-                    :onmouseenter='() => { setHovering(player.id) }'
-                    :onmouseleave='() => { setHovering(``) }'
+                    :onmouseenter='() => { setHoveringId(player.id) }'
+                    :onmouseleave='() => { setHoveringId(``) }'
                 >
                     <span :class='player.isTurn ? `` : `hidden`'>></span>
                     <span
-                        :class='`${gameState.id === player.id ? `name self` : `name`}`'
+                        v-if='gameState.id === player.id'
+                        class='name self'
                         :onclick='() => { editName(player.id) }'
                     >
                         {{ player.alias }}
-                        {{  gameState.id === player.id ? '(You)' : '' }}
-                        {{ !player.isOnline ? '(Offline)': '' }}
-                        <Edit v-if='gameState.id === player.id && hovering === player.id'
+                        (You)
+                        <Edit
+                            :style='editStyle'
                             :fill='getPlayerColor(player.id)'
                             size='1rem'
                         />
+                    </span>
+                    <span v-else class='name'>
+                        {{ player.alias }}
+                        {{ !player.isOnline ? '(Offline)': '' }}
                     </span>
                 </div>
                 <div class='score'>{{ player.score }}</div>
@@ -64,23 +73,27 @@ const editName = (id: string) => {
             <div
                 v-for='player in gameState.players'
                 class='player-collapse-item'
-                :onmouseenter='() => { setHovering(player.id) }'
-                :onmouseleave='() => { setHovering(``) }'
+                :onmouseenter='() => { setHoveringId(player.id) }'
+                :onmouseleave='() => { setHoveringId(``) }'
                 :style='playerStyle(player.id)'
             >
                 <div class='player'>
                     <span :class='player.isTurn ? `` : `hidden`'>></span>
                     <span
-                        :class='`${gameState.id === player.id ? `name self` : `name`}`'
+                        v-if='gameState.id === player.id'
+                        class='name self'
                         :onclick='()=> { editName(player.id) }'
                     >
                         {{ player.alias }}
-                        {{ gameState.id === player.id ? '(You)' : '' }}
-                        {{ !player.isOnline ? '(Offline)' : '' }}
-                        <Edit v-if='gameState.id === player.id && hovering === player.id'
+                        (You)
+                        <Edit v-if='hoveringId === player.id'
                             :fill='getPlayerColor(player.id)'
                             size='1rem'
                         />
+                    </span>
+                    <span v-else class='name'>
+                        {{ player.alias }}
+                        {{ !player.isOnline ? '(Offline)' : '' }}
                     </span>
                 </div>
                 <div class='score'>{{ player.score }}</div>
