@@ -1,60 +1,90 @@
 <script setup lang='ts'>
 import { GAMESTATUS } from '@/config';
 import { gameState, uiState } from '@/store';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import Edit from './icon/edit.vue';
+
+const [hovering, setHovering] = [ref(''), (id: string) => { hovering.value = id }]
 
 const isGameStarted = computed(() => 
     gameState.status !== GAMESTATUS.NEW &&
     gameState.status !== GAMESTATUS.WAITING_JOIN
 )
-const playerStyle = computed(() => {
-    return (id: string) => {
-        const color = uiState.playerColor[id] || '0, 0, 0'
-        const opacity = gameState.players[id].isTurn ? 1 : .2
+const getPlayerColor = (id: string) => {
+    const color = uiState.playerColor[id] || '0, 0, 0'
+    const isHovering = id === hovering.value
+    const opacity = gameState.players[id].isTurn ? 1 : isHovering ? .4 : .2
+    return `rgba(${color}, ${opacity})`
+}
+const playerStyle = computed(() => 
+    (id: string) => {
+        const playerColor = getPlayerColor(id)
         return ({
-            border: `.1rem solid rgba(${color}, ${opacity})`,
-            color:`rgba(${color}, ${opacity})`
+            border: `.1rem solid ${playerColor}`,
+            color:`${playerColor}`
         })
     }
-})
+)
+
+const editName = (id: string) => {
+    if (id !== gameState.id) return
+    uiState.modal.displayContent('playerAlias')
+}
 </script>
 <template>
     <div v-if='isGameStarted' class='side-container'>
-        <div v-if='gameState.capacity <= 2' class='player-container'>
-            <template v-for='player in gameState.players'>
-                <div
-                    :class='player.isTurn ? `player-expand-item selected` : `player-expand-item`'
-                    :style='playerStyle(player.id)'
+        <div v-if='gameState.capacity > 2' class='player-container'>
+            <div
+                v-for='player in gameState.players'
+                class='player-expand-item'
+                :style='playerStyle(player.id)'
+            >
+                <div class='player'
+                    :onmouseenter='() => { setHovering(player.id) }'
+                    :onmouseleave='() => { setHovering(``) }'
                 >
-                    <div class='player-name'>
-                        <span :class='player.isTurn ? `` : `hidden`'>>></span>
-                        <span>
-                            {{ player.alias }}
-                            {{ gameState.id === player.id ? '(You)': '' }}
-                            {{ !player.isOnline ? '(Offline)': '' }}
-                        </span>
-                    </div>
-                    <div class='score'>{{ player.score }}</div>
+                    <span :class='player.isTurn ? `` : `hidden`'>></span>
+                    <span
+                        :class='`${gameState.id === player.id ? `name self` : `name`}`'
+                        :onclick='() => { editName(player.id) }'
+                    >
+                        {{ player.alias }}
+                        {{  gameState.id === player.id ? '(You)' : '' }}
+                        {{ !player.isOnline ? '(Offline)': '' }}
+                        <Edit v-if='gameState.id === player.id && hovering === player.id'
+                            :fill='getPlayerColor(player.id)'
+                            size='1rem'
+                        />
+                    </span>
                 </div>
-            </template>
+                <div class='score'>{{ player.score }}</div>
+            </div>
         </div>
         <div v-else class='player-container'>
-            <template v-for='player in gameState.players'>
-                <div
-                    :class='player.isTurn ? `player-collapse-item selected` : `player-collapse-item`'
-                    :style='playerStyle(player.id)'
-                >
-                    <div class='player-name'>
-                        <span :class='player.isTurn ? `` : `hidden`'>></span>
-                        <span>
-                            {{ player.alias }}
-                            {{ gameState.id === player.id ? '(You)' : '' }}
-                            {{ !player.isOnline ? '(Offline)' : '' }}
-                        </span>
-                    </div>
-                    <div class='score'>{{ player.score }}</div>
+            <div
+                v-for='player in gameState.players'
+                class='player-collapse-item'
+                :onmouseenter='() => { setHovering(player.id) }'
+                :onmouseleave='() => { setHovering(``) }'
+                :style='playerStyle(player.id)'
+            >
+                <div class='player'>
+                    <span :class='player.isTurn ? `` : `hidden`'>></span>
+                    <span
+                        :class='`${gameState.id === player.id ? `name self` : `name`}`'
+                        :onclick='()=> { editName(player.id) }'
+                    >
+                        {{ player.alias }}
+                        {{ gameState.id === player.id ? '(You)' : '' }}
+                        {{ !player.isOnline ? '(Offline)' : '' }}
+                        <Edit v-if='gameState.id === player.id && hovering === player.id'
+                            :fill='getPlayerColor(player.id)'
+                            size='1rem'
+                        />
+                    </span>
                 </div>
-            </template>
+                <div class='score'>{{ player.score }}</div>
+            </div>
         </div>
         <div>Bombs Left: {{ gameState.bombsLeft }} / {{ gameState.boardConfig.bomb }}</div>
     </div>
@@ -95,14 +125,21 @@ const playerStyle = computed(() => {
         justify-content: space-between;
         flex-direction: row;
     }
-    .selected {
-        border-color: white;
-        color: white;
-    }
-    .player-name {
+    .player {
         display: grid;
         grid-template-columns: 2rem 1fr;
         word-break: break-all;
+    }
+    .name {
+        background: transparent;
+        color: inherit;
+        border: 0;
+        outline: 0;
+        width: auto;
+    }
+    .name.self:hover {
+        text-decoration: underline;
+        cursor:pointer;
     }
     .player-expand-item .score {
         font-size: 6rem;

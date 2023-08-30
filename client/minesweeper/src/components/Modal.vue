@@ -1,14 +1,15 @@
 <script setup lang='ts'>
-import { onMounted, watch, nextTick } from 'vue';
-import { uiState } from '@/store';
+import { onMounted, watch, nextTick } from 'vue'
+import { uiState } from '@/store'
 import Create from './modal/Create.vue'
 import Join from './modal/Join.vue'
-import CreateOrJoin from './modal/CreateOrJoin.vue';
-import GameEnded from './modal/GameEnded.vue';
+import CreateOrJoin from './modal/CreateOrJoin.vue'
+import GameEnded from './modal/GameEnded.vue'
 import Invited from './modal/Invited.vue'
 import Message from './modal/Message.vue'
-import HowToPlay from './modal/HowToPlay.vue';
-import Passcode from './modal/Passcode.vue';
+import HowToPlay from './modal/HowToPlay.vue'
+import Passcode from './modal/Passcode.vue'
+import PlayerAlias from './modal/PlayerAlias.vue'
 import WaitingRoom from './modal/WaitingRoom.vue'
 import NoContent from './modal/NoContent.vue'
 
@@ -60,6 +61,9 @@ watch(props, setFocus)
         </template>
         <template v-else-if='props.content === `passcode`'>
             <Passcode :close='close' />
+        </template>
+        <template v-else-if='props.content === `playerAlias`'>
+            <PlayerAlias :close='close' />
         </template>
         <template v-else-if='props.content === `waitingRoom`'>
             <WaitingRoom />
