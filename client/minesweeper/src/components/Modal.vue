@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, watch, nextTick } from 'vue'
+import { onMounted, nextTick, ref, watch, onUnmounted } from 'vue'
 import { uiState } from '@/store'
 import Create from './modal/Create.vue'
 import Join from './modal/Join.vue'
@@ -13,12 +13,17 @@ import PlayerAlias from './modal/PlayerAlias.vue'
 import WaitingRoom from './modal/WaitingRoom.vue'
 import NoContent from './modal/NoContent.vue'
 
+type EventListener = {
+    event: string,
+    handler: (ev : Event) => void
+}
 const props = defineProps({
     // create, join, createOrJoin
     content: {
         default: 'createOrJoin'
     },
 })
+const modalRef = ref<HTMLDivElement>()
 
 // Auto focus when input field is available
 const setFocus = async () => {
@@ -27,17 +32,30 @@ const setFocus = async () => {
     if (!elCollection.length) return
     elCollection[0].focus()
 }
-
 const close = () => {
     uiState.modal.isActive = false 
 }
+const eventListeners: EventListener[] = []
+
+const addModalEventListener = (eventListener: EventListener) => {
+    const { event, handler } = eventListener
+    modalRef.value?.addEventListener(event, handler)
+    eventListeners.push(eventListener)
+}
 
 onMounted(setFocus)
+
+onUnmounted(() => {
+    eventListeners.forEach(eventListener => {
+        const { event, handler } = eventListener
+        modalRef.value?.removeEventListener(event, handler)
+    })
+})
 watch(props, setFocus)
 </script>
 <template>
     <div class='overlay'></div>
-    <div class='modal'>
+    <div ref='modalRef' class='modal'>
         <template v-if='props.content === `create`'>
            <Create :close='close'/> 
         </template>
@@ -66,7 +84,7 @@ watch(props, setFocus)
             <PlayerAlias :close='close' />
         </template>
         <template v-else-if='props.content === `waitingRoom`'>
-            <WaitingRoom />
+            <WaitingRoom :addModalEventListener='addModalEventListener'/>
         </template>
         <template v-else>
            <NoContent :close='close'/>

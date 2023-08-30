@@ -4,6 +4,13 @@ import socket from '@/socket'
 import { gameState } from '@/store'
 import Edit from '../icon/edit.vue'
 
+const props = defineProps({
+    addModalEventListener: {
+        type: Function,
+        default: () => {}
+    }
+})
+
 const [alias, setAlias] = [
     ref(gameState.players[gameState.id].alias),
     (str: string) => { alias.value = str }
@@ -32,36 +39,35 @@ const editStyle = computed(() => ({
     visibility: isEditVisible.value ? 'visible' : 'hidden'
 }))
 
-const enableEdit = async() => {
+const enableEditing = async() => {
     setIsEditing(true)
     await nextTick()
     const input = document.getElementsByClassName('alias-input')[0] as HTMLInputElement
     input.focus()
 }
 
-const endEdit = (event:Event) => {
-    if (event.target instanceof Element) {
-        if (!event.target.classList.contains('alias-input') &&
-        !event.target.classList.contains('self') &&
-        isEditing.value) {
-            socket.send(JSON.stringify({
-                name: 'rename',
-                content: JSON.stringify({
-                    alias: alias.value
-                })
-            }))
-            isEditing.value = false
-        }
-    }
+const endEditing = (event:Event) => {
+    if (!(event.target instanceof Element)) return
+    
+    const { classList } = event.target
+    const isName = classList.contains('alias-input') || classList.contains('self')
+    
+    if (isName || !isEditing.value) return
+    
+    socket.send(JSON.stringify({
+        name: 'rename',
+        content: JSON.stringify({
+            alias: alias.value
+        })
+    }))
+    isEditing.value = false
 }
 
-onMounted(() => {
-    const container = document.getElementsByClassName('modal')[0] as HTMLDivElement
-    container.addEventListener('click', endEdit)
-})
-onUnmounted(() => {
-    const container = document.getElementsByClassName('modal')[0] as HTMLDivElement
-    container?.removeEventListener('click', endEdit)
+onMounted(() => { 
+    props.addModalEventListener({
+        event: 'click',
+        handler: endEditing
+    })
 })
 </script>
 <template>
@@ -74,7 +80,7 @@ onUnmounted(() => {
             class='grid-key'
             :onmouseenter='() => setEditVisibility(true)'
             :onmouseleave='() => setEditVisibility(false)'
-            :onclick='() => enableEdit()'
+            :onclick='() => enableEditing()'
         >
             <span class='self'>
                 {{ player.alias }}
