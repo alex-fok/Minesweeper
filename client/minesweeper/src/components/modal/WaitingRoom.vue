@@ -85,7 +85,7 @@ onMounted(() => {
             <span class='self'>
                 {{ player.alias }}
                 (You)
-                <Edit :style='editStyle' fill='white' size='1rem' />
+                <Edit :style='editStyle' color='white' size='1rem' />
             </span>
             <span :class='player.isOnline ? `online` : `offline`'>({{ player.isOnline ? 'online' : 'offline' }})</span>
         </label>

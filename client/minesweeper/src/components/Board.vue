@@ -114,7 +114,7 @@ watch(() => gameState.lastPlayed.timestamp, () => {
                     disabled='true'
                 />
                 <span class='copy' title='Copy' @click='copyInviteUrl'>
-                    <Copy fill='white' size='1.5rem'/>
+                    <Copy color='white' size='1.5rem'/>
                 </span>
             </div>
         </div>

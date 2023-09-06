@@ -67,7 +67,7 @@ const outline = computed(() => {
         <Flag
             v-if='show === `BO`'
             :size='isShrunk ? `2vh` : `3vh`'
-            :fill='`rgba(${uiState.playerColor[owner]})`'
+            :color='`rgba(${uiState.playerColor[owner]})`'
         />
         <span
             v-else-if='!Number.isNaN(parseInt(show))'

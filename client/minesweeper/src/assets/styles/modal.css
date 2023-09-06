@@ -44,6 +44,7 @@
     border-right: 1px dashed white;
 }
 .grid-value {
+    width: 100%;
     padding: .5rem;
     margin-left: .5rem;
     background: transparent;
@@ -55,11 +56,12 @@
     
 }
 
-.grid-value input {
+.grid-value .input {
     background: transparent;
-    border: 1px solid whitesmoke;
+    border: 1px solid #666666;
     border-radius: .2rem;
     color: white;
+    width: 12rem;
     padding: .3rem .3rem .2rem .3rem;
 }
 .user-input {

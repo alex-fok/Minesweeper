@@ -57,7 +57,7 @@ const editStyle = computed(() => ({
                         (You)
                         <Edit
                             :style='editStyle'
-                            :fill='getPlayerColor(player.id)'
+                            :color='getPlayerColor(player.id)'
                             size='1rem'
                         />
                     </span>
@@ -87,7 +87,7 @@ const editStyle = computed(() => ({
                         {{ player.alias }}
                         (You)
                         <Edit v-if='hoveringId === player.id'
-                            :fill='getPlayerColor(player.id)'
+                            :color='getPlayerColor(player.id)'
                             size='1rem'
                         />
                     </span>

@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { onMounted, ref, computed } from 'vue'
+import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 import socket from '@/socket'
 import {getAlias, setAlias as saveAlias } from '@/docUtils'
@@ -66,10 +66,16 @@ const setTimeLimit = (num:number) => {
     timeLimit.value = num
 }
 
+const keydownEventHandler = (event: KeyboardEvent) => {
+    if (event.key === 'Enter') createRoom()
+}
+
 onMounted(() => {
-    aliasRef?.value?.addEventListener('keydown', event => {
-        if ((event as KeyboardEvent).key === 'Enter') createRoom()
-    })
+    aliasRef?.value?.addEventListener('keydown', keydownEventHandler)
+})
+
+onUnmounted(() => {
+    aliasRef?.value?.removeEventListener('keydown', keydownEventHandler)
 })
 </script>
 <template>
@@ -81,7 +87,7 @@ onMounted(() => {
                 ref='aliasRef'
                 type='text'
                 id='alias'
-                class='autofocus'
+                class='input autofocus'
                 maxlength=12
                 v-model='alias'
             />
@@ -103,6 +109,7 @@ onMounted(() => {
             <label class='grid-key'>Passcode</label>
             <div class='grid-value'>
                 <input
+                    class='input'
                     ref='passcodeRef'
                     type='password'
                     maxlength=4
@@ -181,7 +188,7 @@ onMounted(() => {
     </div>
     <div class='modal-row reverse'>
         <button :class='createBtn' @click='createRoom' :disabled='alias.length === 0'>CREATE</button>
-        <button :class='createBtn' @click='cancel' :disabled='alias.length === 0'>CANCEL</button>
+        <button class='btn' @click='cancel' :disabled='alias.length === 0'>CANCEL</button>
     </div>
 </template>
 <style scoped>
