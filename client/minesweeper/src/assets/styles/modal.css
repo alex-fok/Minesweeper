@@ -53,15 +53,15 @@
     text-align: center;
     box-sizing: border-box;
     font-size: .8rem;
-    
 }
 
 .grid-value .input {
     background: transparent;
     border: 1px solid #666666;
     border-radius: .2rem;
-    color: white;
     width: 12rem;
+    box-sizing: border-box;
+    color: white;
     padding: .3rem .3rem .2rem .3rem;
 }
 .user-input {

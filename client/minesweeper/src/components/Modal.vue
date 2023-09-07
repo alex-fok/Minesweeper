@@ -3,6 +3,7 @@ import { onMounted, nextTick, ref, watch, onUnmounted } from 'vue'
 import { uiState } from '@/store'
 import Create from './modal/Create.vue'
 import Join from './modal/Join.vue'
+import RoomSearch from './modal/RoomSearch.vue'
 import CreateOrJoin from './modal/CreateOrJoin.vue'
 import GameEnded from './modal/GameEnded.vue'
 import Invited from './modal/Invited.vue'
@@ -17,13 +18,40 @@ type EventListener = {
     event: string,
     handler: (ev : Event) => void
 }
+
+type JoinPrefillContent = {
+    alias: string,
+    roomType: 'private' | 'public',
+    roomId: string,
+    passcode: string
+}
+
+type PrefillType = '' | 'join'
+type PrefillContent = {} | Partial<JoinPrefillContent>
+
+type Prefill = {
+    type: PrefillType,
+    content: PrefillContent
+}
 const props = defineProps({
     // create, join, createOrJoin
     content: {
+        type: String,
         default: 'createOrJoin'
-    },
+    }
 })
 const modalRef = ref<HTMLDivElement>()
+const prefill = ref<Prefill>({
+    type: 'join',
+    content: {
+        alias: 'test'
+    }
+})
+
+const setPrefill = (type: PrefillType, content: PrefillContent) => {
+    prefill.value.type = type
+    prefill.value.content = { ...prefill.value.content, ...content }
+}
 
 // Auto focus when input field is available
 const setFocus = async () => {
@@ -60,7 +88,17 @@ watch(props, setFocus)
            <Create :close='close'/> 
         </template>
         <template v-else-if='props.content === `join`'>
-           <Join :close='close'/> 
+           <Join
+                :prefill='prefill.type === `join` ? prefill.content : {}'
+                :setPrefill='setPrefill'
+                :close='close'
+            />
+        </template>
+        <template v-else-if='props.content === `roomSearch`'>
+            <RoomSearch
+                :setPrefill='setPrefill'
+                :close='close'
+            />
         </template>
         <template v-else-if='props.content === `createOrJoin`'>
            <CreateOrJoin :close='close' />
