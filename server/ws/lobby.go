@@ -62,6 +62,16 @@ func (l *Lobby) findInviteCode(id string) *Room {
 	return nil
 }
 
+func (l *Lobby) getPublicRIds() []uint {
+	roomIds := []uint{}
+	for _, r := range l.rooms {
+		if r.roomType == "public" {
+			roomIds = append(roomIds, r.id)
+		}
+	}
+	return roomIds
+}
+
 func (l *Lobby) run() {
 	for {
 		select {

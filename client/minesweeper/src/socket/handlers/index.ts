@@ -6,6 +6,7 @@ import playerAliasHandler from './playerAlias'
 import playerMousePos from './playerMousePos'
 import playerOnlineHandler from './playerOnline'
 import playerReadyHandler from './playerReady'
+import publicRoomIdsHandler from './publicRoomIds'
 import reconnFailedHandler from './reconnFailed'
 import revealHandler from './reveal'
 import roomCreatedHandler from './roomCreated'
@@ -29,6 +30,7 @@ const getAll = () : handlerMap[] => [
     { name: 'playerMousePos', fn: playerMousePos },
     { name: 'playerOnline', fn: playerOnlineHandler },
     { name: 'playerReady', fn: playerReadyHandler },
+    { name: 'publicRoomIds', fn: publicRoomIdsHandler },
     { name: 'reconnFailed', fn: reconnFailedHandler },
     { name: 'reveal', fn: revealHandler },
     { name: 'roomCreated', fn: roomCreatedHandler },

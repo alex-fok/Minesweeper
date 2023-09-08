@@ -113,8 +113,15 @@ func (c *Client) createRoom(req *Request) {
 	if c.room != nil {
 		c.room.unregister <- c
 	}
+	// Restrict roomType to equal to either "public" or "private"
+	var roomType string
+	if createReq.RoomType == "public" {
+		roomType = createReq.RoomType
+	} else {
+		roomType = "private"
+	}
 	c.room = c.lobby.createRoom(c, &RoomConfig{
-		Type:      createReq.RoomType,
+		Type:      roomType,
 		Pass:      createReq.Pass,
 		Player:    createReq.Player,
 		Size:      createReq.Size,
@@ -171,6 +178,22 @@ func (c *Client) joinRoom(req *Request) {
 			pass:   "",
 		}
 		log.Println("Client", joinReq.Alias, "joined Room", r.id)
+	}
+}
+
+func (c *Client) findPublic(req *Request) {
+	// Request should be empty
+	type RoomIds struct {
+		Ids []uint `json:"ids"`
+	}
+
+	rIds, _ := json.Marshal(RoomIds{
+		Ids: c.lobby.getPublicRIds(),
+	})
+
+	c.writer.update <- &Action{
+		Name:    "publicRoomIds",
+		Content: string(rIds),
 	}
 }
 
@@ -319,6 +342,8 @@ func (c *Client) readBuffer() {
 			go c.createRoom(&req)
 		case "joinRoom":
 			go c.joinRoom(&req)
+		case "findPublic":
+			go c.findPublic(&req)
 		case "inviteCode":
 			go c.handleInviteCode(&req)
 		case "passcode":
