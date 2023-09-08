@@ -342,7 +342,7 @@ func (c *Client) readBuffer() {
 			go c.createRoom(&req)
 		case "joinRoom":
 			go c.joinRoom(&req)
-		case "findPublic":
+		case "findPublicRoomIds":
 			go c.findPublic(&req)
 		case "inviteCode":
 			go c.handleInviteCode(&req)
