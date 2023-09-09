@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { ref, computed, nextTick, onMounted, onUnmounted, onUpdated } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { GAMESTATUS } from '@/config';
 import { gameState, uiState } from '@/store';
 import socket from '@/socket';
@@ -135,6 +135,7 @@ onUnmounted(() => {
                     @focus='() => { setIsFindRoomFocus(true) }'
                     @blur='() => { setIsFindRoomFocus(false) }'
                 />
+                <!-- Dropdown -->
                 <span v-if='isFindRoomFocus' class='search-wrapper'>
                     <Search color='white' size='2vh'/>
                     <div
@@ -148,7 +149,7 @@ onUnmounted(() => {
                 class='input autofocus'
                 ref='roomIdRef'
                 type='text'
-                id='roomId'
+                v-model='roomId'
                 maxlength='4'
             />
         </div>
@@ -158,7 +159,7 @@ onUnmounted(() => {
                 <input
                     class='input'
                     ref='passcodeRef'
-                    type='text'
+                    type='password'
                     v-model='passcode'
                     maxlength='4'
                 />

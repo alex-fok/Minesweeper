@@ -42,13 +42,13 @@ const props = defineProps({
 })
 const modalRef = ref<HTMLDivElement>()
 const prefill = ref<Prefill>({
-    type: 'join',
-    content: {
-        alias: 'test'
-    }
+    type: '',
+    content: {}
 })
 
 const setPrefill = (type: PrefillType, content: PrefillContent) => {
+    console.log('type:', type)
+    console.log('content:', content)
     prefill.value.type = type
     prefill.value.content = { ...prefill.value.content, ...content }
 }
@@ -95,10 +95,7 @@ watch(props, setFocus)
             />
         </template>
         <template v-else-if='props.content === `roomSearch`'>
-            <RoomSearch
-                :setPrefill='setPrefill'
-                :close='close'
-            />
+            <RoomSearch :setPrefill='setPrefill' />
         </template>
         <template v-else-if='props.content === `createOrJoin`'>
            <CreateOrJoin :close='close' />
