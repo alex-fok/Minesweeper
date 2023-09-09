@@ -137,15 +137,17 @@ func (c *Client) createRoom(req *Request) {
 
 func (c *Client) joinRoom(req *Request) {
 	type JoinReq struct {
-		Id    uint   `json:"id"`
-		Alias string `json:"alias"`
+		Alias    string `json:"alias"`
+		RoomType string `json:"roomType"`
+		Id       uint   `json:"id"`
+		Passcode string `jon:"passcode"`
 	}
 	var joinReq JoinReq
 	if err := json.Unmarshal([]byte(req.Content), &joinReq); err != nil {
 		log.Println(err)
 		return
 	}
-	if c.room != nil && c.room.id == joinReq.Id {
+	if c.room != nil {
 		if c.room.id == joinReq.Id {
 			return
 		} else {
@@ -155,7 +157,12 @@ func (c *Client) joinRoom(req *Request) {
 	c.alias = joinReq.Alias
 	// Find Room. Register user if valid
 	r, ok := c.lobby.findRoom(joinReq.Id)
-	if !ok {
+
+	mismatch := joinReq.RoomType == "public" && r.roomType == "private"
+
+	// Room not found, OR
+	// Mismatch room type
+	if mismatch || !ok {
 		log.Println("Room", joinReq.Id, "not found")
 		message, _ := json.Marshal(&Message{
 			Message: "Room #" + strconv.FormatUint(uint64(joinReq.Id), 10) + " not found",
@@ -167,10 +174,11 @@ func (c *Client) joinRoom(req *Request) {
 		return
 	}
 	c.room = r
+
 	if c.room.roomType == "private" {
-		c.writer.update <- &Action{
-			Name:    "passcode",
-			Content: "{}",
+		c.room.register <- &RoomLogin{
+			client: c,
+			pass:   joinReq.Passcode,
 		}
 	} else {
 		c.room.register <- &RoomLogin{
