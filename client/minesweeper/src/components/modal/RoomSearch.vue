@@ -40,24 +40,27 @@ onMounted(findRooms)
     </div>
 </div>
 <div class='separator'></div>
-<div v-if='publicState.roomIds.length > 0' class='room-list'>
-    <div
-        v-for='(id, i) in publicState.roomIds'
-        :class='selectedIdx === i ? `room-id selected` : `room-id`'
-        @click='() => { setSelected(i) }'
-    >
-        {{ id }}
+<template v-if='publicState.roomIds.length > 0'>
+    <div class='room-list'>
+        <div
+            v-for='(id, i) in publicState.roomIds'
+            :class='selectedIdx === i ? `room-id selected` : `room-id`'
+            @click='() => { setSelected(i) }'
+        >
+            {{ id }}
+        </div>
     </div>
-</div>
-<div class='modal-row'>
-    <label class=''>Selected:</label>
-    <input
-        class='room-input'
-        type='text'
-        :value='selectedIdx > -1 ? publicState.roomIds[selectedIdx] : ``'
-        placeholder='Select a room number...'
-        disabled/>
-</div>
+    <div class='modal-row'>
+        <label class=''>Selected:</label>
+        <input
+            class='room-input'
+            type='text'
+            :value='selectedIdx > -1 ? publicState.roomIds[selectedIdx] : ``'
+            placeholder='Select a room number...'
+            disabled/>
+    </div>
+</template>
+<div v-else class='no-room'>--- No rooms available ---</div>
 <div class='modal-row reverse'>
     <button :class='confirmBtn' @click='confirmRoom' :disabled='selectedIdx === -1'>CONFIRM</button>
     <button class='btn' @click='cancel'>CANCEL</button>
@@ -72,13 +75,20 @@ onMounted(findRooms)
     vertical-align: middle;
     font-size: 1.2rem;
 }
+.separator {
+    border-bottom: 2px solid white;
+}
 .room-list {
     display: grid;
     grid-template-columns: repeat(4, 5rem);
     row-gap: .2rem;
 }
-.separator {
-    border-bottom: 2px solid white;
+.no-room {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999999;
+    font-style: italic;
 }
 .room-id {
     display: flex;
@@ -86,7 +96,6 @@ onMounted(findRooms)
     column-gap: .2rem;
     cursor: pointer;
 }
-
 .room-id.selected {
     font-weight: 700;
 }

@@ -136,12 +136,13 @@ onUnmounted(() => {
                     @blur='() => { setIsFindRoomFocus(false) }'
                 />
                 <!-- Dropdown -->
-                <span v-if='isFindRoomFocus' class='search-wrapper'>
+                <span
+                    v-if='isFindRoomFocus'
+                    class='search-wrapper'
+                    @mousedown='search'
+                >
                     <Search color='white' size='2vh'/>
-                    <div
-                        class='search-dropdown'
-                        @mousedown='search'
-                    >Find Public Room...</div>
+                    <div class='search-dropdown'>Find Public Room...</div>
                 </span>
             </div>
             <input
