@@ -84,7 +84,7 @@ func (c *Client) reconnect(req *Request) {
 	if rId, err := strconv.ParseUint(reconnReq.RoomId, 10, 64); err == nil {
 		if r, ok := c.lobby.findRoom(uint(rId)); ok {
 			c.room = r
-			c.room.reconnect <- c
+			c.room.reconnect <- c.id
 			return
 		}
 	}
@@ -111,7 +111,7 @@ func (c *Client) createRoom(req *Request) {
 	}
 	c.alias = createReq.Alias
 	if c.room != nil {
-		c.room.unregister <- c
+		c.room.unregister <- c.id
 	}
 	// Restrict roomType to equal to either "public" or "private"
 	var roomType string
@@ -151,7 +151,7 @@ func (c *Client) joinRoom(req *Request) {
 		if c.room.id == joinReq.Id {
 			return
 		} else {
-			c.room.unregister <- c
+			c.room.unregister <- c.id
 		}
 	}
 	c.alias = joinReq.Alias
@@ -329,7 +329,7 @@ func (c *Client) readBuffer() {
 		c.writer.stop <- true
 
 		if c.room != nil {
-			c.room.disconnect <- c
+			c.room.disconnect <- c.id
 		}
 	}()
 

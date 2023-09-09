@@ -43,10 +43,9 @@ type Room struct {
 	inviteCode string
 	update     chan *RoomUpdate
 	register   chan *RoomLogin
-	unregister chan *Client
-	disconnect chan *Client
-	reconnect  chan *Client
-	test       chan *Client
+	unregister chan ClientId
+	disconnect chan ClientId
+	reconnect  chan ClientId
 	timeouts   map[ClientId]int64
 	stop       chan bool
 }
@@ -64,11 +63,11 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 		inviteCode: l.createInviteCode(id),
 		update:     make(chan *RoomUpdate),
 		register:   make(chan *RoomLogin),
-		unregister: make(chan *Client),
-		disconnect: make(chan *Client),
-		reconnect:  make(chan *Client),
-		test:       make(chan *Client),
+		unregister: make(chan ClientId),
+		disconnect: make(chan ClientId),
+		reconnect:  make(chan ClientId),
 		timeouts:   make(map[ClientId]int64),
+		stop:       make(chan bool),
 	}
 	r.gameDriver.SetBroadcast(r.broadcast)
 	go r.run()
@@ -107,10 +106,10 @@ func (r *Room) registerClient(rLogin *RoomLogin) {
 	}
 }
 
-func (r *Room) unregisterClient(c *Client) {
-	if _, ok := r.clients[c.id]; ok {
-		delete(r.clients, c.id)
-		r.gameDriver.UnregisterPlayer(c.id)
+func (r *Room) unregisterClient(cId ClientId) {
+	if _, ok := r.clients[cId]; ok {
+		delete(r.clients, cId)
+		r.gameDriver.UnregisterPlayer(cId)
 	}
 	if len(r.clients) == 0 {
 		r.stop <- true
@@ -118,25 +117,24 @@ func (r *Room) unregisterClient(c *Client) {
 	}
 }
 
-func (r *Room) disconnectClient(c *Client) {
-	log.Println("disconnecting client")
-	if _, ok := r.clients[c.id]; !ok {
+func (r *Room) disconnectClient(cId ClientId) {
+	if _, ok := r.clients[cId]; !ok {
 		return
 	}
-	log.Println("Client", c.alias, "disconnected")
-	if _, ok := r.timeouts[c.id]; !ok {
-		r.timeouts[c.id] = time.Now().Unix()
-		isPlayer := r.gameDriver.DisconnectPlayer(c.id)
+	log.Println("Client", r.clients[cId].alias, "disconnected")
+	if _, ok := r.timeouts[cId]; !ok {
+		r.timeouts[cId] = time.Now().Unix()
+		isPlayer := r.gameDriver.DisconnectPlayer(cId)
 		if !r.gameDriver.GetIsEnded() && isPlayer {
 			r.notifyWaitingRoomInfo()
 		}
 	}
 }
 
-func (r *Room) reconnectClient(c *Client) {
+func (r *Room) reconnectClient(cId ClientId) {
 	// Reconnect user if id is in timeout map
-	_, timeoutOk := r.timeouts[c.id]
-	_, clientsOk := r.clients[c.id]
+	_, timeoutOk := r.timeouts[cId]
+	c, clientsOk := r.clients[cId]
 	if !timeoutOk || !clientsOk {
 		log.Println("Cannot reconnect client")
 		c.writer.update <- &Action{
@@ -280,9 +278,8 @@ func (r *Room) checkActivity(now int64) {
 	for cId, t := range r.timeouts {
 		if now-t > TIMELIMIT_IN_SEC {
 			log.Println("Removing client", r.clients[cId].alias, "from room", r.id)
-			r.gameDriver.UnregisterPlayer(cId)
-			delete(r.clients, cId)
 			delete(r.timeouts, cId)
+			r.unregister <- cId
 		}
 	}
 }
@@ -314,14 +311,14 @@ func (r *Room) run() {
 			r.handleRoomUpdate(update)
 		case c := <-r.register:
 			r.registerClient(c)
-		case c := <-r.unregister:
-			r.unregisterClient(c)
-		case c := <-r.disconnect:
-			r.disconnectClient(c)
-		case c := <-r.reconnect:
-			r.reconnectClient(c)
+		case cId := <-r.unregister:
+			go r.unregisterClient(cId)
+		case cId := <-r.disconnect:
+			r.disconnectClient(cId)
+		case cId := <-r.reconnect:
+			r.reconnectClient(cId)
 		case <-r.stop:
-			break
+			return
 		}
 	}
 }

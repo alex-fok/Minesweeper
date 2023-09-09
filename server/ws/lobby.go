@@ -78,7 +78,6 @@ func (l *Lobby) run() {
 		case r := <-l.register:
 			l.rooms[r.id] = r
 		case r := <-l.unregister:
-			r.stop <- true
 			delete(l.rooms, r.id)
 			delete(l.inviteCodes, r.inviteCode)
 		}
