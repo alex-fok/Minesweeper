@@ -1,9 +1,9 @@
 import { GAMESTATUS } from '@/config'
-import { gameState, uiState } from '@/store'
+import { roomState, uiState } from '@/store'
 
 const { NEW } = GAMESTATUS
 
 export default () => {
-    gameState.status = NEW
+    roomState.status = NEW
     uiState.modal.displayContent('createOrJoin')
 }

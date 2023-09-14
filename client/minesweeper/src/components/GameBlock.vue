@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed } from 'vue'
 import { BOARDSETTING } from '@/config'
-import { gameState, uiState } from '@/store'
+import { gameState, roomState, uiState } from '@/store'
 import Flag from './icon/FlagIcon.vue'
 
 const props = defineProps({
@@ -31,8 +31,6 @@ const props = defineProps({
     }
 })
 
-const { id } = gameState
-
 const emitReveal = () => {
     props.reveal()
 }
@@ -41,7 +39,7 @@ const emitPositionUpdate = () => {
 }
 
 const getNumClass = (num: number) => `num-${num}`
-const isSelectable = computed(() => gameState.isPlayer && gameState.players[id].isTurn)
+const isSelectable = computed(() => roomState.isPlayer && gameState.players[roomState.id].isTurn)
 const isShrunk = computed(() => gameState.boardConfig.size === BOARDSETTING.SIZE.LARGE)
 const outline = computed(() => {
     // Last Hand

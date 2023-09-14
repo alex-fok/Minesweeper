@@ -1,5 +1,5 @@
 import { GAMESTATUS } from '@/config'
-import { gameState, uiState } from '@/store'
+import { roomState, uiState } from '@/store'
 import handlers from './handlers'
 
 const { NEW, INVITED } = GAMESTATUS
@@ -37,18 +37,18 @@ socket.addEventListener('open', () => {
     }
 
     const confirmInviteCode = () => {
-        gameState.status = INVITED
+        roomState.status = INVITED
         socket.emit('inviteCode', { id: invitation })
     }
 
-    gameState.id = userId || ''
+    roomState.id = userId || ''
     if (userId) {
         reconnect()
     } else if (invitation) {
        confirmInviteCode()
     } else {
         uiState.modal.displayContent('createOrJoin')
-        gameState.status = NEW
+        roomState.status = NEW
     }
 })
 

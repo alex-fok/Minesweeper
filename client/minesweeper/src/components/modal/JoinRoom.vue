@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { GAMESTATUS } from '@/config';
-import { gameState, uiState } from '@/store';
+import { roomState, uiState } from '@/store';
 import socket from '@/socket';
 import { getAlias, setAlias as saveAlias } from '@/docUtils'
 import Search from '../icon/SearchIcon.vue';
@@ -68,7 +68,7 @@ const search = () => {
     uiState.modal.displayContent('roomSearch')
 }
 const cancel = () => {
-    if (gameState.status === GAMESTATUS.NEW) {
+    if (roomState.status === GAMESTATUS.NEW) {
         uiState.modal.displayContent('createOrJoin')
     } else {
         props.close()

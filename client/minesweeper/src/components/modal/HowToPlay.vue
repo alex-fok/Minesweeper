@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { GAMESTATUS } from '@/config'
-import { gameState, uiState } from '@/store'
+import { roomState, uiState } from '@/store'
 import { computed, ref } from 'vue'
 
 defineProps({
@@ -13,7 +13,7 @@ defineProps({
 const page = ref(1)
 const maxPage = 4
 
-const prevBtn = computed(() => page.value === 1 && gameState.status !== GAMESTATUS.NEW ? 'btn hidden' : 'btn')
+const prevBtn = computed(() => page.value === 1 && roomState.status !== GAMESTATUS.NEW ? 'btn hidden' : 'btn')
 const nextBtn = computed(() => page.value === maxPage ? 'btn hidden' : 'btn')
 
 const nextPage = () => {
@@ -71,7 +71,7 @@ const previousPage = () => {
 <div class='modal-row'>
     <div class='modal-item'>
         <button :class='prevBtn' @click='previousPage()'>
-            {{gameState.status === GAMESTATUS.NEW && page === 1 ? 'BACK' : '&#8592; PREV' }}
+            {{ roomState.status === GAMESTATUS.NEW && page === 1 ? 'BACK' : '&#8592; PREV' }}
         </button>
     </div>
     <div class='modal-item'>

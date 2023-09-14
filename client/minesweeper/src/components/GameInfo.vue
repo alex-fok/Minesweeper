@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { GAMESTATUS } from '@/config';
-import { gameState, uiState } from '@/store';
+import { gameState, roomState, uiState } from '@/store';
 import { computed, ref } from 'vue';
 import Edit from './icon/EditIcon.vue';
 
@@ -9,8 +9,8 @@ const [hoveringId, setHoveringId] = [ref(''), (id: string) => {
 }]
 
 const isGameStarted = computed(() => 
-    gameState.status !== GAMESTATUS.NEW &&
-    gameState.status !== GAMESTATUS.WAITING_JOIN
+    roomState.status !== GAMESTATUS.NEW &&
+    roomState.status !== GAMESTATUS.WAITING_JOIN
 )
 const getPlayerColor = (id: string) => {
     const color = uiState.playerColor[id] || '0, 0, 0'
@@ -28,11 +28,11 @@ const playerStyle = computed(() =>
     }
 )
 const editName = (id: string) => {
-    if (id !== gameState.id) return
+    if (id !== roomState.id) return
     uiState.modal.displayContent('playerAlias')
 }
 const editStyle = computed(() => ({
-    visibility: hoveringId.value === gameState.id ? 'visible' : 'hidden'
+    visibility: hoveringId.value === roomState.id ? 'visible' : 'hidden'
 }))
 </script>
 <template>
@@ -50,7 +50,7 @@ const editStyle = computed(() => ({
                 >
                     <span :class='player.isTurn ? `` : `hidden`'>></span>
                     <span
-                        v-if='gameState.id === player.id'
+                        v-if='roomState.id === player.id'
                         class='name self'
                         @click='() => { editName(player.id) }'
                     >
@@ -82,7 +82,7 @@ const editStyle = computed(() => ({
                 <div class='player'>
                     <span :class='player.isTurn ? `` : `hidden`'>></span>
                     <span
-                        v-if='gameState.id === player.id'
+                        v-if='roomState.id === player.id'
                         class='name self'
                         @click='()=> { editName(player.id) }'
                     >

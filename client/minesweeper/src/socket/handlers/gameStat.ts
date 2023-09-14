@@ -1,4 +1,4 @@
-import { gameState, uiState } from '@/store'
+import { gameState, roomState, uiState } from '@/store'
 import { COLORSETTING, GAMESTATUS } from '@/config'
 import media from '@/media'
 
@@ -40,7 +40,7 @@ export default (data: GameStat) => {
 
     if (!players) return
 
-    if (gameState.status === INVITED) {
+    if (roomState.status === INVITED) {
         uiState.modal.displayContent('invited')
     } else {
         uiState.modal.isActive = false
@@ -49,8 +49,8 @@ export default (data: GameStat) => {
     
     gameState.players = players
 
-    gameState.status = Object.keys(gameState.players).length > 1 ? IN_GAME : WAITING_JOIN
-    gameState.isPlayer = players[gameState.id] !== undefined
+    roomState.status = Object.keys(gameState.players).length > 1 ? IN_GAME : WAITING_JOIN
+    roomState.isPlayer = players[roomState.id] !== undefined
     
     // Set color
     Object.keys(gameState.players).forEach((id, i) => {

@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { GAMESTATUS, BLOCKTYPE, BOARDSETTING } from '@/config'
+import { BLOCKTYPE, BOARDSETTING } from '@/config'
 
 type BlockView = {
     x: number,
@@ -25,18 +25,13 @@ type Player = {
     cursor: number
 }
 
-const { UNDETERMINED } = GAMESTATUS
 const { BOMB, NUMBER } = BLOCKTYPE
 
 const board: BlockView[] = [];
 
 const players: Record<string, Player> = {}
 export default reactive({
-    id: '',
-    roomId: -1,
     board,
-    status: UNDETERMINED,
-    isPlayer: false,
     boardConfig: {
         bomb: BOARDSETTING.BOMB.NORMAL,
         size: BOARDSETTING.SIZE.MEDIUM
@@ -51,7 +46,6 @@ export default reactive({
         owner: '',
         timestamp: 0
     },
-    inviteCode: '',
     winner: '',
     initBoard: function() {
         this.board = new Array(this.boardConfig.size * this.boardConfig.size)
@@ -72,15 +66,11 @@ export default reactive({
         if (block['bType'] === NUMBER) return block['value'].toString()
         return block['bType'] === BOMB ? 'BO' : 'BL'
     },
-        reset: function() {
+    reset: function() {
         this.resetBoard()
-        this.roomId = -1
-        this.status = UNDETERMINED
-        this.isPlayer = false
         this.players = {}
         this.capacity = 0
         this.bombsLeft = Number.MAX_SAFE_INTEGER
-        this.inviteCode = ''
         this.winner = ''
     },
 })

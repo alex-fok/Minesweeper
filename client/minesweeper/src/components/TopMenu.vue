@@ -1,5 +1,5 @@
 <script setup lang='ts'>
-import { gameState, uiState } from '@/store'
+import { roomState, uiState } from '@/store'
 
 const createRoom = () => {
     uiState.modal.displayContent('create')
@@ -18,7 +18,7 @@ const howToPlay = () => {
     <div class='header-container'>
         <div class='menu-item'>
             <div class='room'>
-                Room #{{ gameState.roomId !== undefined && gameState.roomId >= 0 ? gameState.roomId : ' (Loading...)' }}
+                Room #{{ roomState.roomId !== undefined && roomState.roomId >= 0 ? roomState.roomId : ' (Loading...)' }}
             </div>
         </div>
         <div class='menu-item'>

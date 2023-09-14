@@ -3,7 +3,7 @@ import { onMounted, ref, computed, onUnmounted } from 'vue'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 import socket from '@/socket'
 import {getAlias, setAlias as saveAlias } from '@/docUtils'
-import { gameState, uiState } from '@/store'
+import { gameState, roomState, uiState } from '@/store'
 
 const props = defineProps({
     close: {
@@ -41,7 +41,7 @@ const createRoom = () => {
     props.close()
 }
 const cancel = () => {
-    if (gameState.status === GAMESTATUS.NEW) {
+    if (roomState.status === GAMESTATUS.NEW) {
         uiState.modal.displayContent('createOrJoin')
     } else {
         props.close()

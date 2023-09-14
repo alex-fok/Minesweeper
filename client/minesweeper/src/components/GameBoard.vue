@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed, ref, watch } from 'vue'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
-import { gameState } from '@/store'
+import { gameState, roomState } from '@/store'
 import socket from '@/socket'
 import Block from './GameBlock.vue'
 import Copy from './icon/CopyIcon.vue'
@@ -10,7 +10,7 @@ const { END, IN_GAME, WAITING_JOIN } = GAMESTATUS
 const timeLeft = ref(-1)
 
 const reveal = (i: number) => {
-    if (gameState.status !== IN_GAME) return
+    if (roomState.status !== IN_GAME) return
 
     const y = Math.floor(i / gameState.boardConfig.size)
     const x = i % gameState.boardConfig.size
@@ -19,7 +19,7 @@ const reveal = (i: number) => {
 const getInviteUrl = () => {
     const {  protocol, hostname, port, pathname } = window.location
     const portNum = port !== '' ? ':' + port : ''
-    return `${protocol}//${hostname}${portNum}${pathname}?join=${gameState.inviteCode}`
+    return `${protocol}//${hostname}${portNum}${pathname}?join=${roomState.inviteCode}`
 }
 
 const mapSize = computed(() => {
@@ -38,14 +38,14 @@ const playerCursors = computed(() => {
     
     const result : string[] = []
     playerIds.forEach(id => {
-        if (id !== gameState.id || (gameState.isPlayer && !gameState.players[gameState.id].isTurn))
+        if (id !== roomState.id || (roomState.isPlayer && !gameState.players[roomState.id].isTurn))
             result[gameState.players[id].cursor] = id
     })
     return result
 })
 
 const updateMousePosition = (position: number) => {
-    if (!gameState.isPlayer) return
+    if (!roomState.isPlayer) return
     socket.emit('share', {position})
 }
 
@@ -57,7 +57,7 @@ const lastPlayedBlock = computed(() => {
 })
 
 const isTimerExist = computed(() => {
-    return gameState.status === END && gameState.timeLimit
+    return roomState.status === END && gameState.timeLimit
 })
 
 watch(() => gameState.lastPlayed.timestamp, () => {
@@ -85,9 +85,9 @@ watch(() => gameState.lastPlayed.timestamp, () => {
 
 </script>
 <template>
-    <div v-if='gameState.status === WAITING_JOIN' class='waiting-container'>
+    <div v-if='roomState.status === WAITING_JOIN' class='waiting-container'>
         <div
-            v-if='gameState.status === WAITING_JOIN'
+            v-if='roomState.status === WAITING_JOIN'
             class='waiting-text-wrapper'
         >
             <div class='waiting-text'>
@@ -97,7 +97,7 @@ watch(() => gameState.lastPlayed.timestamp, () => {
             <div>
                 Invite:
                 <input
-                    v-if='gameState.inviteCode !== ``'
+                    v-if='roomState.inviteCode !== ``'
                     id='invite-url'
                     class='invite-url'
                     size='60'

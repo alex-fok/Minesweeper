@@ -1,6 +1,6 @@
 import { GAMESTATUS, COLORSETTING } from '@/config'
 import media from '@/media'
-import { gameState, uiState } from '@/store'
+import { gameState, roomState, uiState, reset } from '@/store'
 
 const { END } = GAMESTATUS
 
@@ -21,15 +21,15 @@ type GameEnded = {
 }
 export default (data: GameEnded) => {
     const { isCanceled, winner, players } = data
-    gameState.status = END
+    roomState.status = END
     if (isCanceled) {
         uiState.modal.displayContent('message', 'Player left the game. Game is canceled.')
-        gameState.reset()
+        reset()
     } else {
-        gameState.status = END
+        roomState.status = END
         gameState.winner = winner
         gameState.players = players
-        gameState.isPlayer = gameState.players[gameState.id] !== undefined
+        roomState.isPlayer = gameState.players[roomState.id] !== undefined
 
         // Set color
         Object.keys(gameState.players).forEach((id, i) => {
@@ -37,7 +37,7 @@ export default (data: GameEnded) => {
         })
 
         uiState.modal.displayContent('gameEnded')
-        if (gameState.isPlayer)
-            media.play(winner === gameState.id ? 'win' : 'lose')
+        if (roomState.isPlayer)
+            media.play(winner === roomState.id ? 'win' : 'lose')
     }
    }

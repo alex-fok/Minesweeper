@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import socket from '@/socket';
-import { gameState, uiState } from '@/store';
+import { gameState, roomState, uiState } from '@/store';
 import { computed, ref } from 'vue';
 const props = defineProps({
     close: {
@@ -13,15 +13,17 @@ const isRematchClicked = ref(false)
 
 const result = computed(() => {
     if (gameState.winner === '') {
-        if (!gameState.isPlayer) return 'Draw!'
-        const { players, id } = gameState
+        if (!roomState.isPlayer) return 'Draw!'
+        
+        const { players } = gameState
         const playerIds = Object.keys(players)
+        
         const highestScore = playerIds.reduce((prev, curr) => players[curr].score > prev ? players[curr].score : prev, 0)
-        return players[id].score === highestScore ? 'Draw!' : 'You Lose!'
+        return players[roomState.id].score === highestScore ? 'Draw!' : 'You Lose!'
     }
-    if (!gameState.isPlayer) return `${gameState.winner} Won!`
+    if (!roomState.isPlayer) return `${gameState.winner} Won!`
 
-    const isWon = gameState.isPlayer && gameState.winner === gameState.id
+    const isWon = roomState.isPlayer && gameState.winner === roomState.id
     return isWon ? 'You Win!' : 'You Lose!'
 })
 
@@ -69,13 +71,13 @@ const playerStyle = computed(() => {
                 >
                     <div class='score-fill' :style='fillStyle(player.id)'></div>
                     <div class='score'>
-                        <span>{{ player.alias }}{{ gameState.id === player.id ? ' (You)': '' }}</span>
+                        <span>{{ player.alias }}{{ roomState.id === player.id ? ' (You)': '' }}</span>
                         <span>{{ player.score }}</span>
                     </div>
                 </div>
             </div>
     </div>
-    <div v-if='gameState.isPlayer' class='modal-row'>
+    <div v-if='roomState.isPlayer' class='modal-row'>
         <div v-if='isRematchClicked' class='modal-item'>
             Waiting for opponent response...
         </div>

@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import { computed, nextTick, onMounted, ref } from 'vue'
 import socket from '@/socket'
-import { gameState } from '@/store'
+import { gameState, roomState } from '@/store'
 import Edit from '../icon/EditIcon.vue'
 
 const props = defineProps({
@@ -12,7 +12,7 @@ const props = defineProps({
 })
 
 const [alias, setAlias] = [
-    ref(gameState.players[gameState.id].alias),
+    ref(gameState.players[roomState.id].alias),
     (str: string) => { alias.value = str }
 ]
 
@@ -27,9 +27,9 @@ const [isEditing, setIsEditing] = [
 ]
 
 const updateReady = () => {
-    if (!gameState.isPlayer) return
+    if (!roomState.isPlayer) return
     socket.emit('ready', {
-        isReady: !gameState.players[gameState.id]?.isReady || false
+        isReady: !gameState.players[roomState.id]?.isReady || false
     })
 }
 const editStyle = computed(() => ({
@@ -71,7 +71,7 @@ onMounted(() => {
         :key='player.id'
     >
         <label
-            v-if='gameState.id === player.id && !isEditing'
+            v-if='roomState.id === player.id && !isEditing'
             class='grid-key'
             @mouseenter='() => setEditVisibility(true)'
             @mouseleave='() => setEditVisibility(false)'
@@ -85,7 +85,7 @@ onMounted(() => {
             <span :class='player.isOnline ? `online` : `offline`'>({{ player.isOnline ? 'online' : 'offline' }})</span>
         </label>
         <label
-            v-else-if='gameState.id === player.id && isEditing'
+            v-else-if='roomState.id === player.id && isEditing'
             class='grid-key'
         >
             <input
@@ -101,9 +101,9 @@ onMounted(() => {
         <div class='grid-value'>{{ player.isReady ? 'Ready' : 'Not Ready' }}</div>
     </template>
     </div>
-    <div v-if= 'gameState.isPlayer' class='modal-row reverse'>
+    <div v-if= 'roomState.isPlayer' class='modal-row reverse'>
         <button class='btn' @click='updateReady'>
-            {{ gameState.players[gameState.id]?.isReady ? 'Unready' : 'I\'m Ready!' }}
+            {{ gameState.players[roomState.id]?.isReady ? 'Unready' : 'I\'m Ready!' }}
         </button>
     </div>
 </template>

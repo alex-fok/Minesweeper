@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref } from 'vue';
-import { gameState } from '@/store';
+import { gameState, roomState } from '@/store';
 import socket from '@/socket';
 
 const props = defineProps({
@@ -12,7 +12,7 @@ const props = defineProps({
 const cancel = () => {
     props.close()
 }
-const alias = ref(gameState.players[gameState.id]?.alias || '')
+const alias = ref(gameState.players[roomState.id]?.alias || '')
 const aliasRef = ref<HTMLInputElement>()
 
 const setAlias = (event: Event) => {

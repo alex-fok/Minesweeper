@@ -6,11 +6,11 @@ import TopMenu from './components/TopMenu.vue'
 import ModalView from './components/ModalView.vue'
 
 import { GAMESTATUS } from '@/config'
-import { gameState, uiState } from '@/store'
+import { roomState, uiState } from '@/store'
 import { computed } from 'vue'
 
 const { UNDETERMINED, NEW, INVITED } = GAMESTATUS
-const isReady = computed(() => ![UNDETERMINED, NEW, INVITED].includes(gameState.status))
+const isReady = computed(() => ![UNDETERMINED, NEW, INVITED].includes(roomState.status))
 </script>
 <template>
     <ModalView

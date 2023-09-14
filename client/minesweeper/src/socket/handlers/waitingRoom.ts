@@ -1,4 +1,4 @@
-import { gameState, uiState } from '@/store'
+import { gameState, roomState, uiState } from '@/store'
 
 type WaitRoom = {
     players: Record<string, {
@@ -14,8 +14,8 @@ export default (data: WaitRoom) => {
     const keys = Object.keys(players)
 
     keys.forEach(k => {
-        if (k === gameState.id)
-            gameState.isPlayer = true
+        if (k === roomState.id)
+            roomState.isPlayer = true
 
         gameState.players[k] = {
             id: k,
