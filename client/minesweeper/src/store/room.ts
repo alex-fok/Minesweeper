@@ -1,5 +1,5 @@
 import { reactive } from 'vue'
-import { GAMESTATUS } from '@/config/'
+import { GAMESTATUS } from '@/config'
 
 export default reactive({
     id: '',

@@ -1,5 +1,5 @@
 import { GAMESTATUS } from '@/config'
-import { gameState, roomState } from '@/store'
+import { roomState, reset } from '@/store'
 
 type RoomId = {
     id: number,
@@ -9,6 +9,7 @@ type RoomId = {
 const { WAITING_JOIN } = GAMESTATUS
 
 export default (data: RoomId) => {
+    reset()
     const { id, inviteCode } = data
     roomState.roomId = id
     roomState.inviteCode = inviteCode
@@ -21,5 +22,4 @@ export default (data: RoomId) => {
     history.replaceState({}, '', url)
 
     roomState.status = WAITING_JOIN
-    gameState.resetBoard()
 }

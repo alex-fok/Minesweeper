@@ -39,7 +39,7 @@ const emitPositionUpdate = () => {
 }
 
 const getNumClass = (num: number) => `num-${num}`
-const isSelectable = computed(() => roomState.isPlayer && gameState.players[roomState.id].isTurn)
+const isSelectable = computed(() => roomState.isPlayer && gameState.players[roomState.id]?.isTurn)
 const isShrunk = computed(() => gameState.boardConfig.size === BOARDSETTING.SIZE.LARGE)
 const outline = computed(() => {
     // Last Hand

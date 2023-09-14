@@ -38,7 +38,7 @@ const playerCursors = computed(() => {
     
     const result : string[] = []
     playerIds.forEach(id => {
-        if (id !== roomState.id || (roomState.isPlayer && !gameState.players[roomState.id].isTurn))
+        if (id !== roomState.id || (roomState.isPlayer && !gameState.players[roomState.id]?.isTurn))
             result[gameState.players[id].cursor] = id
     })
     return result

@@ -12,7 +12,7 @@ const props = defineProps({
 })
 
 const [alias, setAlias] = [
-    ref(gameState.players[roomState.id].alias),
+    ref(gameState.players[roomState.id]?.alias),
     (str: string) => { alias.value = str }
 ]
 
