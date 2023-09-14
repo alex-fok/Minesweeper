@@ -45,7 +45,7 @@ type Room struct {
 	register   chan *RoomLogin
 	unregister chan ClientId
 	disconnect chan ClientId
-	reconnect  chan ClientId
+	reconnect  chan *Client
 	timeouts   map[ClientId]int64
 	stop       chan bool
 }
@@ -65,7 +65,7 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 		register:   make(chan *RoomLogin),
 		unregister: make(chan ClientId),
 		disconnect: make(chan ClientId),
-		reconnect:  make(chan ClientId),
+		reconnect:  make(chan *Client),
 		timeouts:   make(map[ClientId]int64),
 		stop:       make(chan bool),
 	}
@@ -131,10 +131,10 @@ func (r *Room) disconnectClient(cId ClientId) {
 	}
 }
 
-func (r *Room) reconnectClient(cId ClientId) {
+func (r *Room) reconnectClient(c *Client) {
 	// Reconnect user if id is in timeout map
-	_, timeoutOk := r.timeouts[cId]
-	c, clientsOk := r.clients[cId]
+	_, timeoutOk := r.timeouts[c.id]
+	_, clientsOk := r.clients[c.id]
 	if !timeoutOk || !clientsOk {
 		log.Println("Cannot reconnect client")
 		c.writer.update <- &Action{
@@ -315,8 +315,8 @@ func (r *Room) run() {
 			go r.unregisterClient(cId)
 		case cId := <-r.disconnect:
 			r.disconnectClient(cId)
-		case cId := <-r.reconnect:
-			r.reconnectClient(cId)
+		case c := <-r.reconnect:
+			r.reconnectClient(c)
 		case <-r.stop:
 			return
 		}

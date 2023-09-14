@@ -84,7 +84,7 @@ func (c *Client) reconnect(req *Request) {
 	if rId, err := strconv.ParseUint(reconnReq.RoomId, 10, 64); err == nil {
 		if r, ok := c.lobby.findRoom(uint(rId)); ok {
 			c.room = r
-			c.room.reconnect <- c.id
+			c.room.reconnect <- c
 			return
 		}
 	}
