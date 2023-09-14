@@ -26,6 +26,6 @@ export default {
     play: (se: SoundEffect) => {
         if (playing !== '') audioMap[playing].load()
         playing = se
-        audioMap[se].play()
+        //audioMap[se].play()
     }
 }

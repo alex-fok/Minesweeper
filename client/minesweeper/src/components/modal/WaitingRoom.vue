@@ -78,9 +78,9 @@ onMounted(() => {
         <label
             v-if='gameState.id === player.id && !isEditing'
             class='grid-key'
-            :onmouseenter='() => setEditVisibility(true)'
-            :onmouseleave='() => setEditVisibility(false)'
-            :onclick='() => enableEditing()'
+            @mouseenter='() => setEditVisibility(true)'
+            @mouseleave='() => setEditVisibility(false)'
+            @click='() => enableEditing()'
         >
             <span class='self'>
                 {{ player.alias }}

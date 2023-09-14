@@ -44,14 +44,14 @@ const editStyle = computed(() => ({
                 :style='playerStyle(player.id)'
             >
                 <div class='player'
-                    :onmouseenter='() => { setHoveringId(player.id) }'
-                    :onmouseleave='() => { setHoveringId(``) }'
+                    @mouseenter='() => { setHoveringId(player.id) }'
+                    @mouseleave='() => { setHoveringId(``) }'
                 >
                     <span :class='player.isTurn ? `` : `hidden`'>></span>
                     <span
                         v-if='gameState.id === player.id'
                         class='name self'
-                        :onclick='() => { editName(player.id) }'
+                        @click='() => { editName(player.id) }'
                     >
                         {{ player.alias }}
                         (You)
@@ -73,8 +73,8 @@ const editStyle = computed(() => ({
             <div
                 v-for='player in gameState.players'
                 class='player-collapse-item'
-                :onmouseenter='() => { setHoveringId(player.id) }'
-                :onmouseleave='() => { setHoveringId(``) }'
+                @mouseenter='() => { setHoveringId(player.id) }'
+                @mouseleave='() => { setHoveringId(``) }'
                 :style='playerStyle(player.id)'
             >
                 <div class='player'>
@@ -82,7 +82,7 @@ const editStyle = computed(() => ({
                     <span
                         v-if='gameState.id === player.id'
                         class='name self'
-                        :onclick='()=> { editName(player.id) }'
+                        @click='()=> { editName(player.id) }'
                     >
                         {{ player.alias }}
                         (You)
