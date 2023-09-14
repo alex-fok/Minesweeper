@@ -47,8 +47,6 @@ const prefill = ref<Prefill>({
 })
 
 const setPrefill = (type: PrefillType, content: PrefillContent) => {
-    console.log('type:', type)
-    console.log('content:', content)
     prefill.value.type = type
     prefill.value.content = { ...prefill.value.content, ...content }
 }

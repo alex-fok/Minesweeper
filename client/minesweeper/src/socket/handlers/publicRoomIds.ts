@@ -5,6 +5,5 @@ type roomIds = {
 }
 
 export default (data: roomIds) => {
-    console.log(data)
     publicState.roomIds = data.ids
 }
