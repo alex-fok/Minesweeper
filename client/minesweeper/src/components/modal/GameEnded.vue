@@ -63,6 +63,7 @@ const playerStyle = computed(() => {
     <div class='modal-row'>
             <div class='scoreboard grow'>
                 <div v-for='player in gameState.players'
+                    :key='player.id'
                     class='score-wrapper'
                     :style='playerStyle(player.id)'
                 >

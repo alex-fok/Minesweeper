@@ -1,15 +1,15 @@
 <script setup lang='ts'>
 import { onMounted, nextTick, ref, watch, onUnmounted } from 'vue'
 import { uiState } from '@/store'
-import Create from './modal/Create.vue'
-import Join from './modal/Join.vue'
+import CreateRoom from './modal/CreateRoom.vue'
+import JoinRoom from './modal/JoinRoom.vue'
 import RoomSearch from './modal/RoomSearch.vue'
 import CreateOrJoin from './modal/CreateOrJoin.vue'
 import GameEnded from './modal/GameEnded.vue'
-import Invited from './modal/Invited.vue'
-import Message from './modal/Message.vue'
+import InvitedForm from './modal/InvitedForm.vue'
+import MessageReceived from './modal/MessageReceived.vue'
 import HowToPlay from './modal/HowToPlay.vue'
-import Passcode from './modal/Passcode.vue'
+import PasscodeForm from './modal/PasscodeForm.vue'
 import PlayerAlias from './modal/PlayerAlias.vue'
 import WaitingRoom from './modal/WaitingRoom.vue'
 import NoContent from './modal/NoContent.vue'
@@ -83,10 +83,10 @@ watch(props, setFocus)
     <div class='overlay'></div>
     <div ref='modalRef' class='modal'>
         <template v-if='props.content === `create`'>
-           <Create :close='close'/> 
+           <CreateRoom :close='close'/> 
         </template>
         <template v-else-if='props.content === `join`'>
-           <Join
+           <JoinRoom
                 :prefill='prefill.type === `join` ? prefill.content : {}'
                 :setPrefill='setPrefill'
                 :close='close'
@@ -102,16 +102,16 @@ watch(props, setFocus)
             <GameEnded :close='close'/>
         </template>
         <template v-else-if='props.content === `invited`'>
-            <Invited :close='close' />
+            <InvitedForm :close='close' />
         </template>
         <template v-else-if='props.content === `message`'>
-            <Message :close='close' />
+            <MessageReceived :close='close' />
         </template>
         <template v-else-if='props.content === `howToPlay`'>
             <HowToPlay :close='close' />
         </template>
         <template v-else-if='props.content === `passcode`'>
-            <Passcode :close='close' />
+            <PasscodeForm :close='close' />
         </template>
         <template v-else-if='props.content === `playerAlias`'>
             <PlayerAlias :close='close' />

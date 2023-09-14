@@ -1,5 +1,5 @@
 import { gameState, uiState } from '@/store'
-import { BOARDSETTING, COLORSETTING, GAMESTATUS } from '@/config'
+import { COLORSETTING, GAMESTATUS } from '@/config'
 import media from '@/media'
 
 type Player = {

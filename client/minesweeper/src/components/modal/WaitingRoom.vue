@@ -1,8 +1,8 @@
 <script setup lang='ts'>
-import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import socket from '@/socket'
 import { gameState } from '@/store'
-import Edit from '../icon/edit.vue'
+import Edit from '../icon/EditIcon.vue'
 
 const props = defineProps({
     addModalEventListener: {
@@ -66,7 +66,10 @@ onMounted(() => {
     <div class='grid-container'>
         <label class='title'>Players</label>
         <div class='title'>Status</div>
-    <template v-for='player in gameState.players'>
+    <template
+        v-for='player in gameState.players'
+        :key='player.id'
+    >
         <label
             v-if='gameState.id === player.id && !isEditing'
             class='grid-key'

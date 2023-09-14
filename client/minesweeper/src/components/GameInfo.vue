@@ -2,7 +2,7 @@
 import { GAMESTATUS } from '@/config';
 import { gameState, uiState } from '@/store';
 import { computed, ref } from 'vue';
-import Edit from './icon/edit.vue';
+import Edit from './icon/EditIcon.vue';
 
 const [hoveringId, setHoveringId] = [ref(''), (id: string) => {
     hoveringId.value = id
@@ -40,6 +40,7 @@ const editStyle = computed(() => ({
         <div v-if='gameState.capacity <= 2' class='player-container'>
             <div
                 v-for='player in gameState.players'
+                :key='player.id'
                 class='player-expand-item'
                 :style='playerStyle(player.id)'
             >
@@ -72,6 +73,7 @@ const editStyle = computed(() => ({
         <div v-else class='player-container'>
             <div
                 v-for='player in gameState.players'
+                :key='player.id'
                 class='player-collapse-item'
                 @mouseenter='() => { setHoveringId(player.id) }'
                 @mouseleave='() => { setHoveringId(``) }'

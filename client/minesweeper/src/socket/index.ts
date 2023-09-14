@@ -25,7 +25,7 @@ handlers.getAll().forEach(handler => {
     socketEvents[handler.name] = handler.fn
 })
 
-socket.addEventListener('open', _ => {
+socket.addEventListener('open', () => {
     const url = new URL(window.location.href)
     const roomId = url.searchParams.get('room')
     const userId = url.searchParams.get('id')

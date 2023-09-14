@@ -4,12 +4,14 @@ import { GAMESTATUS } from '@/config';
 import { gameState, uiState } from '@/store';
 import socket from '@/socket';
 import { getAlias, setAlias as saveAlias } from '@/docUtils'
-import Search from '../icon/search.vue';
+import Search from '../icon/SearchIcon.vue';
 
 const props = defineProps({
     prefill: {
         type: Object,
-        default: {}
+        default() {
+            return {}
+        }
     },
     setPrefill: {
         type: Function,
@@ -21,17 +23,15 @@ const props = defineProps({
     }
 })
 
-const { prefill } = props
-
-const alias = ref(prefill.alias || getAlias() || '')
+const alias = ref(props.prefill.alias || getAlias() || '')
 const aliasRef = ref<HTMLInputElement>()
 
-const roomType = ref(prefill.roomType || 'public')
+const roomType = ref(props.prefill.roomType || 'public')
 
-const roomId = ref(prefill.roomId || '')
+const roomId = ref(props.prefill.roomId || '')
 const roomIdRef = ref<HTMLInputElement>()
 
-const passcode = ref(prefill.passcode || '')
+const passcode = ref(props.prefill.passcode || '')
 const passcodeRef = ref<HTMLInputElement>()
 
 const isFindRoomFocus = ref(false)

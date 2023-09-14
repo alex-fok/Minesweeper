@@ -8,7 +8,7 @@ type TurnPassed = {
 }
 
 export default (data: TurnPassed) => {
-    const { count, curr, lastPlayed } = data
+    const { curr, lastPlayed } = data
     gameState.lastPlayed.timestamp = Date.parse(lastPlayed)
     for (const id in gameState.players) {
         gameState.players[id].isTurn = id === curr ? true : false

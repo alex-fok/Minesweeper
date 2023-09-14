@@ -3,8 +3,8 @@ import { computed, ref, watch } from 'vue'
 import { BOARDSETTING, GAMESTATUS } from '@/config'
 import { gameState } from '@/store'
 import socket from '@/socket'
-import Block from './Block.vue'
-import Copy from './icon/copy.vue'
+import Block from './GameBlock.vue'
+import Copy from './icon/CopyIcon.vue'
 
 const { END, IN_GAME, WAITING_JOIN } = GAMESTATUS
 const timeLeft = ref(-1)
@@ -37,7 +37,7 @@ const playerCursors = computed(() => {
     const playerIds = Object.keys(gameState.players)
     
     const result : string[] = []
-    playerIds.forEach((id, _) => {
+    playerIds.forEach(id => {
         if (id !== gameState.id || (gameState.isPlayer && !gameState.players[gameState.id].isTurn))
             result[gameState.players[id].cursor] = id
     })

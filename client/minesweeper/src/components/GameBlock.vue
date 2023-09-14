@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { BOARDSETTING } from '@/config'
 import { gameState, uiState } from '@/store'
-import Flag from './icon/flag.vue'
+import Flag from './icon/FlagIcon.vue'
 
 const props = defineProps({
     reveal: {

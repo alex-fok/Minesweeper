@@ -1,7 +1,7 @@
 <script setup lang='ts'>
 import socket from '@/socket'
 import { computed, onMounted, ref } from 'vue';
-import Reload from '../icon/reload.vue';
+import Reload from '../icon/ReloadIcon.vue';
 import { publicState, uiState } from '@/store';
 const props = defineProps({
 
@@ -41,6 +41,7 @@ onMounted(findRooms)
     <div class='room-list'>
         <div
             v-for='(id, i) in publicState.roomIds'
+            :key='i'
             :class='selectedIdx === i ? `room-id selected` : `room-id`'
             @click='() => { setSelected(i) }'
         >

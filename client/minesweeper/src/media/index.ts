@@ -17,7 +17,7 @@ const audioMap:Record<string, HTMLAudioElement> = {
 }
 
 Object.keys(audioMap).forEach(se => {
-    audioMap[se].addEventListener('ended', _ => {
+    audioMap[se].addEventListener('ended', () => {
         playing = ''
     })
 })
