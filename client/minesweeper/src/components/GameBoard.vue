@@ -46,7 +46,10 @@ const playerCursors = computed(() => {
 
 const updateMousePosition = (position: number) => {
     if (!roomState.isPlayer) return
-    socket.emit('share', {position})
+    socket.emit('share', {
+        name: 'playerMousePos', 
+        content: JSON.stringify({position})
+    })
 }
 
 const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())
@@ -86,10 +89,7 @@ watch(() => gameState.lastPlayed.timestamp, () => {
 </script>
 <template>
     <div v-if='roomState.status === WAITING_JOIN' class='waiting-container'>
-        <div
-            v-if='roomState.status === WAITING_JOIN'
-            class='waiting-text-wrapper'
-        >
+        <div class='waiting-text-wrapper'>
             <div class='waiting-text'>
                 <div>Waiting for player to join...</div>
                 <div class='subtitle'>{{`${Object.keys(gameState.players).length}/${gameState.capacity}`}}</div>
