@@ -4,9 +4,21 @@ import handlers from './handlers'
 
 const { NEW, INVITED } = GAMESTATUS
 
+class CustomWebSocket extends WebSocket {
+    constructor(url: string | URL, protocols?: string | string[] | undefined) {
+        super(url, protocols)
+    }
+    emit(name: string, content: Object) {
+        this.send(JSON.stringify({
+            name,
+            content: JSON.stringify(content)
+        }))
+    }
+}
+
 // For prod: window.location.hostname
 // For dev : ws://localhost:8080/ws
-const socket = new WebSocket(import.meta.env.VITE_SERVER ? import.meta.env.VITE_SERVER : 'ws://' + window.location.hostname + '/ws')
+const socket = new CustomWebSocket(import.meta.env.VITE_SERVER ? import.meta.env.VITE_SERVER : 'ws://' + window.location.hostname + '/ws')
 const socketEvents: Record<string, (event: any)=>void> = {}
 
 handlers.getAll().forEach(handler => {
@@ -21,18 +33,12 @@ socket.addEventListener('open', _ => {
 
     const reconnect = () => {
         console.log('Trying to reconnect user')
-        socket.send(JSON.stringify({
-            name: 'reconnect',
-            content: JSON.stringify({ userId, roomId })
-        }))
+        socket.emit('reconnect', { userId, roomId })
     }
 
     const confirmInviteCode = () => {
         gameState.status = INVITED
-        socket.send(JSON.stringify({
-            name: 'inviteCode',
-            content: JSON.stringify({id: invitation})
-        }))
+        socket.emit('inviteCode', { id: invitation })
     }
 
     gameState.id = userId || ''

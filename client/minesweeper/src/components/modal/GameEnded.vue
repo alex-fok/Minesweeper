@@ -27,12 +27,7 @@ const result = computed(() => {
 
 const requestRematch = (rematch: boolean) => {
     isRematchClicked.value = true
-    socket.send(JSON.stringify({
-        name: 'rematch',
-        content: JSON.stringify({
-            rematch
-        })
-    }))
+    socket.emit('rematch', { rematch })
     if (!rematch) props.close()
 }
 

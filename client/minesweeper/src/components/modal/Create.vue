@@ -29,18 +29,15 @@ const createBtn = computed(() => alias.value.length === 0 ? 'btn disabled' : 'bt
 const createRoom = () => {
     gameState.reset();
     saveAlias(alias.value)
-    socket.send(JSON.stringify({
-        name: 'createRoom',
-        content: JSON.stringify({
-            alias: alias.value,
-            roomType: roomType.value,
-            passcode: roomType.value === 'private' ? passcode.value : '',
-            player: player.value,
-            size: size.value,
-            bomb: bomb.value,
-            timeLimit: timeLimit.value
-        })
-    }))
+    socket.emit('createRoom', {
+        alias: alias.value,
+        roomType: roomType.value,
+        passcode: roomType.value === 'private' ? passcode.value : '',
+        player: player.value,
+        size: size.value,
+        bomb: bomb.value,
+        timeLimit: timeLimit.value
+    })
     props.close()
 }
 const cancel = () => {

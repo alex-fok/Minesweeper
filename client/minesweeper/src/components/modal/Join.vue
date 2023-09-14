@@ -49,20 +49,16 @@ const joinRoom = () => {
 
     if (alias.value !== '') saveAlias(alias.value)
 
-    socket.send(JSON.stringify({
-        name: 'joinRoom',
-        content: JSON.stringify({
-            alias: alias.value,
-            roomType: roomType.value,
-            id: roomIdInt,
-            passcode: roomType.value === 'private' ? passcode.value : ''
-        })
-    }))
+    socket.emit('joinRoom', {
+        alias: alias.value,
+        roomType: roomType.value,
+        id: roomIdInt,
+        passcode: roomType.value === 'private' ? passcode.value : ''
+    })
     props.close()
 }
 
 const search = () => {
-    console.log('search')
     props.setPrefill('join', {
         alias: alias.value,
         roomType: roomType.value,

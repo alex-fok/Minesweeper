@@ -14,10 +14,7 @@ const reveal = (i: number) => {
 
     const y = Math.floor(i / gameState.boardConfig.size)
     const x = i % gameState.boardConfig.size
-    socket.send(JSON.stringify({
-        name: 'reveal',
-        content: JSON.stringify({x, y})
-    }))
+    socket.emit('reveal', {x, y})
 }
 const getInviteUrl = () => {
     const {  protocol, hostname, port, pathname } = window.location
@@ -49,13 +46,7 @@ const playerCursors = computed(() => {
 
 const updateMousePosition = (position: number) => {
     if (!gameState.isPlayer) return
-    socket.send(JSON.stringify({
-        name: 'share',
-        content: JSON.stringify({
-            name: 'playerMousePos',
-            content: JSON.stringify({position})
-        })
-    }))
+    socket.emit('share', {position})
 }
 
 const copyInviteUrl = () => navigator.clipboard.writeText(getInviteUrl())

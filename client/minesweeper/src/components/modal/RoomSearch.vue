@@ -16,10 +16,7 @@ const [selectedIdx, setSelected] = [ref(-1), (num: number) => { selectedIdx.valu
 const confirmBtn = computed(() => selectedIdx.value === -1 ? 'btn disabled' : 'btn')
 
 const findRooms = () => {
-    socket.send(JSON.stringify({
-        name: 'findPublicRoomIds',
-        content: JSON.stringify({})
-    }))
+    socket.emit('findPublicRoomIds', {})
 }
 
 const cancel = () => {

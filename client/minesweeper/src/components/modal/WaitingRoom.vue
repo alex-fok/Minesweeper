@@ -28,12 +28,9 @@ const [isEditing, setIsEditing] = [
 
 const updateReady = () => {
     if (!gameState.isPlayer) return
-    socket.send(JSON.stringify({
-        name: 'ready',
-        content: JSON.stringify({
-            isReady: !gameState.players[gameState.id]?.isReady || false
-        })
-    }))
+    socket.emit('ready', {
+        isReady: !gameState.players[gameState.id]?.isReady || false
+    })
 }
 const editStyle = computed(() => ({
     visibility: isEditVisible.value ? 'visible' : 'hidden'
@@ -54,12 +51,7 @@ const endEditing = (event:Event) => {
     
     if (isName || !isEditing.value) return
     
-    socket.send(JSON.stringify({
-        name: 'rename',
-        content: JSON.stringify({
-            alias: alias.value
-        })
-    }))
+    socket.emit('rename', { alias: alias.value })
     isEditing.value = false
 }
 

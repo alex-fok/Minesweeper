@@ -10,12 +10,7 @@ const props = defineProps({
 const [passcode, passcodeRef] = [ref(''), ref<HTMLInputElement>()]
 
 const sendPass = () => {
-    socket.send(JSON.stringify({
-        name: 'passcode',
-        content:  JSON.stringify({
-            passcode: passcode.value
-        })
-    }))
+    socket.emit('passcode', { passcode: passcode.value })
     props.close()
 }
 const keyDownEventHandler = (event: KeyboardEvent) => {

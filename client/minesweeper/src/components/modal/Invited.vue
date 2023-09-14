@@ -19,10 +19,7 @@ const setAlias = (event:Event) => {
 const rename = () => {
     if (alias.value === '') return
     saveAlias(alias.value)
-    socket.send(JSON.stringify({
-        name: 'rename',
-        content: JSON.stringify({alias: alias.value})
-    }))
+    socket.emit('rename', { alias: alias.value })
     props.close()
 }
 
