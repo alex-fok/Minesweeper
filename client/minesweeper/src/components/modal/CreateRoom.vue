@@ -118,69 +118,41 @@ onUnmounted(() => {
         <label class='grid-key'># of players</label>
         <div class='grid-value btn-group'>
             <button
-                :class='`${player === PLAYER.TWO ? `btn selected` : `btn`}`'
-                @click='() => {setPlayer(PLAYER.TWO)}'
-            >{{ PLAYER.TWO }}</button>
-            <button
-                :class='`${player === PLAYER.THREE ? `btn selected` : `btn`}`'
-                @click='() => {setPlayer(PLAYER.THREE)}'
-            >{{ PLAYER.THREE }}</button>
-            <button
-                :class='`${player === PLAYER.FOUR ? `btn selected` : `btn`}`'
-                @click='() => {setPlayer(PLAYER.FOUR)}'
-            >{{ PLAYER.FOUR }}</button>
+                v-for='p in PLAYER'
+                :key='`PLAYER-${p}`'
+                :class='`${player === p ? `btn selected` : `btn`}`'
+                @click='() => {setPlayer(p)}'
+            >{{ p }}</button>
         </div>
         <!-- Map size -->
         <label class='grid-key'>Map size</label>
         <div class='grid-value btn-group'>
             <button
-                :class='`${size === SIZE.SMALL ? `btn selected` : `btn`}`'
-                @click='() => {setSize(SIZE.SMALL)}'
-            >{{ SIZE.SMALL }} x {{ SIZE.SMALL }}</button>
-            <button
-                :class='`${size === SIZE.MEDIUM ? `btn selected` : `btn`}`'
-                @click='() => {setSize(SIZE.MEDIUM)}'
-            >{{ SIZE.MEDIUM }} x {{ SIZE.MEDIUM }}</button>
-            <button
-                :class='`${size === SIZE.LARGE ? `btn selected` : `btn`}`'
-                @click='() => {setSize(SIZE.LARGE)}'
-            >{{ SIZE.LARGE }} x {{ SIZE.LARGE }}</button>
+                v-for='s in SIZE'
+                :key='`SIZE-${s}`'
+                :class='size === s ? `btn selected` : `btn`'
+                @click='() => {setSize(s)}'
+            >{{ s }} x {{ s }}</button>
         </div>
         <!-- # of bombs -->
         <label class='grid-key'># of bombs</label>
         <div class='grid-value btn-group'>
             <button
-                :class='`${bomb === BOMB.LITTLE ? `btn selected` : `btn`}`'
-                @click='() => {setBomb(BOMB.LITTLE)}'
-            >{{ BOMB.LITTLE }}</button>
-            <button
-                :class='`${bomb === BOMB.NORMAL ? `btn selected` : `btn`}`'
-                @click='() => {setBomb(BOMB.NORMAL)}'
-            >{{ BOMB.NORMAL }}</button>
-            <button
-                :class='`${bomb === BOMB.MANY ? `btn selected` : `btn`}`'
-                @click='() => {setBomb(BOMB.MANY)}'
-            >{{ BOMB.MANY }}</button>
+                v-for='b in BOMB'
+                :key='`BOMB-${b}`'
+                :class='bomb === b ? `btn selected` : `btn`'
+                @click='() => {setBomb(b)}'
+            >{{ b }}</button>
         </div>
         <!-- Time Limit -->
         <label class='grid-key'>Time Limit</label>
         <div class='grid-value btn-group'>
             <button
-                :class='`${timeLimit === TIME_LIMIT.NONE ? `btn selected` : `btn`}`'
-                @click='() => {setTimeLimit(TIME_LIMIT.NONE)}'
-            >None</button>
-            <button
-                :class='`${timeLimit === TIME_LIMIT.SHORT ? `btn selected` : `btn`}`'
-                @click='() => {setTimeLimit(TIME_LIMIT.SHORT)}'
-            >{{ TIME_LIMIT.SHORT }}s</button>
-            <button
-                :class='`${timeLimit === TIME_LIMIT.NORMAL ? `btn selected` : `btn`}`'
-                @click='() => {setTimeLimit(TIME_LIMIT.NORMAL)}'
-            >{{ TIME_LIMIT.NORMAL }}s</button>
-            <button
-                :class='`${timeLimit === TIME_LIMIT.LONG ? `btn selected` : `btn`}`'
-                @click='() => {setTimeLimit(TIME_LIMIT.LONG)}'
-            >{{ TIME_LIMIT.LONG }}s</button>
+                v-for='t in TIME_LIMIT'
+                :key='`TIME_LIMIT-${t}`'
+                :class='`${timeLimit === t ? `btn selected` : `btn`}`'
+                @click='() => {setTimeLimit(t)}'
+            >{{ t ? `${t}s` : 'None'}}</button>
         </div>
     </div>
     <div class='modal-row reverse'>
