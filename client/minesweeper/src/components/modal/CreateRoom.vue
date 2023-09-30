@@ -1,6 +1,6 @@
 <script setup lang='ts'>
 import { onMounted, ref, computed, onUnmounted } from 'vue'
-import { BOARDSETTING, GAMESTATUS } from '@/config'
+import { ROOMSETTING, BOARDSETTING, GAMESTATUS } from '@/config'
 import socket from '@/socket'
 import {getAlias, setAlias as saveAlias } from '@/docUtils'
 import { gameState, roomState, uiState } from '@/store'
@@ -16,13 +16,14 @@ const roomType = ref('public')
 const [alias, aliasRef] = [ref(getAlias() || ''), ref<HTMLInputElement>()]
 const [passcode, passcodeRef] = [ref(''), ref<HTMLInputElement>()]
 
-
+const { MAX_CAPACITY } = ROOMSETTING
 const {PLAYER, SIZE, BOMB, TIME_LIMIT} = BOARDSETTING
 
-const player = ref(PLAYER.TWO)
-const size = ref(SIZE.MEDIUM)
-const bomb = ref(BOMB.NORMAL)
-const timeLimit = ref(TIME_LIMIT.NONE)
+const capacity = ref(2) // 2-8 users
+const player = ref(PLAYER.TWO) // 2-4 players
+const size = ref(SIZE.MEDIUM) // 16 x 16, 26 x 26, 36 x 36
+const bomb = ref(BOMB.NORMAL) // 50, 100, 150
+const timeLimit = ref(TIME_LIMIT.NONE) // None, 5s, 10s, 15s
 
 const createBtn = computed(() => alias.value.length === 0 ? 'btn disabled' : 'btn')
 
@@ -33,6 +34,7 @@ const createRoom = () => {
         alias: alias.value,
         roomType: roomType.value,
         passcode: roomType.value === 'private' ? passcode.value : '',
+        capacity: capacity.value,
         player: player.value,
         size: size.value,
         bomb: bomb.value,
@@ -50,6 +52,11 @@ const cancel = () => {
 const setRoomType = (rType: 'private' | 'public') => {
     roomType.value = rType
 }
+
+const setCapacity = (num:number) => {
+    capacity.value = num
+}
+
 const setPlayer = (num:number) => {
     player.value = num
 }
@@ -114,15 +121,33 @@ onUnmounted(() => {
                 />
             </div>
         </template>
+        <!--Room capacity-->
+        <label class='grid-key'>Room Capacity</label>
+        <select
+            class='grid-value'
+            @change='(event:Event) => {
+                const cap = parseInt((event.target as HTMLSelectElement).value)
+                setCapacity(cap)
+            }'
+        >
+            <option
+                :style='{backgroundColor:`rgba(52, 52, 52)`}'
+                v-for='i in MAX_CAPACITY - 1'
+                :key='`room_cap-${i + 1}`'
+                :value='i + 1'
+            >{{ i + 1 }}</option>
+        </select>
         <!--# of Players -->
         <label class='grid-key'># of players</label>
         <div class='grid-value btn-group'>
-            <button
-                v-for='p in PLAYER'
-                :key='`PLAYER-${p}`'
-                :class='`${player === p ? `btn selected` : `btn`}`'
-                @click='() => {setPlayer(p)}'
-            >{{ p }}</button>
+            <template v-for='p in PLAYER'>
+                <button
+                    v-if='p <= capacity'
+                    :key='`PLAYER-${p}`'
+                    :class='`${player === p ? `btn selected` : `btn`}`'
+                    @click='() => {setPlayer(p)}'
+                >{{ p }}</button>
+            </template>
         </div>
         <!-- Map size -->
         <label class='grid-key'>Map size</label>

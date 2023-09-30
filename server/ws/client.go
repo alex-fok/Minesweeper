@@ -99,6 +99,7 @@ func (c *Client) createRoom(req *Request) {
 		Alias     string `json:"alias"`
 		RoomType  string `json:"roomType"`
 		Pass      string `json:"passcode"`
+		Capacity  int    `json:"capacity"`
 		Player    uint   `json:"player"`
 		Size      uint   `json:"size"`
 		Bomb      uint   `json:"bomb"`
@@ -123,6 +124,7 @@ func (c *Client) createRoom(req *Request) {
 	c.room = c.lobby.createRoom(c, &RoomConfig{
 		Type:      roomType,
 		Pass:      createReq.Pass,
+		Capacity:  createReq.Capacity,
 		Player:    createReq.Player,
 		Size:      createReq.Size,
 		Bomb:      createReq.Bomb,
@@ -192,11 +194,11 @@ func (c *Client) joinRoom(req *Request) {
 func (c *Client) findPublic(req *Request) {
 	// Request should be empty
 	type RoomIds struct {
-		Ids []uint `json:"ids"`
+		Rooms []PublicRoomInfo `json:"rooms"`
 	}
 
 	rIds, _ := json.Marshal(RoomIds{
-		Ids: c.lobby.getPublicRIds(),
+		Rooms: c.lobby.getPublicRIds(),
 	})
 
 	c.writer.update <- &Action{

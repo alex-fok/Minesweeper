@@ -16,6 +16,7 @@ type RoomConfig struct {
 	Type      string
 	Pass      string
 	GameMode  string
+	Capacity  int
 	Player    uint
 	Size      uint
 	Bomb      uint
@@ -36,6 +37,7 @@ type Room struct {
 	id         uint
 	roomType   string // "private" or "public"
 	pass       string
+	capacity   int
 	clients    map[ClientId]*Client
 	lobby      *Lobby
 	board      [][]game.Block
@@ -57,6 +59,7 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 		id:         id,
 		roomType:   config.Type,
 		pass:       config.Pass,
+		capacity:   config.Capacity,
 		clients:    make(map[ClientId]*Client),
 		lobby:      l,
 		gameDriver: *game.NewDriver(config.TimeLimit, config.Player, config.Size, config.Bomb),
@@ -76,6 +79,13 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 }
 
 func (r *Room) registerClient(rLogin *RoomLogin) {
+	if len(r.clients) >= r.capacity {
+		rLogin.client.writer.update <- &Action{
+			Name:    "exceedCapacity",
+			Content: "{}",
+		}
+		return
+	}
 	if r.roomType == "private" && rLogin.pass != r.pass {
 		rLogin.client.writer.update <- &Action{
 			Name:    "reconnFailed",
@@ -175,7 +185,6 @@ func (r *Room) reconnectClient(c *Client) {
 	} else {
 		r.notifyWaitingRoomInfo()
 	}
-
 }
 
 func (r *Room) notifyRoomInfo(c *Client) {

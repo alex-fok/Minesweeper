@@ -1,9 +1,15 @@
 import { publicState } from '@/store'
 
-type roomIds = {
-    ids: number[]
+type publicRoomInfo = {
+    id: number,
+    capacity: number,
+    users: number
 }
 
-export default (data: roomIds) => {
-    publicState.roomIds = data.ids
+type rooms = {
+    rooms: publicRoomInfo[]
+}
+
+export default (data: rooms) => {
+    publicState.rooms = data.rooms
 }

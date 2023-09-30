@@ -4,6 +4,12 @@ import (
 	"minesweeper/utils"
 )
 
+type PublicRoomInfo struct {
+	Id       uint `json:"id"`
+	Capacity int  `json:"capacity"`
+	Users    int  `json:"users"`
+}
+
 type Lobby struct {
 	rooms       map[uint]*Room
 	inviteCodes map[string]uint
@@ -62,14 +68,19 @@ func (l *Lobby) findInviteCode(id string) *Room {
 	return nil
 }
 
-func (l *Lobby) getPublicRIds() []uint {
-	roomIds := []uint{}
+func (l *Lobby) getPublicRIds() []PublicRoomInfo {
+
+	rooms := []PublicRoomInfo{}
 	for _, r := range l.rooms {
 		if r.roomType == "public" {
-			roomIds = append(roomIds, r.id)
+			rooms = append(rooms, PublicRoomInfo{
+				Id:       r.id,
+				Capacity: r.capacity,
+				Users:    len(r.clients),
+			})
 		}
 	}
-	return roomIds
+	return rooms
 }
 
 func (l *Lobby) run() {

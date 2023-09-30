@@ -1,7 +1,13 @@
 import { reactive } from 'vue';
 
-const roomIds: number[] = []
+type publicRooms = {
+    id: number,
+    capacity: number
+    users: number
+}
+
+const rooms: publicRooms[] = []
 
 export default reactive({
-    roomIds
+    rooms
 })
