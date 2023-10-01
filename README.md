@@ -1,5 +1,7 @@
 # Overview
-This is a 1 vs 1 turn-based minesweeper introduced more than a decade ago by MSN Messenger. The objective of the game is to reveal more mines than your opponent. Player who reveals more than half of the mines first wins the game.
+This is a muti-player turn-based minesweeper introduced more than a decade ago by MSN Messenger. The objective of the game is to reveal more mines than your opponent. Player who reveals more than half of the mines first wins the game.
+
+![Minesweeper](https://raw.githubusercontent.com/alex-fok/minesweeper/main/screenshots/minesweeper.png)
 
 # Getting Started
 
