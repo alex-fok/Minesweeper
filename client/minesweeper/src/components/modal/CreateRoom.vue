@@ -125,10 +125,7 @@ onUnmounted(() => {
         <label class='grid-key'>Room Capacity</label>
         <select
             class='grid-value'
-            @change='(event:Event) => {
-                const cap = parseInt((event.target as HTMLSelectElement).value)
-                setCapacity(cap)
-            }'
+            @change='(event:Event) => { setCapacity(parseInt((event.target as HTMLSelectElement).value)) }'
         >
             <option
                 :style='{backgroundColor:`rgba(52, 52, 52)`}'
