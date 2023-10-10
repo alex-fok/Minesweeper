@@ -1,3 +1,4 @@
+import exceedCapacityHandler from './exceedCapacity'
 import gameEndedHandler from './gameEnded'
 import gameStatHandler from './gameStat'
 import messageHandler from './message'
@@ -22,6 +23,7 @@ type handlerMap = {
 }
 
 const getAll = () : handlerMap[] => [
+    { name: 'exceedCapacity', fn: exceedCapacityHandler},
     { name: 'gameEnded', fn: gameEndedHandler },
     { name: 'gameStat', fn: gameStatHandler },
     { name: 'message', fn: messageHandler },
