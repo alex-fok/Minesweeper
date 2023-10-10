@@ -1,72 +1,47 @@
 <script setup lang='ts'>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { GAMESTATUS } from '@/config';
-import { roomState, uiState } from '@/store';
+import { ref, computed, onMounted } from 'vue'
+import { GAMESTATUS } from '@/config'
+import { roomState, uiState, publicState } from '@/store'
 import socket from '@/socket';
 import { getAlias, setAlias as saveAlias } from '@/docUtils'
-import Search from '../icon/SearchIcon.vue';
+import Reload from '../icon/ReloadIcon.vue'
+import Avatar from '../icon/AvatarIcon.vue'
 
 const props = defineProps({
-    prefill: {
-        type: Object,
-        default() {
-            return {}
-        }
-    },
-    setPrefill: {
-        type: Function,
-        default: () => {}
-    },
     close: {
         type: Function,
         default: () => {}
     }
 })
 
-const alias = ref(props.prefill.alias || getAlias() || '')
-const aliasRef = ref<HTMLInputElement>()
+const alias = ref(getAlias() || '')
+const roomType = ref('public')
+const selected = ref(-1)
+const passcode = ref('')
 
-const roomType = ref(props.prefill.roomType || 'public')
+const hoveringRoomId = ref(-1)
+const selectedInput = ref<HTMLInputElement>();
 
-const roomId = ref(props.prefill.roomId || '')
-const roomIdRef = ref<HTMLInputElement>()
-
-const passcode = ref(props.prefill.passcode || '')
-const passcodeRef = ref<HTMLInputElement>()
-
-const isFindRoomFocus = ref(false)
-const setIsFindRoomFocus = (bool: boolean) => {
-    isFindRoomFocus.value = bool
+const serarchOpenRooms = () => {
+    socket.emit('findPublicRoomIds', {})
 }
+const isJoinable = computed(() =>
 
-const joinBtn = computed(() => 
-    (alias.value.length === 0 || roomId.value.length === 0) ? 'btn disabled' : 'btn'
+    (alias.value.length === 0 || selected.value === -1)
 )
 
 const joinRoom = () => {
-    const roomIdInt = parseInt(roomId.value, 10)
-    if (Number.isNaN(roomIdInt)) return
-
     if (alias.value !== '') saveAlias(alias.value)
 
     socket.emit('joinRoom', {
         alias: alias.value,
         roomType: roomType.value,
-        id: roomIdInt,
+        id: selected.value,
         passcode: roomType.value === 'private' ? passcode.value : ''
     })
     props.close()
 }
 
-const search = () => {
-    props.setPrefill('join', {
-        alias: alias.value,
-        roomType: roomType.value,
-        roomId: roomId.value,
-        passcode: passcode.value
-    })
-    uiState.modal.displayContent('roomSearch')
-}
 const cancel = () => {
     if (roomState.status === GAMESTATUS.NEW) {
         uiState.modal.displayContent('createOrJoin')
@@ -74,24 +49,39 @@ const cancel = () => {
         props.close()
     }
 }
+
+const isHighlighted = (id: number, index: number) => {
+    const isSelected = selected.value === id
+    const isHovering = hoveringRoomId.value === id
+    const isFull = publicState.rooms[index].users === publicState.rooms[index].capacity
+   
+    return isSelected || (isHovering && !isFull)
+}
+
+const setSelected = (id: number) => {
+    if (id > 9999) {
+        if (selectedInput.value)
+            selectedInput.value.value = selected.value.toString()
+        return
+    }
+
+    const isNaN = Number.isNaN(id)
+    
+    selected.value = isNaN ? -1 : id;
+    
+    if (selectedInput.value)
+        selectedInput.value.value = isNaN ? '' : id.toString()
+}
+
 const setRoomType = (rType: 'private' | 'public') => {
     roomType.value = rType
 }
 
-const keydownEventHandler = (event: KeyboardEvent) => {
-    if (event.key === 'Enter') joinRoom()
+const setHoveringRoom = (id: number) => {
+    hoveringRoomId.value = id
 }
 
-onMounted(() => {
-    [aliasRef, roomIdRef, passcodeRef].forEach(ref => {
-        ref?.value?.addEventListener('keydown', keydownEventHandler)
-    })
-})
-onUnmounted(() => {
-    [aliasRef, roomIdRef, passcodeRef].forEach(ref => {
-        ref?.value?.removeEventListener('keydown', keydownEventHandler)
-    })
-})
+onMounted(serarchOpenRooms)
 </script>
 <template>
     <div class='grid-container'>
@@ -120,34 +110,11 @@ onUnmounted(() => {
         </div>
         <label class='grid-key'>Room #</label>
         <div class='grid-value'>
-            <div
-                v-if='roomType === `public`'
-                class='search-container'
-            >
-                <input
-                    class='input'
-                    v-model='roomId'
-                    maxlength='4'
-                    @focus='() => { setIsFindRoomFocus(true) }'
-                    @blur='() => { setIsFindRoomFocus(false) }'
-                />
-                <!-- Dropdown -->
-                <span
-                    v-if='isFindRoomFocus'
-                    class='search-wrapper'
-                    @mousedown='search'
-                >
-                    <Search color='white' size='2vh'/>
-                    <div class='search-dropdown'>Find Public Room...</div>
-                </span>
-            </div>
             <input
-                v-else
+                ref='selectedInput'
                 class='input autofocus'
-                ref='roomIdRef'
-                type='text'
-                v-model='roomId'
-                maxlength='4'
+                type='number'
+                @input='event => { setSelected(parseInt((event.target as HTMLInputElement).value)) }'
             />
         </div>
         <template v-if='roomType === `private`'>
@@ -155,7 +122,6 @@ onUnmounted(() => {
             <div class='grid-value'>
                 <input
                     class='input'
-                    ref='passcodeRef'
                     type='password'
                     v-model='passcode'
                     maxlength='4'
@@ -163,8 +129,41 @@ onUnmounted(() => {
             </div>
         </template>
     </div>
+    <template v-if='roomType === `public`'>
+            <div class='modal-row'>
+                <div class='room-list-title'>Select A Room</div>
+                <div class='refresh' title='Reload' @click='serarchOpenRooms'>
+                    <Reload color='white' size='1rem'/>
+                </div>
+            </div>
+            <div class='separator'></div>
+            <template v-if='publicState.rooms.length > 0'>
+            <div class='room-list'>
+                <div
+                    v-for='(r, i) in publicState.rooms'
+                    :key='i'
+                    :class='isHighlighted(r.id, i) ? `room-wrapper highlight` : `room-wrapper`'
+                    @mouseover='() => { setHoveringRoom(r.id) }'
+                    @mouseout='() => { setHoveringRoom(-1) }'
+                    @click='() => { if (r.users < r.capacity) setSelected(r.id) }'
+                >
+                    <span class='room-id'>{{ r.id }}</span>
+                    <span class='occupancy'>
+                        <template v-for='c in r.capacity' :key='`capacity-${c}`'>
+                            <Avatar
+                                size='1rem'
+                                :color='c <= r.users ? `white` : `rgba(256, 256, 256, .3)`'
+                            />
+                        </template>
+                    </span>
+                    <span v-if='r.users === r.capacity' class='room-full'>(FULL)</span>
+                </div>
+            </div>
+            </template>
+            <div v-else class='no-room'>--- No rooms available ---</div>
+        </template>
     <div class='modal-row reverse'>
-        <button :class='joinBtn' @click='joinRoom' :disabled='alias.length === 0'>JOIN</button>
+        <button :class='isJoinable ? `btn disabled` : `btn`' @click='joinRoom' :disabled='isJoinable'>JOIN</button>
         <button class='btn' @click='cancel'>CANCEL</button>
     </div>
 </template>
@@ -196,5 +195,73 @@ onUnmounted(() => {
     }
     .search-container .input {
         outline: none;
+    }
+    .room-list-title {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        vertical-align: middle;
+        font-size: 1.2rem;
+    }
+    .refresh {
+        color: white;
+        background-color: transparent;
+        border: 0;
+        padding: 0;
+        align-self: center;
+        cursor: pointer;
+        vertical-align: middle;
+    }
+    .separator {
+        border-bottom: 2px solid white;
+    }
+    .room-list {
+        display: flex;
+        flex-direction: column;
+    }
+    .no-room {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999999;
+        font-style: italic;
+    }
+    .room-wrapper {
+        display: flex;
+        align-items: center;
+        border: 1px rgba(255, 255, 255, 0) solid;
+        padding: .2rem .5rem;
+    }
+    .highlight {
+        border: 1px white solid;
+        border-radius: .3rem;
+    }
+    .room-wrapper.highlight {
+        border: 1px white solid;
+        border-radius: .3rem;
+        cursor: pointer;
+    }
+    .room-id {
+        width: 5rem;
+    }
+    .occupancy {
+        display: flex;
+        flex-direction: row;
+        justify-content: start;
+    }
+    .room-full {
+        color:crimson;
+        margin-left: 1.5rem;
+    }
+
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    /* Firefox */
+    input[type=number] {
+        -moz-appearance: textfield;
     }
 </style>

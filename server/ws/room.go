@@ -80,9 +80,15 @@ func newRoom(id uint, c *Client, l *Lobby, config *RoomConfig) *Room {
 
 func (r *Room) registerClient(rLogin *RoomLogin) {
 	if len(r.clients) >= r.capacity {
+		type ExceedCapacity struct {
+			RoomId uint `json:"roomId"`
+		}
+		exceedCapacity, _ := json.Marshal(&ExceedCapacity{
+			RoomId: r.id,
+		})
 		rLogin.client.writer.update <- &Action{
 			Name:    "exceedCapacity",
-			Content: "{}",
+			Content: string(exceedCapacity),
 		}
 		return
 	}
@@ -94,7 +100,7 @@ func (r *Room) registerClient(rLogin *RoomLogin) {
 		return
 	}
 	r.clients[rLogin.client.id] = rLogin.client
-
+	rLogin.client.assignRoom(r)
 	// Notify room info
 	r.notifyRoomInfo(rLogin.client)
 

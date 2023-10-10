@@ -68,6 +68,10 @@ func NewClient(conn *websocket.Conn, lobby *Lobby) *Client {
 	}
 }
 
+func (c *Client) assignRoom(room *Room) {
+	c.room = room
+}
+
 func (c *Client) reconnect(req *Request) {
 	type ReconnReq struct {
 		UserId string `json:"userId"`
@@ -160,11 +164,9 @@ func (c *Client) joinRoom(req *Request) {
 	// Find Room. Register user if valid
 	r, ok := c.lobby.findRoom(joinReq.Id)
 
-	mismatch := joinReq.RoomType == "public" && r.roomType == "private"
-
 	// Room not found, OR
 	// Mismatch room type
-	if mismatch || !ok {
+	if !ok || joinReq.RoomType == "public" && r.roomType == "private" {
 		log.Println("Room", joinReq.Id, "not found")
 		message, _ := json.Marshal(&Message{
 			Message: "Room #" + strconv.FormatUint(uint64(joinReq.Id), 10) + " not found",
@@ -175,15 +177,14 @@ func (c *Client) joinRoom(req *Request) {
 		}
 		return
 	}
-	c.room = r
 
-	if c.room.roomType == "private" {
-		c.room.register <- &RoomLogin{
+	if r.roomType == "private" {
+		r.register <- &RoomLogin{
 			client: c,
 			pass:   joinReq.Passcode,
 		}
 	} else {
-		c.room.register <- &RoomLogin{
+		r.register <- &RoomLogin{
 			client: c,
 			pass:   "",
 		}
