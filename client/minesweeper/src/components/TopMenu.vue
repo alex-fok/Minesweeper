@@ -13,6 +13,10 @@ const howToPlay = () => {
     uiState.modal.displayContent('howToPlay')
 }
 
+const toGithub = () => {
+    window.location.href=`https://github.com/alex-fok`
+}
+
 </script>
 <template>
     <div class='header-container'>
@@ -34,6 +38,11 @@ const howToPlay = () => {
         <div class='menu-item'>
             <div class='button' @click='howToPlay()'>
                 How To Play?
+            </div>
+        </div>
+        <div class='menu-item'>
+            <div class='button' @click='toGithub()'>
+                Github
             </div>
         </div>
     </div>
